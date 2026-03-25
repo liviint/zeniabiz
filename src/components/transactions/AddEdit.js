@@ -1,9 +1,8 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { useState } from "react";
 import {
-  addSale,
-  addExpense,
-} from "@/src/features/transactions/transactions.queries";
+  upsertTransaction
+} from "../../db/transactionsDb";
 
 export default function AddEdit() {
   const [type, setType] = useState<"sale" | "expense">("sale");
@@ -17,9 +16,9 @@ export default function AddEdit() {
     if (!value) return;
 
     if (type === "sale") {
-      addSale(value, note);
+      upsertTransaction(value, note);
     } else {
-      addExpense(value, category, note);
+      upsertTransaction(value, category, note);
     }
 
     // reset form

@@ -1,8 +1,8 @@
 import { View, Text, FlatList, StyleSheet } from "react-native";
-import { useTransactions } from "@/src/features/transactions/transactions.hooks";
+import { getTransactions } from "../../../src/db/transactionsDb";
 
 export default function TransactionsScreen() {
-  const { transactions } = useTransactions();
+  const { transactions } = getTransactions();
 
   return (
     <View style={styles.container}>

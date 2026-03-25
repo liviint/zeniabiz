@@ -3,8 +3,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   getTransactionById,
-  removeTransaction,
-} from "@/src/features/transactions/transactions.queries";
+  deleteTransaction,
+} from "../../../../src/db/transactionsDb";
 
 export default function TransactionDetail() {
   const { id } = useLocalSearchParams();
@@ -30,7 +30,7 @@ export default function TransactionDetail() {
   const isSale = transaction.type === "sale";
 
   const handleDelete = () => {
-    removeTransaction(transaction.id);
+    deleteTransaction(transaction.id);
     router.back();
   };
 
