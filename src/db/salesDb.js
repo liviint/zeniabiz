@@ -1,3 +1,7 @@
+import uuid from "react-native-uuid";
+
+const newUuid = () => uuid.v4();
+
 export async function createSaleWithItems(
   db,
   { items = [], note = null, date }

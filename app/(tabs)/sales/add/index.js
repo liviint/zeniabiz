@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useIsFocused } from "@react-navigation/native";
 import { View, StyleSheet, FlatList, Pressable, Alert } from "react-native";
 import { Card, BodyText, SecondaryText, Input } from "../../../../src/components/ThemeProvider/components";
 import { useSQLiteContext } from "expo-sqlite";
@@ -9,6 +10,7 @@ import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 
 export default function SellPage() {
   const db = useSQLiteContext();
+  const isFocused = useIsFocused()
   const router = useRouter();
   const { globalStyles } = useThemeStyles();
 
@@ -20,7 +22,7 @@ export default function SellPage() {
       const data = await getProducts(db);
       setProducts(data);
     })();
-  }, []);
+  }, [isFocused]);
 
   const addToCart = (product) => {
     const exists = cart.find((c) => c.product_id === product.id);

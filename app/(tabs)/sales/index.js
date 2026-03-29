@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { View, FlatList, Pressable } from "react-native";
+import { useIsFocused } from "@react-navigation/native";
 import { Card, BodyText, SecondaryText } from "../../../src/components/ThemeProvider/components";
 import { useSQLiteContext } from "expo-sqlite";
 import { useRouter } from "expo-router";
@@ -9,17 +10,19 @@ import { AddButton } from "../../../src/components/common/AddButton";
 
 export default function SalesList() {
     const {globalStyles} = useThemeStyles()
-  const db = useSQLiteContext();
-  const router = useRouter();
+    const isFocused = useIsFocused()
+    const db = useSQLiteContext();
+    const router = useRouter();
 
-  const [sales, setSales] = useState([]);
+    const [sales, setSales] = useState([]);
 
-  useEffect(() => {
-    (async () => {
-      const data = await getTransactions(db);
-      setSales(data.filter((t) => t.type === "income"));
-    })();
-  }, []);
+    useEffect(() => {
+        (async () => {
+            const data = await getTransactions(db);
+            console.log(data,"hello data")
+            setSales(data.filter((t) => t.type === "income"));
+        })();
+    }, [isFocused]);
 
     return (
         <View style={globalStyles.container}>

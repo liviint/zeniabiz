@@ -81,21 +81,15 @@ export async function getProductById(db, id) {
 }
 
 export async function deleteProduct(db, id) {
-  const now = new Date().toISOString();
-
   await db.runAsync(
     `
-    UPDATE products
-    SET deleted_at = ?, updated_at = ?
+    DELETE FROM products
     WHERE id = ?
     `,
-    [now, now, id]
+    [id]
   );
 }
 
-// ------------------------
-// Adjust Stock
-// ------------------------
 export async function adjustStock(db, product_id, quantityChange) {
   await db.runAsync(
     `
