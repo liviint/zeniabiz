@@ -19,7 +19,7 @@ export default function Header() {
   return (
     <View style={styles.headerContainer}>
       <Pressable onPress={() => router.push("/journal")}>
-        <Text style={styles.logoText}>ZeniaHub</Text>
+        <Text style={styles.logoText}>ZeniaBiz</Text>
       </Pressable>
     <TouchableOpacity 
       onPress={() => setMenuOpen(!menuOpen)} 
