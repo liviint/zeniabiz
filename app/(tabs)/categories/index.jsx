@@ -43,7 +43,7 @@ export default function CategoriesListScreen({ navigation }) {
 
   const renderCategory = ({ item }) => (
     <TouchableOpacity
-      onPress={() => router.push(`/categories/${item.uuid}`, { categoryId: item.id })}
+      onPress={() => router.push(`/categories/${item.id}`, { categoryId: item.id })}
       style={{
         flexDirection: "row",
         alignItems: "center",
@@ -80,7 +80,7 @@ export default function CategoriesListScreen({ navigation }) {
         <Text style={{ color: "#888" }}>No categories</Text>
         ) : (
         data.map((item) => (
-        <View key={item.uuid}>{renderCategory({ item })}</View>
+        <View key={item.id}>{renderCategory({ item })}</View>
         ))
       )}
     </View>
