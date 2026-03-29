@@ -1,7 +1,7 @@
 import { SQLiteProvider } from "expo-sqlite";
 
 const migrateDbIfNeeded = async (db) => {
-
+  await db.execAsync(`DROP TABLE IF EXISTS transactions;`);
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
 
@@ -10,8 +10,12 @@ const migrateDbIfNeeded = async (db) => {
       type TEXT NOT NULL, -- 'sale' | 'expense'
       amount REAL NOT NULL,
       category TEXT,
+      category_id INTEGER,
+      payee Text,
       note TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL,
+      date TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS app_settings (

@@ -83,9 +83,9 @@ export async function getTransactions(db, date = new Date()) {
   return await db.getAllAsync(
     `
     SELECT *
-    FROM biz_transactions
-    WHERE deleted_at IS NULL
-      AND date >= ?
+    FROM transactions
+    WHERE 
+      date >= ?
       AND date < ?
     ORDER BY datetime(date) DESC
     `,

@@ -1,8 +1,10 @@
 import { View, Text, FlatList, StyleSheet } from "react-native";
 import { getTransactions } from "../../../src/db/transactionsDb";
+import { useSQLiteContext } from 'expo-sqlite';
 
 export default function TransactionsScreen() {
-  const { transactions } = getTransactions();
+  const db = useSQLiteContext();
+  const { transactions } = getTransactions(db);
 
   return (
     <View style={styles.container}>
