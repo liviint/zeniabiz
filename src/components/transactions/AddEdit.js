@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable, TouchableOpacity, Alert, ScrollView 
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Card, BodyText,Input,TextArea , FormLabel, SecondaryText} from "../ThemeProvider/components";
 import { useSQLiteContext } from "expo-sqlite";
-import { getTransactionByUuid, upsertTransaction } from "../../db/transactionsDb";
+import { getTransactionById, upsertTransaction } from "../../db/transactionsDb";
 import { getTransactionTemplates } from "../../db/transactionsTempsDb";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import CategoriesPicker from "../common/CategoriesPicker";
@@ -12,7 +12,7 @@ import { useIsFocused } from "@react-navigation/native";
 
 export default function AddEdit() {
   const isFocused = useIsFocused()
-  const {id:uuid} = useLocalSearchParams()
+  const {id:id} = useLocalSearchParams()
   const {globalStyles} = useThemeStyles()
   const db = useSQLiteContext()
   const router = useRouter()
@@ -20,10 +20,10 @@ export default function AddEdit() {
     title: "",
     amount: "",
     category: "",
-    category_uuid:"",
+    category_id:"",
     type: "expense", 
     note: "",
-    uuid:"",
+    id:"",
     payee:"",
     date:new Date(),
     template:false,
@@ -65,7 +65,7 @@ export default function AddEdit() {
   };
 
   const handleCategoryChange = (selected) => {
-    setForm((prev) => ({ ...prev, category_uuid: selected.uuid, category:selected.name, type:selected.type }))
+    setForm((prev) => ({ ...prev, category_id: selected.id, category:selected.name, type:selected.type }))
   } 
 
 const isFormValid = () => {
@@ -83,7 +83,7 @@ const isFormValid = () => {
     return false;
   }
 
-  if (!form.category_uuid) {
+  if (!form.category_id) {
     Alert.alert(
       "Category required",
       "Please select a category for this transaction."
@@ -106,11 +106,11 @@ const isFormValid = () => {
       title: template.title || "",
       amount: template.amount ? String(template.amount) : "",
       category: template.category || "",
-      category_uuid: template.category_uuid || "",
+      category_id: template.category_id || "",
       type: template.type,
       note: template.note || "",
       payee: template.payee || "",
-      template:template.uuid,
+      template:template.id,
     }));
     setShowTemplates(false);
   };
@@ -128,14 +128,14 @@ const isFormValid = () => {
   }
 
   useEffect(() => {
-    if(!uuid) return
+    if(!id) return
     let getTransaction = async() => {
-      let transaction = await getTransactionByUuid(db,uuid)
+      let transaction = await getTransactionById(db,id)
       let date = transaction.date ? new Date(transaction.date) : new Date()
       setForm({...transaction,date})
     }
     getTransaction()
-  },[uuid])
+  },[id])
 
   useEffect(() => {
     const loadTemplates = async () => {
@@ -154,13 +154,13 @@ const isFormValid = () => {
   return (
     <ScrollView style={globalStyles.container}>
       <BodyText style={globalStyles.title}>
-        {uuid ? "Edit Transaction" : "Add Transaction"}
+        {id ? "Edit Transaction" : "Add Transaction"}
       </BodyText>
 
       <Card >
 
       <UseTemplateComponent 
-        uuid={uuid}
+        id={id}
         templates={templates}
         showTemplates={showTemplates}
         setShowTemplates={setShowTemplates}
@@ -189,7 +189,7 @@ const isFormValid = () => {
             keyboardType="numeric"
             value={String(form.amount)}
             onChangeText={(v) => handleChange("amount", v)}
-            uuid={uuid}
+            id={id}
           />
         </View>
 
@@ -287,7 +287,7 @@ const isFormValid = () => {
 
         <TouchableOpacity style={globalStyles.primaryBtn} onPress={handleSave}>
           <Text style={globalStyles.primaryBtnText}>
-            {uuid ? "Update Transaction" : "Save Transaction"}
+            {id ? "Update Transaction" : "Save Transaction"}
           </Text>
         </TouchableOpacity>
 
@@ -296,11 +296,11 @@ const isFormValid = () => {
   );
 }
 
-const UseTemplateComponent = ({uuid,templates, handleUseTemplate,showTemplates, setShowTemplates, globalStyles}) => {
+const UseTemplateComponent = ({id,templates, handleUseTemplate,showTemplates, setShowTemplates, globalStyles}) => {
   const router = useRouter()
   return (
     <>
-      {!uuid &&  (
+      {!id &&  (
         <Pressable
           onPress={() => setShowTemplates(true)}
           style={{...globalStyles.secondaryBtn, marginBottom:10}}
@@ -345,7 +345,7 @@ const UseTemplateComponent = ({uuid,templates, handleUseTemplate,showTemplates, 
           <ScrollView>
             {templates.map((tpl) => (
               <Pressable
-                key={tpl.uuid}
+                key={tpl.id}
                 onPress={() => handleUseTemplate(tpl)}
                 style={styles.templateItem}
               >

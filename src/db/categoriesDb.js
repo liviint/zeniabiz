@@ -5,7 +5,7 @@ const newUuid = () => uuid.v4();
 
 export const seedCategoriesIfEmpty = async (db,apiData=[]) => {
   const rows = await db.getAllAsync(
-    "SELECT COUNT(*) as count FROM finance_categories"
+    "SELECT COUNT(*) as count FROM transaction_categories"
   );
   if (rows[0].count > 0) return;
 
@@ -13,7 +13,7 @@ export const seedCategoriesIfEmpty = async (db,apiData=[]) => {
 
   for (const cat of defaults) {
     await db.runAsync(
-      `INSERT INTO finance_categories 
+      `INSERT INTO transaction_categories 
         (uuid, name, type, color, icon, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
       [newUuid(), cat.name, cat.type, cat.color, cat.icon]
@@ -31,7 +31,7 @@ export const getCategories = async (db, uuid = null) => {
     const rows = await db.getAllAsync(
       `
       SELECT *
-      FROM finance_categories
+      FROM transaction_categories
       WHERE uuid = ? AND deleted_at IS NULL
       LIMIT 1
       `,
@@ -43,7 +43,7 @@ export const getCategories = async (db, uuid = null) => {
   return db.getAllAsync(
     `
     SELECT *
-    FROM finance_categories
+    FROM transaction_categories
     WHERE deleted_at IS NULL
     ORDER BY name ASC
     `
@@ -54,22 +54,20 @@ export const getUnsyncedCategories = (db) => {
   return db.getAllAsync(
     `
     SELECT *
-    FROM finance_categories
+    FROM transaction_categories
     WHERE is_synced = 0
     `
   );
 }
 
 
-export const upsertCategory = async (db, { id = null, uuid, name, type, color, icon }) => {
+export const upsertCategory = async (db, {name, type, color, icon }) => {
   const now = new Date().toISOString();
 
   try {
     await db.runAsync(
       `
-      INSERT INTO finance_categories (
-        id,
-        uuid,
+      INSERT INTO transaction_categories (
         name,
         type,
         color,
@@ -77,14 +75,14 @@ export const upsertCategory = async (db, { id = null, uuid, name, type, color, i
         created_at,
         updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(uuid) DO UPDATE SET
+      VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
         color = excluded.color,
         icon = excluded.icon,
         updated_at = excluded.updated_at
       `,
-      [id, uuid || newUuid(), name.trim(), type, color, icon, now, now]
+      [ name.trim(), type, color, icon, now, now]
     );
     console.log("✅ Category upserted locally");
   } catch (error) {
@@ -96,14 +94,14 @@ export const upsertCategory = async (db, { id = null, uuid, name, type, color, i
 /**
  * Soft-delete a category by UUID
  */
-export const deleteCategory = async (db, uuid) => {
+export const deleteCategory = async (db, id) => {
   await db.runAsync(
     `
-    UPDATE finance_categories
+    UPDATE transaction_categories
     SET deleted_at = datetime('now'), updated_at = datetime('now')
-    WHERE uuid = ?
+    WHERE id = ?
     `,
-    [uuid]
+    [id]
   );
 };
 
@@ -114,7 +112,7 @@ export const getCategoriesByType = async (db, type) => {
   return db.getAllAsync(
     `
     SELECT *
-    FROM finance_categories
+    FROM transaction_categories
     WHERE type = ? AND deleted_at IS NULL
     ORDER BY name ASC
     `,
@@ -125,15 +123,15 @@ export const getCategoriesByType = async (db, type) => {
 /**
  * Check if a category exists by UUID
  */
-export const categoryExists = async (db, uuid) => {
+export const categoryExists = async (db, id) => {
   const row = await db.getFirstAsync(
     `
     SELECT 1
-    FROM finance_categories
+    FROM transaction_categories
     WHERE uuid = ? AND deleted_at IS NULL
     LIMIT 1
     `,
-    [uuid]
+    [id]
   );
   return !!row;
 };

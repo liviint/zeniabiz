@@ -11,7 +11,7 @@ import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { Picker } from "@react-native-picker/picker";
 import { BodyText, FormLabel, Input , Card, CustomPicker} from "../ThemeProvider/components";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { getCategories, upsertCategory } from "../../db/transactionsDb";
+import { getCategories, upsertCategory } from "../../db/categoriesDb";
 import uuid from 'react-native-uuid';
 import { COLORS } from "../../../utils/constants";
 
@@ -49,14 +49,13 @@ export default function AddEdit() {
 
   const saveCategory = async () => {
     if (!form.name.trim()) {
-      Alert.alert("Validation", "Category name is required");
-      return;
+        Alert.alert("Validation", "Category name is required");
+        return;
     }
     try {
-      const cateUuid = form.uuid || uuid.v4();
-      await upsertCategory(db,{...form,uuid:cateUuid})
-      router.back();
-      setForm(initialForm)
+        await upsertCategory(db,form)
+        router.back();
+        setForm(initialForm)
     } catch (error) {
       console.log(error,"hello error")
     }
