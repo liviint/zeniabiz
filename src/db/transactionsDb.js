@@ -8,14 +8,14 @@ const newUuid = () => uuid.v4();
 export async function upsertTransaction(
   db,
   {
-    uuid,
+    id,
     type,
     amount,
     category = null,
+    category_id,
     note = null,
     date,
     created_at,
-    source = "manual",
   }
 ) {
   const now = new Date().toISOString();
@@ -25,40 +25,39 @@ export async function upsertTransaction(
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
-    const localUuid = uuid ? uuid : newUuid();
+    id = id || newUuid();
 
     await db.runAsync(
       `
-      INSERT INTO biz_transactions (
-        uuid,
+      INSERT INTO transactions (
+        id,
         type,
         amount,
         category,
+        category_id,
         note,
-        source,
         created_at,
         updated_at,
-        date,
-        is_synced
+        date
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 
-      ON CONFLICT(uuid) DO UPDATE SET
+      ON CONFLICT(id) DO UPDATE SET
         type = excluded.type,
         amount = excluded.amount,
         category = excluded.category,
+        category_id = excluded.category_id,
         note = excluded.note,
         updated_at = excluded.updated_at,
-        date = excluded.date,
-        is_synced = 0
+        date = excluded.date
       `,
       [
-        localUuid,
+        id,
         type,
         amount,
         category,
+        category_id,
         note,
-        source,
         created_at,
         now,
         transactionDate,
@@ -66,9 +65,10 @@ export async function upsertTransaction(
     );
 
     await db.runAsync("COMMIT");
-    return localUuid;
+    return id;
   } catch (error) {
     await db.runAsync("ROLLBACK");
+    console.log(error,"hello error")
     throw error;
   }
 }

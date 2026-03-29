@@ -45,7 +45,7 @@ const migrateDbIfNeeded = async (db) => {
       type TEXT NOT NULL CHECK(type IN ('income','expense')),
 
       category TEXT,
-      category_uuid TEXT,
+      category_id TEXT,
       usage_count INTEGER DEFAULT 0,
 
       payee TEXT,

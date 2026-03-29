@@ -69,6 +69,7 @@ export default function AddEdit() {
   } 
 
 const isFormValid = () => {
+  console.log(form,"hello form")
   if (!form.title.trim()) {
     Alert.alert("Missing title", "Please enter a title for the transaction.");
     return false;
@@ -101,6 +102,7 @@ const isFormValid = () => {
 };
 
   const handleUseTemplate = (template) => {
+    console.log(template,"hello template")
     setForm((prev) => ({
       ...prev,
       title: template.title || "",
