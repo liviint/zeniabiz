@@ -159,15 +159,14 @@ export const getTransactionTemplates = async (db) => {
   `);
 };
 
-export const getTransactionTemplateByUuid = async (db, uuid) => {
+export const getTransactionTemplateById = async (db, id) => {
   return await db.getFirstAsync(
     `
     SELECT *
     FROM transaction_templates
-    WHERE uuid = ?
-      AND deleted_at IS NULL
+    WHERE id = ?
     `,
-    [uuid]
+    [id]
   );
 };
 

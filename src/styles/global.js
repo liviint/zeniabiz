@@ -78,27 +78,30 @@ export const createGlobalStyles = (colors) =>
     },
     editBtn: {
       backgroundColor: colors.secondary + "20", 
-      paddingVertical: 6,
-      paddingHorizontal: 12,
-      borderRadius: 8,
-      borderColor: "#ccc",
-      borderWidth: 1,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      alignItems: "center",
     },
     editBtnText: {
-      fontSize: 12,
+      fontSize: 16,
+      fontWeight: "bold",
+      color: colors.secondary,
     },
 
-
     deleteButton: {
-      paddingVertical: 6,
-      paddingHorizontal: 14,
-      borderRadius: 20,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      marginRight: 8,
+      alignItems: "center",
       backgroundColor: colors.primary + "20", 
     },
 
     deleteText: {
       color: colors.primary,
-      fontWeight: "600",
+      fontWeight: "bold",
+      fontSize: 16,
     },
 
     trackButton: {
