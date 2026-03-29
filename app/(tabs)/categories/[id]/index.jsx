@@ -13,7 +13,7 @@ export default function CategoryDetailsScreen() {
     const db = useSQLiteContext();
     const isFocused = useIsFocused()
     const {globalStyles}  = useThemeStyles()
-    const { id:uuid } = useLocalSearchParams();
+    const { id } = useLocalSearchParams();
     const router = useRouter();
 
     const [category, setCategory] = useState(null);
@@ -21,12 +21,13 @@ export default function CategoryDetailsScreen() {
 
     const loadCategory = async () => {
         try {
-        const data = await getCategories(db,uuid);
-        setCategory(data);
+            const data = await getCategories(db,id);
+            console.log(data,"hello data")
+            setCategory(data);
         } catch (err) {
-        console.log("Failed to load category", err);
+            console.log("Failed to load category", err);
         } finally {
-        setLoading(false);
+            setLoading(false);
         }
     };
 
@@ -36,7 +37,7 @@ export default function CategoryDetailsScreen() {
 
     const handleDelete = async () => {
         try {
-        await deleteCategory(db,uuid);
+        await deleteCategory(db,id);
         router.back();
         } catch (err) {
         console.log("Delete failed", err);
@@ -83,7 +84,7 @@ export default function CategoryDetailsScreen() {
         <View style={{ gap: 12 }}>
             
             <TouchableOpacity
-                onPress={() => router.push(`/categories/${uuid}/edit`)}
+                onPress={() => router.push(`/categories/${id}/edit`)}
                 style={globalStyles.editBtn}
             >
             <Text style={globalStyles.editBtnText}>

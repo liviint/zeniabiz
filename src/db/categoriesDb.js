@@ -26,16 +26,16 @@ export const seedCategoriesIfEmpty = async (db,apiData=[]) => {
 /**
  * Get all categories or a single category by UUID
  */
-export const getCategories = async (db, uuid = null) => {
-  if (uuid) {
+export const getCategories = async (db, id = null) => {
+  if (id) {
     const rows = await db.getAllAsync(
       `
       SELECT *
       FROM transaction_categories
-      WHERE uuid = ? AND deleted_at IS NULL
+      WHERE id = ? 
       LIMIT 1
       `,
-      [uuid]
+      [id]
     );
     return rows[0] || null;
   }
