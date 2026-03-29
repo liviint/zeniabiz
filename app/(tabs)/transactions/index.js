@@ -1,6 +1,7 @@
 import { View, Text, FlatList, StyleSheet } from "react-native";
 import { getTransactions } from "../../../src/db/transactionsDb";
 import { useSQLiteContext } from 'expo-sqlite';
+import { AddButton } from "../../../src/components/common/AddButton";
 
 export default function TransactionsScreen() {
   const db = useSQLiteContext();
@@ -46,7 +47,13 @@ export default function TransactionsScreen() {
         ListEmptyComponent={
           <Text style={styles.empty}>No transactions yet</Text>
         }
+
       />
+
+      <AddButton 
+        primaryAction={{route:"/transactions/add",label:"Add Transaction"}}
+      />
+
     </View>
   );
 }
