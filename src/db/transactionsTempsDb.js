@@ -20,12 +20,12 @@ export const upsertTransactionTemplate = async (db, template) => {
     deleted_at = null,
     is_synced = 0,
   } = template;
-  let uuid = template.uuid || newUuid()
+  let id = template.id || newUuid()
 
   await db.runAsync(
     `
     INSERT INTO transaction_templates (
-      uuid,
+      id,
       title,
       amount,
       type,
@@ -40,7 +40,7 @@ export const upsertTransactionTemplate = async (db, template) => {
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 
-    ON CONFLICT(uuid) DO UPDATE SET
+    ON CONFLICT(id) DO UPDATE SET
       title = excluded.title,
       amount = excluded.amount,
       type = excluded.type,
@@ -53,7 +53,7 @@ export const upsertTransactionTemplate = async (db, template) => {
       is_synced = excluded.is_synced
     `,
     [
-      uuid,
+      id,
       title,
       amount,
       type,

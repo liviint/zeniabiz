@@ -41,7 +41,7 @@ export default function TransactionTemplatesListScreen() {
   const renderItem = ({ item }) => (
     <TouchableOpacity
       onPress={() =>
-        router.push(`transactions-templates/${item.uuid}`)
+        router.push(`transactions-templates/${item.id}`)
       }
     >
       <Card>
@@ -91,7 +91,7 @@ export default function TransactionTemplatesListScreen() {
 
         <FlatList
           data={templates}
-          keyExtractor={(item) => item.uuid}
+          keyExtractor={(item) => item.id}
           renderItem={renderItem}
           refreshing={loading}
           onRefresh={loadTemplates}

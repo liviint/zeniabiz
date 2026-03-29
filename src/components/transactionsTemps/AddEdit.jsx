@@ -7,7 +7,7 @@ import {
   BodyText,
   Card
 } from "../ThemeProvider/components";
-import { upsertTransactionTemplate, getTransactionTemplateByUuid } from "../../db/transactionsTempsDb"
+import { upsertTransactionTemplate, getTransactionTemplateByid } from "../../db/transactionsTempsDb"
 import { useThemeStyles } from '../../hooks/useThemeStyles';
 import CategoriesPicker from "../common/CategoriesPicker";
 import { useLocalSearchParams , useRouter} from "expo-router";
@@ -16,7 +16,7 @@ import { useIsFocused } from "@react-navigation/native";
 export default function AddTransactionTemplateScreen() {
   const isFocused = useIsFocused()
   const {globalStyles} = useThemeStyles()
-  const {id:uuid} = useLocalSearchParams()
+  const {id:id} = useLocalSearchParams()
   const db = useSQLiteContext();
   const router = useRouter()
 
@@ -25,16 +25,16 @@ export default function AddTransactionTemplateScreen() {
     amount: "",
     type: "expense",
     category: "",
-    category_uuid: "",
+    category_id: "",
     payee: "",
     note: "",
-    uuid:"",
+    id:"",
   }
 
   const [form, setForm] = useState(initialForm);
 
   const handleCategoryChange = (selected) => {
-    setForm((prev) => ({ ...prev, category_uuid: selected.uuid, category:selected.name, type:selected.type }))
+    setForm((prev) => ({ ...prev, category_id: selected.id, category:selected.name, type:selected.type }))
   } 
 
   const handleChange = (field, value) => {
@@ -59,11 +59,11 @@ export default function AddTransactionTemplateScreen() {
       type: form.type,
 
       category: form.category,
-      category_uuid: form.category_uuid,
+      category_id: form.category_id,
 
       payee: form.payee,
       note: form.note,
-      uuid:form.uuid,
+      id:form.id,
     });
 
     Alert.alert("Success ✅", "Template saved successfully!");
@@ -73,17 +73,17 @@ export default function AddTransactionTemplateScreen() {
   
   useEffect(() => {
     const loadTemplate = async () => {
-      const result = await getTransactionTemplateByUuid(db, uuid);
+      const result = await getTransactionTemplateByid(db, id);
       setForm(result);
     };
-    uuid && loadTemplate();
+    id && loadTemplate();
   }, [isFocused]);
 
   return (
     <ScrollView style={globalStyles.container}>
       <BodyText style={globalStyles.title}>
         {
-          uuid ? "Edit Template" : "Add Template"
+          id ? "Edit Template" : "Add Template"
         }
       </BodyText>
       <Card>
@@ -113,7 +113,7 @@ export default function AddTransactionTemplateScreen() {
 
         <View style={styles.typeRow}>
           <Pressable
-            disabled={form.category_uuid !== ""}
+            disabled={form.category_id !== ""}
             onPress={() => handleChange("type", "expense")}
             style={[styles.typeButton, form.type === "expense" && styles.expenseActive]}
           >
@@ -121,7 +121,7 @@ export default function AddTransactionTemplateScreen() {
           </Pressable>
 
           <Pressable
-            disabled={form.category_uuid !== ""}
+            disabled={form.category_id !== ""}
             onPress={() => handleChange("type", "income")}
             style={[styles.typeButton, form.type === "income" && styles.incomeActive]}
           >
@@ -150,7 +150,7 @@ export default function AddTransactionTemplateScreen() {
 
         <TouchableOpacity style={globalStyles.primaryBtn} onPress={handleSave}>
             <BodyText style={globalStyles.primaryBtnText}>
-              {uuid ? "Update Template" : "Save Template"}
+              {id ? "Update Template" : "Save Template"}
             </BodyText>
         </TouchableOpacity>
       </Card>
