@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { View, ScrollView, Alert } from "react-native";
-import { Card, BodyText, Input, FormLabel } from "../../../src/components/ThemeProvider/components";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { upsertProduct } from "../../../src/db/productsDb";
+import { useState } from "react";
+import { Alert, ScrollView, View } from "react-native";
+import { BodyText, Card, FormLabel, Input } from "../../../src/components/ThemeProvider/components";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import { upsertProduct } from "../../db/inventoryDb";
 
 export default function AddProduct() {
   const db = useSQLiteContext();

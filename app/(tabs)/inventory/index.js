@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
-import { View, StyleSheet, Pressable, FlatList } from "react-native";
-import { Card, BodyText, SecondaryText } from "../../../src/components/ThemeProvider/components";
-import { AddButton } from "../../../src/components/common/AddButton";
+import { useIsFocused } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { useIsFocused } from "@react-navigation/native";
+import { useEffect, useState } from "react";
+import { FlatList, Pressable, StyleSheet, View } from "react-native";
+import { BodyText, Card, SecondaryText } from "../../../src/components/ThemeProvider/components";
+import { AddButton } from "../../../src/components/common/AddButton";
+import { getProducts } from "../../../src/db/inventoryDb";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
-import { getProducts } from "../../../src/db/productsDb";
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();

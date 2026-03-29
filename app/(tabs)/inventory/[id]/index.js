@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
-import { View, StyleSheet, Pressable, Alert } from "react-native";
-import { Card, BodyText, SecondaryText } from "../../../../src/components/ThemeProvider/components";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { getProductById, deleteProduct } from "../../../../src/db/productsDb";
+import { useEffect, useState } from "react";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
 import DeleteButton from "../../../../src/components/common/DeleteButton";
+import { BodyText, Card, SecondaryText } from "../../../../src/components/ThemeProvider/components";
+import { deleteProduct, getProductById } from "../../../../src/db/inventoryDb";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 
 export default function ProductViewPage() {
