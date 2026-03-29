@@ -1,9 +1,9 @@
 import { SQLiteProvider } from "expo-sqlite";
 
 const migrateDbIfNeeded = async (db) => {
-  await db.execAsync(`DROP TABLE IF EXISTS transactions;`);
-  await db.execAsync(`DROP TABLE IF EXISTS transaction_categories;`);
-  await db.execAsync(`DROP TABLE IF EXISTS transaction_templates;`);
+  // await db.execAsync(`DROP TABLE IF EXISTS transactions;`);
+  // await db.execAsync(`DROP TABLE IF EXISTS transaction_categories;`);
+  // await db.execAsync(`DROP TABLE IF EXISTS transaction_templates;`);
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
 
