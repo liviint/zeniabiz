@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
+import { useIsFocused } from "@react-navigation/native";
 import { View } from "react-native";
-import { useLocalSearchParams, use } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { BodyText, Card, SecondaryText } from "../../../../src/components/ThemeProvider/components";
 import { getTransactionById } from "../../../../src/db/transactionsDb";
-import { getTransactionItems } from "../../../../src/db/inventoryDb";
+import { getTransactionItems } from "../../../../src/db/salesDb";
+import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 
 export default function SaleDetails() {
+  const {globalStyles} = useThemeStyles()
+  const isFocused = useIsFocused()
   const db = useSQLiteContext();
   const { id } = useLocalSearchParams();
 
@@ -21,11 +25,11 @@ export default function SaleDetails() {
       setSale(s);
       setItems(i);
     })();
-  }, []);
+  }, [isFocused]);
 
   return (
-    <View style={{ padding: 16 }}>
-      <BodyText style={{ fontSize: 18, fontWeight: "700" }}>
+    <View style={globalStyles.container}>
+      <BodyText style={globalStyles.title}>
         Sale Details
       </BodyText>
 

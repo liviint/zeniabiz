@@ -19,7 +19,6 @@ export default function SalesList() {
     useEffect(() => {
         (async () => {
             const data = await getTransactions(db);
-            console.log(data,"hello data")
             setSales(data.filter((t) => t.type === "income"));
         })();
     }, [isFocused]);
