@@ -8,7 +8,6 @@ import { getTransactions, getTransactionStats } from "../../../src/db/transactio
 import { useSQLiteContext } from "expo-sqlite";
 import { dateFormat } from "../../../utils/dateFormat";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles"
-import { syncManager } from "../../../utils/syncManager";
 import ButtonLinks from "../../../src/components/common/ButtonLinks";
 
 export default function FinanceListPage() {

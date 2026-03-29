@@ -18,6 +18,7 @@ export async function upsertProduct(
   cost_price = parseFloat(cost_price) || 0;
   selling_price = parseFloat(selling_price) || 0;
   stock_quantity = parseFloat(stock_quantity) || 0;
+  created_at = created_at || now
 
   await db.runAsync("BEGIN TRANSACTION");
 

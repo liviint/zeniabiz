@@ -12,7 +12,7 @@ import { useIsFocused } from "@react-navigation/native";
 
 export default function AddEdit() {
   const isFocused = useIsFocused()
-  const {id:id} = useLocalSearchParams()
+  const {id} = useLocalSearchParams()
   const {globalStyles} = useThemeStyles()
   const db = useSQLiteContext()
   const router = useRouter()

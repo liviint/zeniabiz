@@ -1,12 +1,13 @@
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams  } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
-import { Alert, ScrollView, View } from "react-native";
+import { useState , useEffect} from "react";
+import { Alert, ScrollView, TouchableOpacity, Text} from "react-native";
 import { BodyText, Card, FormLabel, Input } from "../../../src/components/ThemeProvider/components";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
-import { upsertProduct } from "../../db/inventoryDb";
+import { upsertProduct , getProductById} from "../../db/inventoryDb";
 
 export default function AddProduct() {
+  const {id} = useLocalSearchParams()
   const db = useSQLiteContext();
   const router = useRouter();
   const { globalStyles } = useThemeStyles();
@@ -16,6 +17,7 @@ export default function AddProduct() {
     cost_price: "",
     selling_price: "",
     stock_quantity: "",
+    created_at:"",
   });
 
   const handleChange = (key, value) => {
@@ -27,13 +29,22 @@ export default function AddProduct() {
 
     await upsertProduct(db, {
       ...form,
-      cost_price: Number(form.cost_price),
-      selling_price: Number(form.selling_price),
-      stock_quantity: Number(form.stock_quantity),
+      cost_price: form.cost_price,
+      selling_price: form.selling_price,
+      stock_quantity: form.stock_quantity,
     });
 
     router.push("/inventory");
   };
+
+   useEffect(() => {
+      if (!id) return;
+      (async () => {
+        const data = await getProductById(db, id);
+        console.log(data,"hello data")
+        setForm(data)
+      })();
+    }, []);
 
   return (
     <ScrollView style={globalStyles.container}>
@@ -44,19 +55,20 @@ export default function AddProduct() {
         <Input value={form.name} onChangeText={(v) => handleChange("name", v)} />
 
         <FormLabel>Cost Price</FormLabel>
-        <Input keyboardType="numeric" onChangeText={(v) => handleChange("cost_price", v)} />
+        <Input value={String(form.cost_price)} keyboardType="numeric" onChangeText={(v) => handleChange("cost_price", v)} />
 
         <FormLabel>Selling Price</FormLabel>
-        <Input keyboardType="numeric" onChangeText={(v) => handleChange("selling_price", v)} />
+        <Input value={String(form.selling_price)} keyboardType="numeric" onChangeText={(v) => handleChange("selling_price", v)} />
 
         <FormLabel>Stock Quantity</FormLabel>
-        <Input keyboardType="numeric" onChangeText={(v) => handleChange("stock_quantity", v)} />
+        <Input value={String(form.stock_quantity)} keyboardType="numeric" onChangeText={(v) => handleChange("stock_quantity", v)} />
 
-        <View style={{ marginTop: 20 }}>
-          <BodyText style={globalStyles.primaryBtnText} onPress={handleSave}>
-            Save Product
-          </BodyText>
-        </View>
+        <TouchableOpacity style={globalStyles.primaryBtn} onPress={handleSave}>
+          <Text style={globalStyles.primaryBtnText}>
+            {id ? "Update Product" : "Save Product"}
+          </Text>
+        </TouchableOpacity>
+
       </Card>
     </ScrollView>
   );
