@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
-import { View } from "react-native";
+import { View, TouchableOpacity, Text } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { BodyText, Card, SecondaryText } from "../../../../src/components/ThemeProvider/components";
 import { getTransactionById } from "../../../../src/db/transactionsDb";
 import { getTransactionItems } from "../../../../src/db/salesDb";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
+import DeleteButton from "../../../../src/components/common/DeleteButton";
 
 export default function SaleDetails() {
   const {globalStyles} = useThemeStyles()
@@ -27,6 +28,10 @@ export default function SaleDetails() {
     })();
   }, [isFocused]);
 
+  const handleDelete = () => {
+    
+  }
+
   return (
     <View style={globalStyles.container}>
       <BodyText style={globalStyles.title}>
@@ -46,6 +51,23 @@ export default function SaleDetails() {
           </SecondaryText>
         </Card>
       ))}
+
+      <View style={{ gap: 12 }}>
+                  
+                  <TouchableOpacity
+                      onPress={() => router.push(`/categories/${id}/edit`)}
+                      style={globalStyles.editBtn}
+                  >
+                  <Text style={globalStyles.editBtnText}>
+                      Edit
+                  </Text>
+                  </TouchableOpacity>
+      
+                  <DeleteButton 
+                      handleOk={handleDelete}
+                      item={"category"}
+                  />
+              </View>
     </View>
   );
 }
