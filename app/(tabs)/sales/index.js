@@ -4,8 +4,11 @@ import { Card, BodyText, SecondaryText } from "../../../src/components/ThemeProv
 import { useSQLiteContext } from "expo-sqlite";
 import { useRouter } from "expo-router";
 import { getTransactions } from "../../../src/db/transactionsDb";
+import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import { AddButton } from "../../../src/components/common/AddButton";
 
 export default function SalesList() {
+    const {globalStyles} = useThemeStyles()
   const db = useSQLiteContext();
   const router = useRouter();
 
@@ -18,24 +21,27 @@ export default function SalesList() {
     })();
   }, []);
 
-  return (
-    <View style={{ flex: 1, padding: 16 }}>
-      <BodyText style={{ fontSize: 18, fontWeight: "700" }}>
-        Sales
-      </BodyText>
+    return (
+        <View style={globalStyles.container}>
+            <BodyText style={globalStyles.title}>
+                Sales
+            </BodyText>
 
-      <FlatList
-        data={sales}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <Pressable onPress={() => router.push(`/sales/${item.id}`)}>
-            <Card>
-              <BodyText>KES {item.amount}</BodyText>
-              <SecondaryText>{item.date}</SecondaryText>
-            </Card>
-          </Pressable>
-        )}
-      />
-    </View>
-  );
+            <FlatList
+                data={sales}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                <Pressable onPress={() => router.push(`/sales/${item.id}`)}>
+                    <Card>
+                    <BodyText>KES {item.amount}</BodyText>
+                    <SecondaryText>{item.date}</SecondaryText>
+                    </Card>
+                </Pressable>
+                )}
+            />
+            <AddButton 
+                primaryAction={{route:"/sales/add",label:"Add a Sale"}}
+            />
+        </View>
+    );
 }
