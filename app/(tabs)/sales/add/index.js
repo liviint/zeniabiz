@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { View, StyleSheet, FlatList, Pressable, Alert } from "react-native";
-import { Card, BodyText, SecondaryText, Input } from "../../src/components/ThemeProvider/components";
+import { Card, BodyText, SecondaryText, Input } from "../../../../src/components/ThemeProvider/components";
 import { useSQLiteContext } from "expo-sqlite";
 import { useRouter } from "expo-router";
-import { getProducts } from "../../src/db/productsDb";
-import { createSaleWithItems } from "../../src/db/salesDb";
-import { useThemeStyles } from "../../src/hooks/useThemeStyles";
+import { getProducts } from "../../../../src/db/inventoryDb";
+import { createSaleWithItems } from "../../../../src/db/salesDb";
+import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 
 export default function SellPage() {
   const db = useSQLiteContext();

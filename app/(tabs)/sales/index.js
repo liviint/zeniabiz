@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { View, FlatList, Pressable } from "react-native";
-import { Card, BodyText, SecondaryText } from "../../src/components/ThemeProvider/components";
+import { Card, BodyText, SecondaryText } from "../../../src/components/ThemeProvider/components";
 import { useSQLiteContext } from "expo-sqlite";
 import { useRouter } from "expo-router";
-import { getTransactions } from "../../src/db/transactionsDb";
+import { getTransactions } from "../../../src/db/transactionsDb";
 
 export default function SalesList() {
   const db = useSQLiteContext();
