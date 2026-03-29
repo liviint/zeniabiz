@@ -57,6 +57,48 @@ const migrateDbIfNeeded = async (db) => {
       is_synced INTEGER DEFAULT 0
     );
 
+    CREATE TABLE IF NOT EXISTS products (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      sku TEXT,
+      selling_price REAL NOT NULL,
+      cost_price REAL DEFAULT 0,
+
+      stock_quantity REAL DEFAULT 0,
+
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      deleted_at TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS stock_movements (
+      id TEXT PRIMARY KEY,
+      product_id TEXT NOT NULL,
+
+      type TEXT NOT NULL CHECK(type IN ('in', 'out', 'adjustment')),
+      quantity REAL NOT NULL,
+
+      note TEXT,
+
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+
+      FOREIGN KEY (product_id) REFERENCES products(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS transaction_items (
+      id TEXT PRIMARY KEY,
+      transaction_id TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+
+      quantity REAL NOT NULL,
+      price REAL NOT NULL,
+
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+
+      FOREIGN KEY (transaction_id) REFERENCES transactions(id),
+      FOREIGN KEY (product_id) REFERENCES products(id)
+    );
+
     CREATE TABLE IF NOT EXISTS app_settings (
       key TEXT PRIMARY KEY,
       value TEXT
