@@ -18,18 +18,20 @@ export default function FinanceListPage() {
     const isFocused = useIsFocused()
     const {globalStyles} = useThemeStyles()
     const [stats, setStats] = useState({
+        profit: 0,
         income: 0,
         expenses: 0,
-        balance: 0,
       });
     const [selectedMonth, setSelectedMonth] = useState(new Date());
 
     let fetchTransactions = async() => {
         let transactions = await getTransactions(db, selectedMonth)
+        console.log(transactions,"hello transactions")
         setTransactions(transactions)
     }
     const fetchStats = async () => {
       const summary = await getTransactionStats(db,selectedMonth);
+      console.log(summary,"hello summary")
       setStats(summary);
     };
 
@@ -39,14 +41,6 @@ export default function FinanceListPage() {
       fetchStats()
     }
     },[isFocused, selectedMonth])
-
-    useEffect(() => {
-      const unsub = syncManager.on("transactions_updated", async () => {
-        fetchTransactions()
-        fetchStats()
-      });
-      return unsub;
-    }, []);
 
     const groupTransactions = (transactions) => {
       const today = new Date();
@@ -100,7 +94,7 @@ export default function FinanceListPage() {
   const sections = groupTransactions(transactions);
 
   const renderItem = ({ item }) => (
-    <Pressable onPress={() => router.push(`/transactions/${item.uuid}`)}>
+    <Pressable onPress={() => router.push(`/transactions/${item.id}`)}>
       <Card>
         <View style={styles.row}>
           <View style={styles.left}>
@@ -128,7 +122,7 @@ export default function FinanceListPage() {
             ]}
           >
             {item.type === "expense" ? "-" : "+"}
-            KES {Math.abs(item.amount).toLocaleString()}
+            KES {Math.abs(item?.amount || 0).toLocaleString()}
           </BodyText>
         </View>
       </Card>
@@ -148,7 +142,7 @@ export default function FinanceListPage() {
       <>
       <SectionList
         sections={sections}
-        keyExtractor={(item) => item.uuid}
+        keyExtractor={(item) => item.id}
         renderItem={renderItem}
         renderSectionHeader={({ section: { title } }) => (
           <BodyText style={{ fontWeight: "bold", padding: 10 }}>
@@ -183,15 +177,15 @@ const ListHeader = ({ stats, selectedMonth,onMonthChange}) => {
 
     <Card style={styles.balanceCard}>
       <SecondaryText style={styles.balanceLabel}>
-        Current Balance
+        Profit
       </SecondaryText>
       <BodyText
         style={[
           styles.balanceAmount,
-          { color: stats.balance >= 0 ? "#2E8B8B" : "#FF6B6B" },
+          { color: stats.profit >= 0 ? "#2E8B8B" : "#FF6B6B" },
         ]}
       >
-        KES {stats.balance.toLocaleString()}
+        KES {stats?.profit?.toLocaleString()}
       </BodyText>
     </Card>
 

@@ -9,6 +9,7 @@ export async function upsertTransaction(
   db,
   {
     id,
+    title,
     type,
     amount,
     category = null,
@@ -31,6 +32,7 @@ export async function upsertTransaction(
       `
       INSERT INTO transactions (
         id,
+        title,
         type,
         amount,
         category,
@@ -40,10 +42,11 @@ export async function upsertTransaction(
         updated_at,
         date
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 
       ON CONFLICT(id) DO UPDATE SET
         type = excluded.type,
+        title = excluded.title,
         amount = excluded.amount,
         category = excluded.category,
         category_id = excluded.category_id,
@@ -53,6 +56,7 @@ export async function upsertTransaction(
       `,
       [
         id,
+        title,
         type,
         amount,
         category,
@@ -99,8 +103,8 @@ export async function getTransactions(db, date = new Date()) {
 export async function getTransactionById(db, id) {
   return await db.getFirstAsync(
     `
-    SELECT * FROM biz_transactions
-    WHERE id = ? AND deleted_at IS NULL
+    SELECT * FROM transactions
+    WHERE id = ? 
     LIMIT 1
     `,
     [id]
@@ -115,9 +119,9 @@ export async function deleteTransaction(db, id) {
 
   await db.runAsync(
     `
-    UPDATE biz_transactions
+    UPDATE transactions
     SET deleted_at = ?, updated_at = ?, is_synced = 0
-    WHERE id = ? AND deleted_at IS NULL
+    WHERE id = ? 
     `,
     [now, now, id]
   );
@@ -133,103 +137,25 @@ export async function getTransactionStats(db, date = new Date()) {
   const result = await db.getFirstAsync(
     `
     SELECT
-      SUM(CASE WHEN type = 'sale' THEN amount ELSE 0 END) AS sales,
+      SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) AS sales,
       SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) AS expenses
-    FROM biz_transactions
-    WHERE deleted_at IS NULL
-      AND date >= ?
+    FROM transactions
+    WHERE 
+      date >= ?
       AND date < ?
     `,
     [start, end]
   );
 
-  const sales = result?.sales || 0;
+  const income = result?.sales || 0;
   const expenses = result?.expenses || 0;
 
   return {
-    sales,
+    income,
     expenses,
-    profit: sales - expenses,
+    profit: income - expenses,
   };
 }
 
-// ------------------------
-// Sync Transactions from API
-// ------------------------
-export const syncTransactionsFromApi = async (db, transactions = []) => {
-  if (!Array.isArray(transactions) || transactions.length === 0) return;
 
-  for (const tx of transactions) {
-    const { uuid, type, amount, category, note, source, date, created_at, updated_at, deleted_at } = tx;
 
-    if (deleted_at) {
-      await db.runAsync(
-        `
-        UPDATE biz_transactions
-        SET deleted_at = ?, updated_at = ?, is_synced = 1
-        WHERE uuid = ?
-        `,
-        [deleted_at, updated_at, uuid]
-      );
-      continue;
-    }
-
-    await db.runAsync(
-      `
-      INSERT INTO biz_transactions (
-        uuid,
-        type,
-        amount,
-        category,
-        note,
-        source,
-        date,
-        created_at,
-        updated_at,
-        is_synced
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
-      ON CONFLICT(uuid) DO UPDATE SET
-        type = excluded.type,
-        amount = excluded.amount,
-        category = excluded.category,
-        note = excluded.note,
-        source = excluded.source,
-        date = excluded.date,
-        updated_at = excluded.updated_at,
-        deleted_at = NULL,
-        is_synced = 1
-      `,
-      [uuid, type, amount, category, note, source, date, created_at, updated_at]
-    );
-  }
-
-  console.log("✅ Transactions synced from API");
-};
-
-// ------------------------
-// Get Unsynced Transactions
-// ------------------------
-export async function getUnsyncedTransactions(db) {
-  return await db.getAllAsync(
-    `
-    SELECT *
-    FROM biz_transactions
-    WHERE is_synced = 0
-    `
-  );
-}
-
-// ------------------------
-// Mark Transactions as Synced
-// ------------------------
-export const markTransactionsAsSynced = async (db, uuids) => {
-  if (!uuids.length) return;
-  const placeholders = uuids.map(() => "?").join(",");
-  await db.runAsync(
-    `UPDATE biz_transactions
-      SET is_synced = 1
-      WHERE uuid IN (${placeholders})`,
-    uuids
-  );
-};
