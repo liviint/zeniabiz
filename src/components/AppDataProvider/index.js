@@ -12,7 +12,7 @@ const migrateDbIfNeeded = async (db) => {
       type TEXT NOT NULL CHECK (type IN ('income', 'expense')),
       amount REAL NOT NULL,
       category TEXT,
-      category_id INTEGER,
+      category_id TEXT,
       title Text,
       payee Text,
       note TEXT,

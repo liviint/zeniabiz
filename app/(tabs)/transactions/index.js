@@ -1,100 +1,329 @@
-import { View, Text, FlatList, StyleSheet } from "react-native";
-import { getTransactions } from "../../../src/db/transactionsDb";
-import { useSQLiteContext } from 'expo-sqlite';
+import { useEffect, useState } from "react";
+import { useIsFocused } from "@react-navigation/native";
+import { View, StyleSheet, Pressable, SectionList } from "react-native";
+import { Card, BodyText, SecondaryText } from "../../../src/components/ThemeProvider/components";
 import { AddButton } from "../../../src/components/common/AddButton";
+import { useRouter } from "expo-router";
+import { getTransactions, getTransactionStats } from "../../../src/db/transactionsDb";
+import { useSQLiteContext } from "expo-sqlite";
+import { dateFormat } from "../../../utils/dateFormat";
+import { useThemeStyles } from "../../../src/hooks/useThemeStyles"
+import { syncManager } from "../../../utils/syncManager";
+import ButtonLinks from "../../../src/components/common/ButtonLinks";
 
-export default function TransactionsScreen() {
-  const db = useSQLiteContext();
-  const { transactions } = getTransactions(db);
+export default function FinanceListPage() {
+    const db = useSQLiteContext()
+    const router = useRouter();
+    const [transactions,setTransactions] = useState([])
+    const isFocused = useIsFocused()
+    const {globalStyles} = useThemeStyles()
+    const [stats, setStats] = useState({
+        income: 0,
+        expenses: 0,
+        balance: 0,
+      });
+    const [selectedMonth, setSelectedMonth] = useState(new Date());
+
+    let fetchTransactions = async() => {
+        let transactions = await getTransactions(db, selectedMonth)
+        setTransactions(transactions)
+    }
+    const fetchStats = async () => {
+      const summary = await getTransactionStats(db,selectedMonth);
+      setStats(summary);
+    };
+
+    useEffect(() => {
+    if (isFocused) {
+      fetchTransactions()
+      fetchStats()
+    }
+    },[isFocused, selectedMonth])
+
+    useEffect(() => {
+      const unsub = syncManager.on("transactions_updated", async () => {
+        fetchTransactions()
+        fetchStats()
+      });
+      return unsub;
+    }, []);
+
+    const groupTransactions = (transactions) => {
+      const today = new Date();
+      const todayStr = today.toISOString().slice(0, 10);
+
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().slice(0, 10);
+
+      const startOfWeek = new Date(today);
+      const day = today.getDay();
+      const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+      startOfWeek.setDate(diff);
+
+      const startOfLastWeek = new Date(startOfWeek);
+      startOfLastWeek.setDate(startOfWeek.getDate() - 7);
+
+      const groups = {
+        Today: [],
+        Yesterday: [],
+        "This Week": [],
+        "Last Week": [],
+        Older: [],
+  };
+
+  transactions.forEach((transaction) => {
+    const date = new Date(transaction.date);
+    const dateStr = date.toISOString().slice(0, 10);
+
+    if (dateStr === todayStr) {
+      groups.Today.push(transaction);
+    } else if (dateStr === yesterdayStr) {
+      groups.Yesterday.push(transaction);
+    } else if (date >= startOfWeek) {
+      groups["This Week"].push(transaction);
+    } else if (date >= startOfLastWeek && date < startOfWeek) {
+      groups["Last Week"].push(transaction);
+    } else {
+      groups.Older.push(transaction);
+    }
+  });
+
+  return Object.keys(groups)
+    .map((key) => ({
+      title: key,
+      data: groups[key],
+    }))
+    .filter((section) => section.data.length > 0);
+};
+
+  const sections = groupTransactions(transactions);
+
+  const renderItem = ({ item }) => (
+    <Pressable onPress={() => router.push(`/transactions/${item.uuid}`)}>
+      <Card>
+        <View style={styles.row}>
+          <View style={styles.left}>
+            <BodyText
+              style={styles.title}
+              numberOfLines={3}
+              ellipsizeMode="tail"
+            >
+              {item.title}
+            </BodyText>
+
+            <SecondaryText
+              style={styles.meta}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {item.category} • {dateFormat(item?.date)}
+              {item.payee ? ` • ${item.payee}` : ""}
+            </SecondaryText>
+          </View>
+          <BodyText
+            style={[
+              styles.amount,
+              item.type === "expense" ? styles.expense : styles.income,
+            ]}
+          >
+            {item.type === "expense" ? "-" : "+"}
+            KES {Math.abs(item.amount).toLocaleString()}
+          </BodyText>
+        </View>
+      </Card>
+    </Pressable>
+  );
+
+    
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Transactions</Text>
-
-      <FlatList
-        data={transactions}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => {
-          const isSale = item.type === "sale";
-
-          return (
-            <View style={styles.card}>
-              <View>
-                <Text style={styles.type}>
-                  {isSale ? "Sale" : "Expense"}
-                </Text>
-
-                {item.category && (
-                  <Text style={styles.category}>{item.category}</Text>
-                )}
-
-                {item.note && (
-                  <Text style={styles.note}>{item.note}</Text>
-                )}
-              </View>
-
-              <Text
-                style={[
-                  styles.amount,
-                  { color: isSale ? "green" : "red" },
-                ]}
-              >
-                {isSale ? "+" : "-"} KES {item.amount}
-              </Text>
-            </View>
-          );
-        }}
-        ListEmptyComponent={
-          <Text style={styles.empty}>No transactions yet</Text>
+    <View style={globalStyles.container}>
+      <View style={styles.headerRow}>
+        <BodyText style={globalStyles.title}>
+          My transactions
+        </BodyText>
+      </View>
+      
+      <>
+      <SectionList
+        sections={sections}
+        keyExtractor={(item) => item.uuid}
+        renderItem={renderItem}
+        renderSectionHeader={({ section: { title } }) => (
+          <BodyText style={{ fontWeight: "bold", padding: 10 }}>
+            {title}
+          </BodyText>
+        )}
+        ListHeaderComponent={
+          <ListHeader
+            stats={stats}
+            selectedMonth={selectedMonth}
+            onMonthChange={setSelectedMonth}
+          />
         }
-
+        contentContainerStyle={{ paddingBottom: 96 }}
       />
+    </>
 
-      <AddButton 
-        primaryAction={{route:"/transactions/add",label:"Add Transaction"}}
-      />
+    <AddButton 
+      primaryAction={{route:"/transactions/add",label:"Add Transaction"}}
+      secondaryActions={[
+        {route:"/categories/add/modal",label:"Add Category"},
+        {route:"/transactions-templates/add/",label:"Add Template"},
+      ]}
+    />
+ </View>
+  )
+}
 
+const ListHeader = ({ stats, selectedMonth,onMonthChange}) => {
+  const router = useRouter();
+  return <>
+
+    <Card style={styles.balanceCard}>
+      <SecondaryText style={styles.balanceLabel}>
+        Current Balance
+      </SecondaryText>
+      <BodyText
+        style={[
+          styles.balanceAmount,
+          { color: stats.balance >= 0 ? "#2E8B8B" : "#FF6B6B" },
+        ]}
+      >
+        KES {stats.balance.toLocaleString()}
+      </BodyText>
+    </Card>
+
+    <View style={styles.statRow}>
+      <Card style={styles.statCard}>
+        <SecondaryText style={styles.statLabel}>Income</SecondaryText>
+        <BodyText style={[styles.statAmount, styles.income]}>
+          +KES {stats.income.toLocaleString()}
+        </BodyText>
+      </Card>
+
+      <Card style={styles.statCard}>
+        <SecondaryText style={styles.statLabel}>Expenses</SecondaryText>
+        <BodyText style={[styles.statAmount, styles.expense]}>
+          -KES {stats.expenses.toLocaleString()}
+        </BodyText>
+      </Card>
     </View>
-  );
+
+    <ButtonLinks 
+      links={[
+        {name:"View Templates", route:"/transactions-templates"},
+        {name:"View Statistics", route:"/transactions/stats"},
+      ]}
+    />
+    
+  </>
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
+  headerRow: {
+    alignItems: "center",
+    marginBottom: 16,
   },
-  title: {
+  header: {
     fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 10,
+    fontWeight: "700",
   },
-  card: {
+  subHeader: {
+    fontSize: 14,
+    marginTop: 2,
+  },
+  statRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 16,
+  },
+  statCard: {
+    flex: 1,
+  },
+  statLabel: {
+    fontSize: 12,
+    marginBottom: 6,
+  },
+  statAmount: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  viewStatsRow: {
+    display:"flex",
+    alignItems: "flex-end",
+    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap:12,
+    marginTop: 12,
+  },
+
+  viewStatsText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#2E8B8B",
+  },
+
+  balanceCard: {
+    alignItems: "center",
+    paddingVertical: 20,
+    marginBottom: 16,
+  },
+  balanceLabel: {
+    fontSize: 13,
+    marginBottom: 6,
+  },
+  balanceAmount: {
+    fontSize: 30,
+    fontWeight: "800",
+  },
+  row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 15,
-    borderWidth: 1,
-    borderColor: "#eee",
-    borderRadius: 10,
-    marginBottom: 10,
+    alignItems: "center",
   },
-  type: {
-    fontWeight: "bold",
+  left:{
+    flex:1,
+    marginRight:12,
+    minWidth: 0,
   },
-  category: {
+  statsButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+  },
+  statsText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#2E8B8B",
+  },
+
+  card: {
+    marginBottom: 12,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+  },
+  title: {
+    fontWeight: "600",
+    maxWidth:"100%",
+  },
+  meta: {
     fontSize: 12,
-    color: "gray",
-  },
-  note: {
-    fontSize: 12,
-    color: "#666",
+    marginTop: 2,
   },
   amount: {
-    fontWeight: "bold",
     fontSize: 16,
+    fontWeight: "700",
+    flexShrink: 0,
   },
-  empty: {
-    textAlign: "center",
-    marginTop: 20,
-    color: "gray",
+  income: {
+    color: "#2E8B8B",
+  },
+  expense: {
+    color: "#FF6B6B",
   },
 });
