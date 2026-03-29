@@ -34,6 +34,34 @@ export default function TabLayout() {
           href: null,
         }}
       />
+
+      <Tabs.Screen
+        name="transactions"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+        name="categories"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+        name="transactions-templates"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+        name="settings/index"
+        options={{
+          href: null,
+        }}
+      />
       
       <Tabs.Screen
         name="[...notfound]"

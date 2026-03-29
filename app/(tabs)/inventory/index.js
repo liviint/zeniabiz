@@ -1,0 +1,90 @@
+import { useEffect, useState } from "react";
+import { View, StyleSheet, Pressable, FlatList } from "react-native";
+import { Card, BodyText, SecondaryText } from "../../../src/components/ThemeProvider/components";
+import { AddButton } from "../../../src/components/common/AddButton";
+import { useRouter } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
+import { useIsFocused } from "@react-navigation/native";
+import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import { getProducts } from "../../../src/db/productsDb";
+
+export default function ProductsListPage() {
+  const db = useSQLiteContext();
+  const router = useRouter();
+  const isFocused = useIsFocused();
+  const { globalStyles } = useThemeStyles();
+
+  const [products, setProducts] = useState([]);
+
+  const fetchProducts = async () => {
+    const data = await getProducts(db);
+    setProducts(data);
+  };
+
+  useEffect(() => {
+    if (isFocused) fetchProducts();
+  }, [isFocused]);
+
+  const renderItem = ({ item }) => (
+    <Pressable onPress={() => router.push(`/inventory/${item.id}`)}>
+      <Card>
+        <View style={styles.row}>
+          <View style={styles.left}>
+            <BodyText style={styles.title}>{item.name}</BodyText>
+            <SecondaryText style={styles.meta}>
+              Stock: {item.stock_quantity} • Cost: KES {item.cost_price}
+            </SecondaryText>
+          </View>
+
+          <BodyText style={styles.price}>
+            KES {item.selling_price}
+          </BodyText>
+        </View>
+      </Card>
+    </Pressable>
+  );
+
+  return (
+    <View style={globalStyles.container}>
+      <BodyText style={globalStyles.title}>My Products</BodyText>
+
+      <FlatList
+        data={products}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        contentContainerStyle={{ paddingBottom: 96 }}
+      />
+
+      <AddButton 
+        primaryAction={{ route: "/inventory/add", label: "Add Product" }}
+        secondaryActions={[
+          { route: "/inventory/sell", label: "Record Sale" },
+        ]}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  left: {
+    flex: 1,
+    marginRight: 12,
+  },
+  title: {
+    fontWeight: "600",
+  },
+  meta: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  price: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#2E8B8B",
+  },
+});
