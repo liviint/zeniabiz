@@ -3,7 +3,7 @@ import { View, Text, Alert, StyleSheet, TouchableOpacity } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { BodyText, Card,  SecondaryText } from "../../../../src/components/ThemeProvider/components";
 import PageLoader from "../../../../src/components/common/PageLoader"
-import { getTransactionTemplateById, deleteTransactionTemplate,  } from "../../../../src/db/transactionsTempsDb";
+import { getTransactionTemplateByid, deleteTransactionTemplate,  } from "../../../../src/db/transactionsTempsDb";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import DeleteButton from "../../../../src/components/common/DeleteButton"
@@ -23,7 +23,7 @@ export default function TransactionTemplateDetailsScreen() {
   const loadTemplate = async () => {
     setLoading(true);
 
-    const result = await getTransactionTemplateById(db, id);
+    const result = await getTransactionTemplateByid(db, id);
 
     setTemplate(result);
     setLoading(false);

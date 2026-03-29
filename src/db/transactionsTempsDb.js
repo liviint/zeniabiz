@@ -159,7 +159,7 @@ export const getTransactionTemplates = async (db) => {
   `);
 };
 
-export const getTransactionTemplateById = async (db, id) => {
+export const getTransactionTemplateByid = async (db, id) => {
   return await db.getFirstAsync(
     `
     SELECT *
