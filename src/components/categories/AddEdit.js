@@ -25,7 +25,7 @@ export default function AddEdit() {
     type:"expense",
     color:COLORS[1],
     icon:"🛒",
-    uuid:"",
+    id:"",
     spendingType:"neutral",
   }
   const [form,setForm] = useState(initialForm)

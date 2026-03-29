@@ -2,11 +2,13 @@ import { SQLiteProvider } from "expo-sqlite";
 
 const migrateDbIfNeeded = async (db) => {
   // await db.execAsync(`DROP TABLE IF EXISTS transactions;`);
+  // await db.execAsync(`DROP TABLE IF EXISTS transaction_categories;`);
+  // await db.execAsync(`DROP TABLE IF EXISTS transaction_templates;`);
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
 
     CREATE TABLE IF NOT EXISTS transactions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id TEXT PRIMARY KEY,
       type TEXT NOT NULL CHECK (type IN ('income', 'expense')),
       amount REAL NOT NULL,
       category TEXT,
@@ -20,7 +22,7 @@ const migrateDbIfNeeded = async (db) => {
     );
 
     CREATE TABLE IF NOT EXISTS transaction_categories (
-      id INTEGER UNIQUE PRIMARY KEY,
+      id TEXT PRIMARY KEY,
 
       name TEXT NOT NULL,
       type TEXT NOT NULL CHECK (type IN ('income', 'expense')),
@@ -36,7 +38,7 @@ const migrateDbIfNeeded = async (db) => {
     );
 
     CREATE TABLE IF NOT EXISTS transaction_templates (
-      id INTEGER UNIQUE PRIMARY KEY,
+      id TEXT PRIMARY KEY,
 
       title TEXT NOT NULL,
       amount REAL,

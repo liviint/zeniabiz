@@ -61,13 +61,14 @@ export const getUnsyncedCategories = (db) => {
 }
 
 
-export const upsertCategory = async (db, {name, type, color, icon }) => {
+export const upsertCategory = async (db, {id,name, type, color, icon }) => {
   const now = new Date().toISOString();
-
+  id = id || newUuid() 
   try {
     await db.runAsync(
       `
       INSERT INTO transaction_categories (
+        id,
         name,
         type,
         color,
@@ -75,14 +76,14 @@ export const upsertCategory = async (db, {name, type, color, icon }) => {
         created_at,
         updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
         color = excluded.color,
         icon = excluded.icon,
         updated_at = excluded.updated_at
       `,
-      [ name.trim(), type, color, icon, now, now]
+      [id, name.trim(), type, color, icon, now, now]
     );
     console.log("✅ Category upserted locally");
   } catch (error) {
