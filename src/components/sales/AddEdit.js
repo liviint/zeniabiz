@@ -17,6 +17,7 @@ export default function SellPage() {
 
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
+  const [title, setTitle] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -34,6 +35,18 @@ export default function SellPage() {
         setCart(i);
       })();
     }, [isFocused]);
+
+    useEffect(() => {
+      if (cart.length === 0) return;
+
+      const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+      const generatedTitle = `Sold ${totalItems} item${
+        totalItems > 1 ? "s" : ""
+      } - KES ${total}`;
+
+      setTitle(generatedTitle);
+    }, [cart]);
   
 
   const addToCart = (product) => {
@@ -78,7 +91,7 @@ export default function SellPage() {
   const handleSave = async () => {
     if (cart.length === 0) return Alert.alert("Add items first");
 
-    await createOrUpdateSale(db, { items: cart ,transaction_id:id});
+    await createOrUpdateSale(db, { items: cart ,transaction_id:id, title,});
 
     Alert.alert("Success", "Sale recorded");
     router.back();
@@ -90,7 +103,6 @@ export default function SellPage() {
             {id ? "Update" : "Record"} Sale
         </BodyText>
 
-      {/* PRODUCTS */}
       <BodyText style={styles.sectionTitle}>Products</BodyText>
       <FlatList
         horizontal
@@ -106,7 +118,12 @@ export default function SellPage() {
         )}
       />
 
-      {/* CART */}
+      <BodyText style={styles.sectionTitle}>Title</BodyText>
+        <Input
+          value={title}
+          onChangeText={setTitle}
+          placeholder="Enter sale title"
+        />
       <BodyText style={styles.sectionTitle}>Cart</BodyText>
 
       {cart.map((item) => (

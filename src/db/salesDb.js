@@ -8,7 +8,8 @@ export async function createOrUpdateSale(
     items = [],
     note = null,
     date,
-    transaction_id = null, // 👈 key
+    title,
+    transaction_id = null,
   }
 ) {
   const now = new Date().toISOString();
@@ -23,10 +24,21 @@ export async function createOrUpdateSale(
     0
   );
 
+  // 🔥 Generate fallback title if none provided
+  const totalItems = items.reduce(
+    (sum, item) => sum + Number(item.quantity),
+    0
+  );
+
+  const finalTitle =
+    title && title.trim().length > 0
+      ? title
+      : `Sold ${totalItems} item${totalItems > 1 ? "s" : ""} - KES ${total}`;
+
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
-    // 🔁 EDIT MODE: Restore stock + delete old items
+    // 🔁 EDIT MODE
     if (isEdit) {
       const oldItems = await db.getAllAsync(
         `
@@ -55,14 +67,14 @@ export async function createOrUpdateSale(
         [id]
       );
 
-      // Update transaction
+      // ✅ Update transaction (ADD TITLE HERE)
       await db.runAsync(
         `
         UPDATE transactions
-        SET amount = ?, note = ?, date = ?, updated_at = ?
+        SET amount = ?, title = ?, note = ?, date = ?, updated_at = ?
         WHERE id = ?
         `,
-        [total, note ?? null, transactionDate, now, id]
+        [total, finalTitle, note ?? null, transactionDate, now, id]
       );
     }
 
@@ -71,11 +83,11 @@ export async function createOrUpdateSale(
       await db.runAsync(
         `
         INSERT INTO transactions (
-          id, type, amount, note, date, created_at, updated_at
+          id, type, amount, title, note, date, created_at, updated_at
         )
-        VALUES (?, 'income', ?, ?, ?, ?, ?)
+        VALUES (?, 'income', ?, ?, ?, ?, ?, ?)
         `,
-        [id, total, note ?? null, transactionDate, now, now]
+        [id, total, finalTitle, note ?? null, transactionDate, now, now]
       );
     }
 
