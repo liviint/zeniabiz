@@ -6,7 +6,6 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { getProducts } from "../../../src/db/inventoryDb";
 import { createOrUpdateSale, getTransactionItems } from "../../../src/db/salesDb";
-import { getTransactionById } from "../../../src/db/transactionsDb";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 
 export default function SellPage() {

@@ -133,3 +133,48 @@ export async function getTransactionItems(db, transaction_id) {
     [transaction_id]
   );
 }
+
+export async function deleteSale(db, transaction_id) {
+  await db.runAsync("BEGIN TRANSACTION");
+
+  try {
+    // 1. Get items
+    const items = await db.getAllAsync(
+      `
+      SELECT product_id, quantity
+      FROM transaction_items
+      WHERE transaction_id = ?
+      `,
+      [transaction_id]
+    );
+
+    // 2. Restore stock
+    for (const item of items) {
+      await db.runAsync(
+        `
+        UPDATE products
+        SET stock_quantity = stock_quantity + ?
+        WHERE id = ?
+        `,
+        [item.quantity, item.product_id]
+      );
+    }
+
+    // 3. Delete items
+    await db.runAsync(
+      `DELETE FROM transaction_items WHERE transaction_id = ?`,
+      [transaction_id]
+    );
+
+    // 4. Delete transaction
+    await db.runAsync(
+      `DELETE FROM transactions WHERE id = ?`,
+      [transaction_id]
+    );
+
+    await db.runAsync("COMMIT");
+  } catch (error) {
+    await db.runAsync("ROLLBACK");
+    throw error;
+  }
+}

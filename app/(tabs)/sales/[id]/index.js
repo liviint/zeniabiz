@@ -5,7 +5,7 @@ import { useLocalSearchParams , useRouter} from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { BodyText, Card, SecondaryText } from "../../../../src/components/ThemeProvider/components";
 import { getTransactionById } from "../../../../src/db/transactionsDb";
-import { getTransactionItems } from "../../../../src/db/salesDb";
+import { getTransactionItems, deleteSale } from "../../../../src/db/salesDb";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import DeleteButton from "../../../../src/components/common/DeleteButton";
 
@@ -30,9 +30,10 @@ export default function SaleDetails() {
     })();
   }, [isFocused]);
 
-  const handleDelete = () => {
-    
-  }
+  const handleDelete = async () => {
+    await deleteSale(db, id);
+    router.back();
+  };
 
   return (
     <View style={globalStyles.container}>
@@ -67,7 +68,7 @@ export default function SaleDetails() {
       
                   <DeleteButton 
                       handleOk={handleDelete}
-                      item={"category"}
+                      item={"sale"}
                   />
               </View>
     </View>
