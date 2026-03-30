@@ -1,7 +1,7 @@
 import { useRouter, useLocalSearchParams  } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useState , useEffect} from "react";
-import { Alert, ScrollView, TouchableOpacity, Text} from "react-native";
+import { Alert, ScrollView, TouchableOpacity, Text, View} from "react-native";
 import { BodyText, Card, FormLabel, Input } from "../../../src/components/ThemeProvider/components";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { upsertProduct , getProductById} from "../../db/inventoryDb";
@@ -51,17 +51,25 @@ export default function AddProduct() {
       <BodyText style={globalStyles.title}>Add Product</BodyText>
 
       <Card>
+      <View style={globalStyles.formGroup}>
         <FormLabel>Name</FormLabel>
         <Input value={form.name} onChangeText={(v) => handleChange("name", v)} />
+      </View>
 
-        <FormLabel>Cost Price</FormLabel>
-        <Input value={String(form.cost_price)} keyboardType="numeric" onChangeText={(v) => handleChange("cost_price", v)} />
+        <View style={globalStyles.formGroup}>
+          <FormLabel>Cost Price</FormLabel>
+          <Input value={String(form.cost_price)} keyboardType="numeric" onChangeText={(v) => handleChange("cost_price", v)} />
+        </View>
 
-        <FormLabel>Selling Price</FormLabel>
-        <Input value={String(form.selling_price)} keyboardType="numeric" onChangeText={(v) => handleChange("selling_price", v)} />
+        <View style={globalStyles.formGroup}>
+          <FormLabel>Selling Price</FormLabel>
+          <Input value={String(form.selling_price)} keyboardType="numeric" onChangeText={(v) => handleChange("selling_price", v)} />
+        </View>
 
-        <FormLabel>Stock Quantity</FormLabel>
-        <Input value={String(form.stock_quantity)} keyboardType="numeric" onChangeText={(v) => handleChange("stock_quantity", v)} />
+        <View style={globalStyles.formGroup}>
+          <FormLabel>Stock Quantity</FormLabel>
+          <Input value={String(form.stock_quantity)} keyboardType="numeric" onChangeText={(v) => handleChange("stock_quantity", v)} />
+        </View>
 
         <TouchableOpacity style={globalStyles.primaryBtn} onPress={handleSave}>
           <Text style={globalStyles.primaryBtnText}>
