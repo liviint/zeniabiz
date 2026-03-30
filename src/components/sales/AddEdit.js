@@ -28,24 +28,19 @@ export default function SellPage() {
 
   useEffect(() => {
       (async () => {
-        // const s = await getTransactionById(db, id);
         const i = await getTransactionItems(db, id);
-  
-        // setSale(s);
         setCart(i);
       })();
     }, [isFocused]);
 
     useEffect(() => {
-      if (cart.length === 0) return;
+      if (cart.length === 0 ) return;
 
-      const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+      const topItem = cart.sort((a, b) => b.quantity - a.quantity)[0];
 
-      const generatedTitle = `Sold ${totalItems} item${
-        totalItems > 1 ? "s" : ""
-      } - KES ${total}`;
+      const finalTitle = `${topItem?.name || "Sale"} - KES ${total}`;
 
-      setTitle(generatedTitle);
+      setTitle(finalTitle);
     }, [cart]);
   
 

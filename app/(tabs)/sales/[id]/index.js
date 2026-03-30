@@ -24,7 +24,6 @@ export default function SaleDetails() {
     (async () => {
       const s = await getTransactionById(db, id);
       const i = await getTransactionItems(db, id);
-
       setSale(s);
       setItems(i);
     })();
