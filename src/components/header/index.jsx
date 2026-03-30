@@ -18,7 +18,7 @@ export default function Header() {
 
   return (
     <View style={styles.headerContainer}>
-      <Pressable onPress={() => router.push("/journal")}>
+      <Pressable onPress={() => router.push("/")}>
         <Text style={styles.logoText}>ZeniaBiz</Text>
       </Pressable>
     <TouchableOpacity 
@@ -31,30 +31,14 @@ export default function Header() {
     {menuOpen && (
       <View style={styles.overlay}>
         <View style={styles.navSmall}>
-          {/* <NavLink 
-            label="Feedback" 
-            path="/feedback" 
-            isActive={isActive("/(tabs)/feedback")} 
-          /> */}
-          {/* <NavLink 
-            label="Profile" 
-            path="/profile" 
-            isActive={isActive("/(tabs)/profile")} 
-          /> */}
+
           <NavLink 
             label="Settings" 
             path="/settings" 
             isActive={isActive("/(tabs)/settings")} 
           />
 
-          <View style={{ height: 1, backgroundColor: "rgba(255,255,255,0.2)", width: "80%", marginVertical: 10 }} />
-            <NavLink 
-              label="❤️ Support this app"
-              path="/support" 
-              isActive={isActive("/(tabs)/support")} 
-            />
-          </View>
-
+        </View>
         
       </View>
     )}
