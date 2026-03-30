@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { HapticTab } from '../../src/components/haptic-tab';
 import { useThemeStyles } from '../../src/hooks/useThemeStyles';
+import { IconSymbol } from '@/src/components/ui/icon-symbol.ios';
 
 export default function TabLayout() {
   const {colors} = useThemeStyles()
@@ -36,9 +37,24 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="inventory"
+        options={{
+          title: 'Stock',
+          tabBarIcon: ({ color }) => <IconSymbol size={24} name="stock" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="sales"
+        options={{
+          title: 'Sales',
+          tabBarIcon: ({ color }) => <IconSymbol size={24} name="sales" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="transactions"
         options={{
-          href: null,
+          title: 'Transactions',
+          tabBarIcon: ({ color }) => <IconSymbol size={24} name="transactions" color={color} />,
         }}
       />
 
