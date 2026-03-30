@@ -6,6 +6,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { getProducts } from "../../../src/db/inventoryDb";
 import { createOrUpdateSale, getTransactionItems } from "../../../src/db/salesDb";
+import { getTransactionById } from "../../../src/db/transactionsDb";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 
 export default function SellPage() {
@@ -27,6 +28,7 @@ export default function SellPage() {
   }, [isFocused]);
 
   useEffect(() => {
+      if(!id) return
       (async () => {
         const i = await getTransactionItems(db, id);
         setCart(i);
@@ -34,7 +36,15 @@ export default function SellPage() {
     }, [isFocused]);
 
     useEffect(() => {
-      if (cart.length === 0 ) return;
+      if(cart.length === 0) return
+      (async () => {
+        const t = await getTransactionById(db, id);
+        setTitle(t?.title)
+      })();
+    }, [isFocused,cart]);
+
+    useEffect(() => {
+      if (cart.length === 0 || id) return;
 
       const topItem = cart.sort((a, b) => b.quantity - a.quantity)[0];
 
@@ -106,7 +116,7 @@ export default function SellPage() {
         renderItem={({ item }) => (
           <Pressable onPress={() => addToCart(item)}>
             <Card style={styles.productCard}>
-              <BodyText>{item.name}</BodyText>
+              <BodyText>{item?.name}</BodyText>
               <SecondaryText>KES {item.selling_price}</SecondaryText>
             </Card>
           </Pressable>
@@ -125,7 +135,7 @@ export default function SellPage() {
         <Card key={item.product_id} style={styles.cartItem}>
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
-              <BodyText>{item.name}</BodyText>
+              <BodyText>{item?.name}</BodyText>
               <SecondaryText>KES {item.price}</SecondaryText>
             </View>
 

@@ -58,7 +58,7 @@ export default function ProductsListPage() {
       <AddButton 
         primaryAction={{ route: "/inventory/add", label: "Add Product" }}
         secondaryActions={[
-          { route: "/inventory/sell", label: "Record Sale" },
+          { route: "/sales/add", label: "Record Sale" },
         ]}
       />
     </View>

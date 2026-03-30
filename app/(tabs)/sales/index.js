@@ -27,7 +27,7 @@ export default function SalesList() {
       setSales(
         data
           .filter((t) => t.type === "income")
-          .sort((a, b) => new Date(b.date) - new Date(a.date)) // 🔥 newest first
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
       );
     })();
   }, [isFocused]);
