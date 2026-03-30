@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
 import { View, TouchableOpacity, Text } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams , useRouter} from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { BodyText, Card, SecondaryText } from "../../../../src/components/ThemeProvider/components";
 import { getTransactionById } from "../../../../src/db/transactionsDb";
@@ -9,10 +9,12 @@ import { getTransactionItems } from "../../../../src/db/salesDb";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import DeleteButton from "../../../../src/components/common/DeleteButton";
 
+
 export default function SaleDetails() {
   const {globalStyles} = useThemeStyles()
   const isFocused = useIsFocused()
   const db = useSQLiteContext();
+  const router = useRouter()
   const { id } = useLocalSearchParams();
 
   const [sale, setSale] = useState({});
@@ -55,12 +57,12 @@ export default function SaleDetails() {
       <View style={{ gap: 12 }}>
                   
                   <TouchableOpacity
-                      onPress={() => router.push(`/categories/${id}/edit`)}
+                      onPress={() => router.push(`/sales/${id}/edit`)}
                       style={globalStyles.editBtn}
                   >
-                  <Text style={globalStyles.editBtnText}>
-                      Edit
-                  </Text>
+                    <Text style={globalStyles.editBtnText}>
+                        Edit
+                    </Text>
                   </TouchableOpacity>
       
                   <DeleteButton 
