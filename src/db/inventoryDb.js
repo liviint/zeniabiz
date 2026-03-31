@@ -1,4 +1,5 @@
 import uuid from "react-native-uuid";
+import { getMonthRange } from "./utils";
 
 const newUuid = () => uuid.v4();
 
@@ -59,13 +60,20 @@ export async function upsertProduct(
 // ------------------------
 // Get All Products
 // ------------------------
-export async function getProducts(db) {
-  return await db.getAllAsync(`
+export async function getProducts(db, selectedMonth) {
+  const { startDate, endDate } = getMonthRange(selectedMonth);
+  console.log(startDate,endDate,"hello dates")
+  return await db.getAllAsync(
+    `
     SELECT *
     FROM products
     WHERE deleted_at IS NULL
+      AND created_at >= ?
+      AND created_at < ?
     ORDER BY datetime(created_at) DESC
-  `);
+    `,
+    [startDate, endDate]
+  );
 }
 
 export async function getProductById(db, id) {

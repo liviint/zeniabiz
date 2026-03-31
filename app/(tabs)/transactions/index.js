@@ -10,6 +10,7 @@ import { dateFormat } from "../../../utils/dateFormat";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles"
 import ButtonLinks from "../../../src/components/common/ButtonLinks";
 import EmptyState from "../../../src/components/common/EmptyState";
+import TimeFilters from "../../../src/components/common/TimeFilters";
 
 export default function FinanceListPage() {
     const db = useSQLiteContext()
@@ -140,7 +141,7 @@ export default function FinanceListPage() {
         </BodyText>
       </View>
       
-      {!isLoading && transactions.length ? <>
+      <>
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
@@ -157,30 +158,35 @@ export default function FinanceListPage() {
             onMonthChange={setSelectedMonth}
           />
         }
+        ListEmptyComponent={
+          <EmptyState 
+            title="No transactions yet"
+            description="Record a sale or expense to start tracking your business."
+        />
+        }
         contentContainerStyle={{ paddingBottom: 96 }}
       />
-    </> : 
-        <EmptyState 
-          title="No transactions yet"
-          description="Record a sale or expense to start tracking your business."
-        />
-    }
+    </> 
 
-    <AddButton 
-      primaryAction={{route:"/transactions/add",label:"Add Transaction"}}
-      secondaryActions={[
-        {route:"/categories/add/modal",label:"Add Category"},
-        {route:"/transactions-templates/add/",label:"Add Template"},
-      ]}
-    />
- </View>
+      <AddButton 
+        primaryAction={{route:"/transactions/add",label:"Add Transaction"}}
+        secondaryActions={[
+          {route:"/categories/add/modal",label:"Add Category"},
+          {route:"/transactions-templates/add/",label:"Add Template"},
+        ]}
+      />
+  </View>
   )
 }
 
-const ListHeader = ({ stats}) => {
+const ListHeader = ({ stats, selectedMonth, onMonthChange}) => {
   return <>
-
+    <TimeFilters 
+          selectedMonth={selectedMonth}
+          onMonthChange={onMonthChange}
+        />
     <Card style={styles.balanceCard}>
+      
       <SecondaryText style={styles.balanceLabel}>
         Net Profit
       </SecondaryText>
