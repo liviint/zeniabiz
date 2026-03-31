@@ -12,6 +12,7 @@ import { getTransactions } from "../../../src/db/transactionsDb";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { AddButton } from "../../../src/components/common/AddButton";
 import EmptyState from "../../../src/components/common/EmptyState";
+import TimeFilters from "../../../src/components/common/TimeFilters";
 
 export default function SalesList() {
   const { globalStyles } = useThemeStyles();
@@ -21,10 +22,11 @@ export default function SalesList() {
 
   const [sales, setSales] = useState([]);
   const [isLoading,setIsLoading] = useState(true)
+  const [selectedMonth, setSelectedMonth] = useState(new Date());
 
   useEffect(() => {
     (async () => {
-      const data = await getTransactions(db);
+      const data = await getTransactions(db, selectedMonth);
 
       setSales(
         data
@@ -33,7 +35,7 @@ export default function SalesList() {
       );
       setIsLoading(false)
     })();
-  }, [isFocused]);
+  }, [isFocused, selectedMonth]);
 
   // 🧠 Format date nicely
   const formatDate = (date) => {
@@ -50,9 +52,12 @@ export default function SalesList() {
     <View style={globalStyles.container}>
       <BodyText style={globalStyles.title}>My Sales</BodyText>
 
-      {
-        !isLoading && sales.length ? 
-        <FlatList
+      <TimeFilters 
+          selectedMonth={selectedMonth}
+          onMonthChange={setSelectedMonth}
+        />
+
+      <FlatList
         data={sales}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
@@ -86,13 +91,13 @@ export default function SalesList() {
             </Pressable>
           );
         }}
+        ListEmptyComponent={
+                  <EmptyState 
+                    title="No sales yet"
+                    description="Start by recording your first sale to track your business."
+                  />
+                }
       />
-      :
-          <EmptyState 
-            title="No sales yet"
-            description="Start by recording your first sale to track your business."
-          />
-      }
 
       <AddButton
         primaryAction={{ route: "/sales/add", label: "Add a Sale" }}
