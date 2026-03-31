@@ -22,7 +22,6 @@ export default function CategoriesPicker({
     const fetchCategories = async () => {
       try {
         const data = await getCategories(db);
-        console.log(data,"hello data")
         setCategories(data);
       } catch (error) {
         console.log("❌ Failed to fetch categories:", error);
@@ -49,7 +48,7 @@ export default function CategoriesPicker({
       <FormLabel>Category</FormLabel>
 
       <CustomPicker
-        selectedValue={categories.find(cate => cate.uuid === form.category_uuid)}
+        selectedValue={categories.find(cate => cate.id === form.category_id)}
         onValueChange={(value) => handleSelect(value)}
       >
         {/* Default placeholder */}

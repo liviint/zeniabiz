@@ -133,6 +133,7 @@ const isFormValid = () => {
     if(!id) return
     let getTransaction = async() => {
       let transaction = await getTransactionById(db,id)
+      console.log(transaction,"hello trans")
       let date = transaction.date ? new Date(transaction.date) : new Date()
       setForm({...transaction,date})
     }
