@@ -11,6 +11,7 @@ import { useRouter } from "expo-router";
 import { getTransactions } from "../../../src/db/transactionsDb";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { AddButton } from "../../../src/components/common/AddButton";
+import EmptyState from "../../../src/components/common/EmptyState";
 
 export default function SalesList() {
   const { globalStyles } = useThemeStyles();
@@ -19,6 +20,7 @@ export default function SalesList() {
   const router = useRouter();
 
   const [sales, setSales] = useState([]);
+  const [isLoading,setIsLoading] = useState(true)
 
   useEffect(() => {
     (async () => {
@@ -29,6 +31,7 @@ export default function SalesList() {
           .filter((t) => t.type === "income")
           .sort((a, b) => new Date(b.date) - new Date(a.date))
       );
+      setIsLoading(false)
     })();
   }, [isFocused]);
 
@@ -45,9 +48,11 @@ export default function SalesList() {
 
   return (
     <View style={globalStyles.container}>
-      <BodyText style={globalStyles.title}>Sales</BodyText>
+      <BodyText style={globalStyles.title}>My Sales</BodyText>
 
-      <FlatList
+      {
+        !isLoading && sales.length ? 
+        <FlatList
         data={sales}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
@@ -82,6 +87,12 @@ export default function SalesList() {
           );
         }}
       />
+      :
+          <EmptyState 
+            title="No sales yet"
+            description="Start by recording your first sale to track your business."
+          />
+      }
 
       <AddButton
         primaryAction={{ route: "/sales/add", label: "Add a Sale" }}

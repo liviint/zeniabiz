@@ -9,28 +9,29 @@ import { useSQLiteContext } from "expo-sqlite";
 import { dateFormat } from "../../../utils/dateFormat";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles"
 import ButtonLinks from "../../../src/components/common/ButtonLinks";
+import EmptyState from "../../../src/components/common/EmptyState";
 
 export default function FinanceListPage() {
     const db = useSQLiteContext()
     const router = useRouter();
     const [transactions,setTransactions] = useState([])
+    const [isLoading,setIsLoading] = useState(true)
     const isFocused = useIsFocused()
     const {globalStyles} = useThemeStyles()
     const [stats, setStats] = useState({
         profit: 0,
-        income: 0,
+        revenue: 0,
         expenses: 0,
       });
     const [selectedMonth, setSelectedMonth] = useState(new Date());
 
     let fetchTransactions = async() => {
         let transactions = await getTransactions(db, selectedMonth)
-        console.log(transactions,"hello transactions")
         setTransactions(transactions)
     }
     const fetchStats = async () => {
       const summary = await getTransactionStats(db,selectedMonth);
-      console.log(summary,"hello summary")
+      console.log(summary,"hello summ")
       setStats(summary);
     };
 
@@ -39,6 +40,7 @@ export default function FinanceListPage() {
       fetchTransactions()
       fetchStats()
     }
+    setIsLoading(false)
     },[isFocused, selectedMonth])
 
     const groupTransactions = (transactions) => {
@@ -138,7 +140,7 @@ export default function FinanceListPage() {
         </BodyText>
       </View>
       
-      <>
+      {!isLoading && transactions.length ? <>
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
@@ -157,7 +159,12 @@ export default function FinanceListPage() {
         }
         contentContainerStyle={{ paddingBottom: 96 }}
       />
-    </>
+    </> : 
+        <EmptyState 
+          title="No transactions yet"
+          description="Record a sale or expense to start tracking your business."
+        />
+    }
 
     <AddButton 
       primaryAction={{route:"/transactions/add",label:"Add Transaction"}}
@@ -170,29 +177,28 @@ export default function FinanceListPage() {
   )
 }
 
-const ListHeader = ({ stats, selectedMonth,onMonthChange}) => {
-  const router = useRouter();
+const ListHeader = ({ stats}) => {
   return <>
 
     <Card style={styles.balanceCard}>
       <SecondaryText style={styles.balanceLabel}>
-        Profit
+        Net Profit
       </SecondaryText>
       <BodyText
         style={[
           styles.balanceAmount,
-          { color: stats.profit >= 0 ? "#2E8B8B" : "#FF6B6B" },
+          { color: stats.netProfit >= 0 ? "#2E8B8B" : "#FF6B6B" },
         ]}
       >
-        KES {stats?.profit?.toLocaleString()}
+        KES {stats?.netProfit?.toLocaleString()}
       </BodyText>
     </Card>
 
     <View style={styles.statRow}>
       <Card style={styles.statCard}>
-        <SecondaryText style={styles.statLabel}>Income</SecondaryText>
+        <SecondaryText style={styles.statLabel}>Revenue</SecondaryText>
         <BodyText style={[styles.statAmount, styles.income]}>
-          +KES {stats.income.toLocaleString()}
+          +KES {stats.revenue.toLocaleString()}
         </BodyText>
       </Card>
 
@@ -202,12 +208,13 @@ const ListHeader = ({ stats, selectedMonth,onMonthChange}) => {
           -KES {stats.expenses.toLocaleString()}
         </BodyText>
       </Card>
+      
     </View>
 
     <ButtonLinks 
       links={[
         {name:"View Templates", route:"/transactions-templates"},
-        {name:"View Statistics", route:"/transactions/stats"},
+       /*  {name:"View Statistics", route:"/transactions/stats"}, */
       ]}
     />
     

@@ -127,33 +127,62 @@ export async function deleteTransaction(db, id) {
   );
 }
 
-// ------------------------
-// Get Transaction Stats
-// ------------------------
 export async function getTransactionStats(db, date = new Date()) {
   const start = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
   const end = new Date(date.getFullYear(), date.getMonth() + 1, 1).toISOString();
 
-  const result = await db.getFirstAsync(
+  // 1. Revenue (only income transactions with items)
+  const revenueResult = await db.getFirstAsync(
     `
-    SELECT
-      SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) AS sales,
-      SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) AS expenses
+    SELECT SUM(ti.price * ti.quantity) AS revenue
+    FROM transaction_items ti
+    JOIN transactions t ON t.id = ti.transaction_id
+    WHERE t.type = 'income'
+      AND t.date >= ?
+      AND t.date < ?
+    `,
+    [start, end]
+  );
+
+  // 2. Cost (join with products)
+  const costResult = await db.getFirstAsync(
+    `
+    SELECT SUM(p.cost_price * ti.quantity) AS cost
+    FROM transaction_items ti
+    JOIN products p ON p.id = ti.product_id
+    JOIN transactions t ON t.id = ti.transaction_id
+    WHERE t.type = 'income'
+      AND t.date >= ?
+      AND t.date < ?
+    `,
+    [start, end]
+  );
+
+  // 3. Expenses (no change)
+  const expenseResult = await db.getFirstAsync(
+    `
+    SELECT SUM(amount) AS expenses
     FROM transactions
-    WHERE 
-      date >= ?
+    WHERE type = 'expense'
+      AND date >= ?
       AND date < ?
     `,
     [start, end]
   );
 
-  const income = result?.sales || 0;
-  const expenses = result?.expenses || 0;
+  const revenue = revenueResult?.revenue || 0;
+  const cost = costResult?.cost || 0;
+  const expenses = expenseResult?.expenses || 0;
+
+  const grossProfit = revenue - cost;
+  const netProfit = grossProfit - expenses;
 
   return {
-    income,
+    revenue,
+    cost,
     expenses,
-    profit: income - expenses,
+    grossProfit,
+    netProfit,
   };
 }
 

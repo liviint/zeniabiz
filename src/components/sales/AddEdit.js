@@ -41,9 +41,10 @@ export default function SellPage() {
         const t = await getTransactionById(db, id);
         setTitle(t?.title)
       })();
-    }, [isFocused,cart]);
+    }, [isFocused]);
 
     useEffect(() => {
+      console.log(id,"helli id")
       if (cart.length === 0 || id) return;
 
       const topItem = cart.sort((a, b) => b.quantity - a.quantity)[0];
@@ -51,7 +52,7 @@ export default function SellPage() {
       const finalTitle = `${topItem?.name || "Sale"} - KES ${total}`;
 
       setTitle(finalTitle);
-    }, [cart]);
+    }, [isFocused,cart]);
   
 
   const addToCart = (product) => {

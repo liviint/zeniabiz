@@ -7,6 +7,7 @@ import { BodyText, Card, SecondaryText } from "../../../src/components/ThemeProv
 import { AddButton } from "../../../src/components/common/AddButton";
 import { getProducts } from "../../../src/db/inventoryDb";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import EmptyState from "../../../src/components/common/EmptyState";
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();
@@ -15,6 +16,7 @@ export default function ProductsListPage() {
   const { globalStyles } = useThemeStyles();
 
   const [products, setProducts] = useState([]);
+  const [isLoading,setIsLoading] = useState(true)
 
   const fetchProducts = async () => {
     const data = await getProducts(db);
@@ -23,6 +25,7 @@ export default function ProductsListPage() {
 
   useEffect(() => {
     if (isFocused) fetchProducts();
+    setIsLoading(false)
   }, [isFocused]);
 
   const renderItem = ({ item }) => (
@@ -48,12 +51,18 @@ export default function ProductsListPage() {
     <View style={globalStyles.container}>
       <BodyText style={globalStyles.title}>My Products</BodyText>
 
-      <FlatList
-        data={products}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={{ paddingBottom: 96 }}
-      />
+    {!isLoading && products.length ?  <FlatList
+      data={products}
+      keyExtractor={(item) => item.id}
+      renderItem={renderItem}
+      contentContainerStyle={{ paddingBottom: 96 }}
+    />
+      :
+    <EmptyState 
+      title="No products yet"
+      description="Add products to start tracking your stock and sales."
+    />
+    }
 
       <AddButton 
         primaryAction={{ route: "/inventory/add", label: "Add Product" }}
