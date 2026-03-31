@@ -10,6 +10,8 @@ export async function createOrUpdateSale(
     date,
     title,
     transaction_id = null,
+    category,
+    category_id,
   }
 ) {
   const now = new Date().toISOString();
@@ -69,27 +71,27 @@ export async function createOrUpdateSale(
 
       // ✅ Update transaction (ADD TITLE HERE)
       await db.runAsync(
-        `
-        UPDATE transactions
-        SET amount = ?, title = ?, note = ?, date = ?, updated_at = ?
-        WHERE id = ?
-        `,
-        [total, finalTitle, note ?? null, transactionDate, now, id]
-      );
-    }
+          `
+          UPDATE transactions
+          SET amount = ?, title = ?, note = ?, date = ?, updated_at = ?, category = ?, category_id = ?
+          WHERE id = ?
+          `,
+          [total, finalTitle, note ?? null, transactionDate, now, category ?? null, category_id ?? null, id]
+        );
+      }
 
     // ➕ CREATE MODE
     if (!isEdit) {
       await db.runAsync(
-        `
-        INSERT INTO transactions (
-          id, type, amount, title, note, date, created_at, updated_at
-        )
-        VALUES (?, 'income', ?, ?, ?, ?, ?, ?)
-        `,
-        [id, total, finalTitle, note ?? null, transactionDate, now, now]
-      );
-    }
+          `
+          INSERT INTO transactions (
+            id, type, amount, title, note, date, created_at, updated_at, category, category_id
+          )
+          VALUES (?, 'income', ?, ?, ?, ?, ?, ?, ?, ?)
+          `,
+          [id, total, finalTitle, note ?? null, transactionDate, now, now, category ?? null, category_id ?? null]
+        );
+      }
 
     // ➕ Insert new items + reduce stock
     for (const item of items) {

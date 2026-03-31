@@ -6,6 +6,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { getProducts } from "../../../src/db/inventoryDb";
 import { createOrUpdateSale, getTransactionItems } from "../../../src/db/salesDb";
+import { getCategories } from "../../../src/db/categoriesDb";
 import { getTransactionById } from "../../../src/db/transactionsDb";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 
@@ -19,6 +20,7 @@ export default function SellPage() {
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [title, setTitle] = useState("");
+  const [category, setCategory] = useState([]);
 
   useEffect(() => {
     (async () => {
@@ -44,7 +46,6 @@ export default function SellPage() {
     }, [isFocused]);
 
     useEffect(() => {
-      console.log(id,"helli id")
       if (cart.length === 0 || id) return;
 
       const topItem = cart.sort((a, b) => b.quantity - a.quantity)[0];
@@ -53,6 +54,22 @@ export default function SellPage() {
 
       setTitle(finalTitle);
     }, [isFocused,cart]);
+
+    
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await getCategories(db);
+        let category = data.filter(cate => cate.name === "Product Sales")[0]
+        setCategory(category)
+      } catch (error) {
+        console.log("❌ Failed to fetch categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
   
 
   const addToCart = (product) => {
@@ -96,9 +113,9 @@ export default function SellPage() {
 
   const handleSave = async () => {
     if (cart.length === 0) return Alert.alert("Add items first");
-
-    await createOrUpdateSale(db, { items: cart ,transaction_id:id, title,});
-
+    console.log(category,"hello category")
+    await createOrUpdateSale(db, { items: cart ,transaction_id:id, title,category:category?.name,
+      category_id:category.id,});
     Alert.alert("Success", "Sale recorded");
     router.back();
   };

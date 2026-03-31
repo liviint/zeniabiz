@@ -61,19 +61,29 @@ export async function upsertProduct(
 // Get All Products
 // ------------------------
 export async function getProducts(db, selectedMonth) {
-  const { startDate, endDate } = getMonthRange(selectedMonth);
-  console.log(startDate,endDate,"hello dates")
-  return await db.getAllAsync(
-    `
+  let sql = `
     SELECT *
     FROM products
     WHERE deleted_at IS NULL
+  `;
+  const params = [];
+
+  if (selectedMonth) {
+    const { startDate, endDate } = getMonthRange(selectedMonth);
+    console.log(startDate, endDate, "hello dates");
+
+    sql += `
       AND created_at >= ?
       AND created_at < ?
+    `;
+    params.push(startDate, endDate);
+  }
+
+  sql += `
     ORDER BY datetime(created_at) DESC
-    `,
-    [startDate, endDate]
-  );
+  `;
+
+  return await db.getAllAsync(sql, params);
 }
 
 export async function getProductById(db, id) {
