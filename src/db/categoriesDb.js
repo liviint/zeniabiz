@@ -3,24 +3,33 @@ import { DEFAULT_CATEGORIES } from "../../utils/categoriesSeeder";
 
 const newUuid = () => uuid.v4();
 
-export const seedCategoriesIfEmpty = async (db,apiData=[]) => {
-  const rows = await db.getAllAsync(
-    "SELECT COUNT(*) as count FROM transaction_categories"
-  );
-  if (rows[0].count > 0) return;
-
-  let defaults = apiData?.length ? apiData : DEFAULT_CATEGORIES
-
-  for (const cat of defaults) {
-    await db.runAsync(
-      `INSERT INTO transaction_categories 
-        (uuid, name, type, color, icon, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-      [newUuid(), cat.name, cat.type, cat.color, cat.icon]
+export const seedCategoriesIfEmpty = async (db, apiData = []) => {
+  try {
+    const rows = await db.getAllAsync(
+      "SELECT COUNT(*) AS count FROM transaction_categories"
     );
-  }
+    if (rows[0].count > 0) return;
 
-  console.log("✅ Default categories seeded");
+    const categoriesToSeed = apiData.length ? apiData : DEFAULT_CATEGORIES;
+
+    // Begin transaction
+    await db.runAsync("BEGIN TRANSACTION");
+
+    for (const cat of categoriesToSeed) {
+      await db.runAsync(
+        `INSERT INTO transaction_categories 
+          (id, name, type, color, icon, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+        [newUuid(), cat.name, cat.type, cat.color, cat.icon]
+      );
+    }
+
+    await db.runAsync("COMMIT");
+    console.log("✅ Default categories seeded");
+  } catch (error) {
+    await db.runAsync("ROLLBACK");
+    console.error("❌ Failed to seed categories:", error);
+  }
 };
 
 /**
