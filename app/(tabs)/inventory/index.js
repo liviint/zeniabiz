@@ -8,6 +8,7 @@ import { AddButton } from "../../../src/components/common/AddButton";
 import { getProducts } from "../../../src/db/inventoryDb";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import EmptyState from "../../../src/components/common/EmptyState";
+import { StatCard } from "../../../src/components/common/StatCard";
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();
@@ -55,6 +56,11 @@ export default function ProductsListPage() {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={{ paddingBottom: 96 }}
+        ListHeaderComponent={
+          <ListHeader
+            stats={{count:products.length}}
+          />
+        }
         ListEmptyComponent={
             <EmptyState 
               title="No products yet"
@@ -71,6 +77,17 @@ export default function ProductsListPage() {
       />
     </View>
   );
+}
+
+const ListHeader = ({ stats}) => {
+  return (
+      <StatCard 
+        label="Total Products"
+        value={stats.count}
+        subText="Items in stock"
+      />
+  )
+  
 }
 
 const styles = StyleSheet.create({
