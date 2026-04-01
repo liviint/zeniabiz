@@ -78,6 +78,13 @@ export default function TabLayout() {
           href: null,
         }}
       />
+
+      <Tabs.Screen
+        name="support/index"
+        options={{
+          href: null,
+        }}
+      />
       
       <Tabs.Screen
         name="[...notfound]"

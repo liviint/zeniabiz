@@ -31,7 +31,6 @@ const styles = {
     flex: 1,
     padding: 20,
     borderRadius: 20,
-    backgroundColor: "#FFFFFF",
     margin: 8,
     alignItems: "center",
 
@@ -47,7 +46,6 @@ const styles = {
 
   label: {
     fontSize: 14,
-    color: "#666",
     marginBottom: 6,
   },
 
@@ -58,7 +56,6 @@ const styles = {
 
   subText: {
     fontSize: 12,
-    color: "#999",
     marginTop: 4,
   },
 };
