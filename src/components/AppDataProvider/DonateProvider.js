@@ -14,7 +14,7 @@ export default function RevenueCatProvider({ children }) {
     try {
       Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
 
-      const androidApiKey = 'test_ujnChvoiHLGNjPcjTVROBmlCGQl';
+      const androidApiKey = 'goog_FvtuWxXkoVKtGqnJREUOfdOiEhi';
 
       Purchases.configure({ apiKey: androidApiKey });
       console.log("RevenueCat initialized");
