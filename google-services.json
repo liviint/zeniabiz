@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "28706889001",
+    "project_id": "zeniabiz",
+    "storage_bucket": "zeniabiz.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:28706889001:android:23e0ca7a2e8b466edeeb38",
+        "android_client_info": {
+          "package_name": "com.zeniabiz.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLhejMAmPxfuzvu_ziB1GDDtvTKVUV62I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

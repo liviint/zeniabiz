@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "zeniaBiz",
+    "name": "ZeniaBiz",
     "slug": "zeniaBiz",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -17,14 +17,18 @@
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/logo.png",
         "backgroundImage": "./assets/images/logo.png",
-        "monochromeImage": "./assets/images/logo.png",
+        "monochromeImage": "./assets/images/logo.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+          "com.google.android.gms.permission.AD_ID"
+        ]
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/logo.png",
+      "favicon": "./assets/images/logo.png"
     },
     "plugins": [
       "expo-router",
@@ -41,7 +45,9 @@
         }
       ],
       "expo-sqlite",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "@react-native-firebase/app",
+      "@react-native-firebase/crashlytics"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -53,6 +59,7 @@
         "projectId": "758ebee6-7784-4acb-aac9-5b5a861204c8"
       }
     },
+    
     "owner": "zeniabiz"
   }
 }
