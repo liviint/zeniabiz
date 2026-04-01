@@ -8,7 +8,6 @@ import { AddButton } from "../../../src/components/common/AddButton";
 import { getProducts } from "../../../src/db/inventoryDb";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import EmptyState from "../../../src/components/common/EmptyState";
-import TimeFilters from "../../../src/components/common/TimeFilters";
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();
@@ -18,17 +17,16 @@ export default function ProductsListPage() {
 
   const [products, setProducts] = useState([]);
   const [isLoading,setIsLoading] = useState(true)
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
 
   const fetchProducts = async () => {
-    const data = await getProducts(db,selectedMonth);
+    const data = await getProducts(db);
     setProducts(data);
   };
 
   useEffect(() => {
     if (isFocused) fetchProducts();
     setIsLoading(false)
-  }, [isFocused,selectedMonth]);
+  }, [isFocused]);
 
   const renderItem = ({ item }) => (
     <Pressable onPress={() => router.push(`/inventory/${item.id}`)}>
@@ -52,23 +50,18 @@ export default function ProductsListPage() {
   return (
     <View style={globalStyles.container}>
       <BodyText style={globalStyles.title}>My Products</BodyText>
-      <TimeFilters 
-            selectedMonth={selectedMonth}
-            onMonthChange={setSelectedMonth}
-        />
-        
-    <FlatList
-      data={products}
-      keyExtractor={(item) => item.id}
-      renderItem={renderItem}
-      contentContainerStyle={{ paddingBottom: 96 }}
-      ListEmptyComponent={
-          <EmptyState 
-            title="No products yet"
-            description="Add products to start tracking your stock and sales."
-          />
-      }
-    />
+      <FlatList
+        data={products}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        contentContainerStyle={{ paddingBottom: 96 }}
+        ListEmptyComponent={
+            <EmptyState 
+              title="No products yet"
+              description="Add products to start tracking your stock and sales."
+            />
+        }
+      />
 
       <AddButton 
         primaryAction={{ route: "/inventory/add", label: "Add Product" }}
