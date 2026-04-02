@@ -2,10 +2,13 @@ import { SQLiteProvider } from "expo-sqlite";
 import CategoriesProvider from "./CategoriesProvider"
 
 const migrateDbIfNeeded = async (db) => {
+
   // await db.execAsync(`DROP TABLE IF EXISTS transactions;`);
   // await db.execAsync(`DROP TABLE IF EXISTS transaction_categories;`);
   // await db.execAsync(`DROP TABLE IF EXISTS transaction_templates;`);
   // await db.execAsync(`DROP TABLE IF EXISTS products;`);
+  // await db.execAsync(`DROP TABLE IF EXISTS sales;`);
+
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
 
@@ -15,12 +18,14 @@ const migrateDbIfNeeded = async (db) => {
       amount REAL NOT NULL,
       category TEXT,
       category_id TEXT,
+      sale_id Text,
       title Text,
       payee Text,
       note TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-      date TEXT NOT NULL
+      date TEXT NOT NULL,
+      deleted_at TEXT
     );
 
     CREATE TABLE IF NOT EXISTS transaction_categories (
@@ -83,22 +88,30 @@ const migrateDbIfNeeded = async (db) => {
       note TEXT,
 
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      deleted_at TEXT,
 
       FOREIGN KEY (product_id) REFERENCES products(id)
     );
 
-    CREATE TABLE IF NOT EXISTS transaction_items (
+
+    CREATE TABLE IF NOT EXISTS sales (
       id TEXT PRIMARY KEY,
-      transaction_id TEXT NOT NULL,
-      product_id TEXT NOT NULL,
+      title TEXT,
+      note TEXT,
+      date TEXT,
+      created_at TEXT,
+      updated_at TEXT,
+      deleted_at TEXT
+    );
 
-      quantity REAL NOT NULL,
-      price REAL NOT NULL,
-
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-
-      FOREIGN KEY (transaction_id) REFERENCES transactions(id),
-      FOREIGN KEY (product_id) REFERENCES products(id)
+    CREATE TABLE IF NOT EXISTS sale_items (
+      id TEXT PRIMARY KEY,
+      sale_id TEXT,
+      product_id TEXT,
+      quantity INTEGER,
+      price REAL,
+      deleted_at TEXT,
+      FOREIGN KEY (sale_id) REFERENCES sales(id)
     );
 
     CREATE TABLE IF NOT EXISTS app_settings (

@@ -4,33 +4,37 @@ import { View, TouchableOpacity, Text } from "react-native";
 import { useLocalSearchParams , useRouter} from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { BodyText, Card, SecondaryText } from "../../../../src/components/ThemeProvider/components";
-import { getTransactionById } from "../../../../src/db/transactionsDb";
-import { getTransactionItems, deleteSale } from "../../../../src/db/salesDb";
+import { getSaleById, getSaleItems, deleteSale } from "../../../../src/db/salesDb";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import DeleteButton from "../../../../src/components/common/DeleteButton";
-
+import { dateFormat } from "../../../../src/utils/dateFormat";
 
 export default function SaleDetails() {
-  const {globalStyles} = useThemeStyles()
-  const isFocused = useIsFocused()
+  const { globalStyles } = useThemeStyles();
+  const isFocused = useIsFocused();
   const db = useSQLiteContext();
-  const router = useRouter()
-  const { id } = useLocalSearchParams();
+  const router = useRouter();
+  const { id: sale_id } = useLocalSearchParams();
 
   const [sale, setSale] = useState({});
   const [items, setItems] = useState([]);
 
   useEffect(() => {
+    if (!sale_id) return;
+
     (async () => {
-      const s = await getTransactionById(db, id);
-      const i = await getTransactionItems(db, id);
+      const s = await getSaleById(db, sale_id);
+      console.log(sale_id,s,"hello sale")
       setSale(s);
+
+      // Load sale items
+      const i = await getSaleItems(db, sale_id);
       setItems(i);
     })();
-  }, [isFocused]);
+  }, [sale_id, isFocused]);
 
   const handleDelete = async () => {
-    await deleteSale(db, id);
+    await deleteSale(db, sale_id);
     router.back();
   };
 
@@ -41,8 +45,8 @@ export default function SaleDetails() {
       </BodyText>
 
       <Card>
-        <BodyText>Total: KES {sale.amount}</BodyText>
-        <SecondaryText>{sale.date}</SecondaryText>
+        <BodyText>Total: KES {sale?.amount}</BodyText>
+        <SecondaryText>{dateFormat(sale?.date)}</SecondaryText>
       </Card>
 
       {items.map((item) => (
@@ -54,22 +58,21 @@ export default function SaleDetails() {
         </Card>
       ))}
 
-      <View style={{ gap: 12 }}>
-                  
-                  <TouchableOpacity
-                      onPress={() => router.push(`/sales/${id}/edit`)}
-                      style={globalStyles.editBtn}
-                  >
-                    <Text style={globalStyles.editBtnText}>
-                        Edit
-                    </Text>
-                  </TouchableOpacity>
-      
-                  <DeleteButton 
-                      handleOk={handleDelete}
-                      item={"sale"}
-                  />
-              </View>
+      <View style={{ gap: 12, marginTop: 20 }}>
+        <TouchableOpacity
+          onPress={() => router.push(`/sales/${sale_id}/edit`)}
+          style={globalStyles.editBtn}
+        >
+          <Text style={globalStyles.editBtnText}>
+            Edit
+          </Text>
+        </TouchableOpacity>
+
+        <DeleteButton 
+          handleOk={handleDelete}
+          item="sale"
+        />
+      </View>
     </View>
   );
 }

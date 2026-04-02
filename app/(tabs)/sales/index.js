@@ -8,7 +8,7 @@ import {
 } from "../../../src/components/ThemeProvider/components";
 import { useSQLiteContext } from "expo-sqlite";
 import { useRouter } from "expo-router";
-import { getTransactions } from "../../../src/db/transactionsDb";
+import { getSales } from "../../../src/db/salesDb"; 
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { AddButton } from "../../../src/components/common/AddButton";
 import EmptyState from "../../../src/components/common/EmptyState";
@@ -21,23 +21,21 @@ export default function SalesList() {
   const router = useRouter();
 
   const [sales, setSales] = useState([]);
-  const [isLoading,setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
   useEffect(() => {
+    if (!db) return;
     (async () => {
-      const data = await getTransactions(db, selectedMonth);
+      setIsLoading(true);
+      const data = await getSales(db, selectedMonth);
 
-      setSales(
-        data
-          .filter((t) => t.type === "income")
-          .sort((a, b) => new Date(b.date) - new Date(a.date))
-      );
-      setIsLoading(false)
+      // sort by date descending
+      setSales(data.sort((a, b) => new Date(b.date) - new Date(a.date)));
+      setIsLoading(false);
     })();
   }, [isFocused, selectedMonth]);
 
-  // 🧠 Format date nicely
   const formatDate = (date) => {
     if (!date) return "";
     return new Date(date).toLocaleString("en-KE", {
@@ -53,9 +51,9 @@ export default function SalesList() {
       <BodyText style={globalStyles.title}>My Sales</BodyText>
 
       <TimeFilters 
-          selectedMonth={selectedMonth}
-          onMonthChange={setSelectedMonth}
-        />
+        selectedMonth={selectedMonth}
+        onMonthChange={setSelectedMonth}
+      />
 
       <FlatList
         data={sales}
@@ -66,12 +64,10 @@ export default function SalesList() {
           return (
             <Pressable onPress={() => router.push(`/sales/${item.id}`)}>
               <Card style={{ marginBottom: 10 }}>
-                {/* 🔥 TITLE */}
                 <BodyText style={{ fontWeight: "600" }}>
                   {item.title || fallbackTitle}
                 </BodyText>
 
-                {/* 🔥 META ROW */}
                 <View
                   style={{
                     flexDirection: "row",
@@ -79,10 +75,7 @@ export default function SalesList() {
                     marginTop: 4,
                   }}
                 >
-                  <SecondaryText>
-                    {formatDate(item.date)}
-                  </SecondaryText>
-
+                  <SecondaryText>{formatDate(item.date)}</SecondaryText>
                   <BodyText style={{ fontWeight: "700" }}>
                     KES {item.amount}
                   </BodyText>
@@ -92,11 +85,11 @@ export default function SalesList() {
           );
         }}
         ListEmptyComponent={
-                  <EmptyState 
-                    title="No sales yet"
-                    description="Start by recording your first sale to track your business."
-                  />
-                }
+          <EmptyState 
+            title="No sales yet"
+            description="Start by recording your first sale to track your business."
+          />
+        }
       />
 
       <AddButton
