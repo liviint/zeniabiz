@@ -9,9 +9,9 @@ export const StatCard = ({
 }) => {
     return (
         <Card style={[styles.card, style]}>
-        <SecondaryText style={styles.label}>
+        <BodyText style={styles.label}>
             {label}
-        </SecondaryText>
+        </BodyText>
 
         <BodyText style={[styles.value, { color }]}>
             {value}
