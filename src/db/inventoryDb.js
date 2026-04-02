@@ -57,9 +57,7 @@ export async function upsertProduct(
   }
 }
 
-// ------------------------
-// Get All Products
-// ------------------------
+
 export async function getProducts(db, selectedMonth) {
   let sql = `
     SELECT *
@@ -108,7 +106,7 @@ export async function deleteProduct(db, id) {
   );
 }
 
-export async function adjustStock(db, product_id, quantityChange) {
+export async function restockProduct(db, product_id, quantityChange) {
   await db.runAsync(
     `
     UPDATE products
@@ -119,9 +117,7 @@ export async function adjustStock(db, product_id, quantityChange) {
   );
 }
 
-// ------------------------
-// Inventory Stats
-// ------------------------
+
 export async function getInventoryStats(db) {
   const result = await db.getFirstAsync(`
     SELECT
