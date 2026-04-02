@@ -19,15 +19,12 @@ export async function createOrUpdateSale(
   const isEdit = !!sale_id;
   const id = sale_id || newUuid();
 
+  // Calculate totals
   const total = items.reduce(
     (sum, item) => sum + Number(item.price) * Number(item.quantity),
     0
   );
-
-  const totalItems = items.reduce(
-    (sum, item) => sum + Number(item.quantity),
-    0
-  );
+  const totalItems = items.reduce((sum, item) => sum + Number(item.quantity), 0);
 
   const finalTitle =
     title && title.trim().length > 0
@@ -37,9 +34,8 @@ export async function createOrUpdateSale(
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
-    // 🔁 EDIT MODE
     if (isEdit) {
-      // 1. Restore stock
+      // 1️⃣ Restore stock for old items
       const oldItems = await db.getAllAsync(
         `SELECT product_id, quantity FROM sale_items WHERE sale_id = ?`,
         [id]
@@ -52,20 +48,20 @@ export async function createOrUpdateSale(
         );
       }
 
-      // 2. Delete old items
+      // 2️⃣ Delete old items
       await db.runAsync(`DELETE FROM sale_items WHERE sale_id = ?`, [id]);
 
-      // 3. Update sale
+      // 3️⃣ Update sale record including total
       await db.runAsync(
         `
         UPDATE sales
-        SET title = ?, note = ?, date = ?, updated_at = ?
+        SET title = ?, note = ?, date = ?, amount = ?, updated_at = ?
         WHERE id = ?
         `,
-        [finalTitle, note ?? null, saleDate, now, id]
+        [finalTitle, note ?? null, saleDate, total, now, id]
       );
 
-      // 4. Update transaction
+      // 4️⃣ Update transaction linked to this sale
       await db.runAsync(
         `
         UPDATE transactions
@@ -74,20 +70,18 @@ export async function createOrUpdateSale(
         `,
         [total, finalTitle, note ?? null, saleDate, now, id]
       );
-    }
-
-    // ➕ CREATE MODE
-    if (!isEdit) {
-      // 1. Create sale
+    } else {
+      // ➕ CREATE MODE
+      // 1️⃣ Insert new sale
       await db.runAsync(
         `
-        INSERT INTO sales (id, title, note, date, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO sales (id, title, note, date, amount, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         `,
-        [id, finalTitle, note ?? null, saleDate, now, now]
+        [id, finalTitle, note ?? null, saleDate, total, now, now]
       );
 
-      // 2. Create transaction
+      // 2️⃣ Insert new transaction
       await db.runAsync(
         `
         INSERT INTO transactions (
@@ -99,48 +93,37 @@ export async function createOrUpdateSale(
       );
     }
 
-    // ➕ Insert items + reduce stock
+    // ➕ Insert items & reduce stock
     for (const item of items) {
-      // 🔒 Stock validation
+      // Validate stock
       const product = await db.getFirstAsync(
         `SELECT stock_quantity FROM products WHERE id = ?`,
         [item.product_id]
       );
 
       if (!product || product.stock_quantity < item.quantity) {
-        throw new Error("Not enough stock");
+        throw new Error(`Not enough stock for ${item.name || item.product_id}`);
       }
 
+      // Insert sale item
       await db.runAsync(
-        `
-        INSERT INTO sale_items (id, sale_id, product_id, quantity, price)
-        VALUES (?, ?, ?, ?, ?)
-        `,
-        [
-          newUuid(),
-          id,
-          item.product_id,
-          Number(item.quantity),
-          Number(item.price),
-        ]
+        `INSERT INTO sale_items (id, sale_id, product_id, quantity, price)
+         VALUES (?, ?, ?, ?, ?)`,
+        [newUuid(), id, item.product_id, Number(item.quantity), Number(item.price)]
       );
 
+      // Reduce stock
       await db.runAsync(
-        `
-        UPDATE products
-        SET stock_quantity = stock_quantity - ?
-        WHERE id = ?
-        `,
+        `UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?`,
         [item.quantity, item.product_id]
       );
     }
 
     await db.runAsync("COMMIT");
     return id;
-
   } catch (error) {
     await db.runAsync("ROLLBACK");
-    console.log("SALE ERROR:", error);
+    console.error("SALE ERROR:", error);
     throw error;
   }
 }

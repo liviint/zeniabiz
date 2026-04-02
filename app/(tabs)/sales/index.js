@@ -29,8 +29,7 @@ export default function SalesList() {
     (async () => {
       setIsLoading(true);
       const data = await getSales(db, selectedMonth);
-
-      // sort by date descending
+      console.log(data,"hello data")
       setSales(data.sort((a, b) => new Date(b.date) - new Date(a.date)));
       setIsLoading(false);
     })();

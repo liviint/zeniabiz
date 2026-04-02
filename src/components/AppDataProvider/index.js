@@ -98,6 +98,7 @@ const migrateDbIfNeeded = async (db) => {
       id TEXT PRIMARY KEY,
       title TEXT,
       note TEXT,
+      amount REAL, 
       date TEXT,
       created_at TEXT,
       updated_at TEXT,

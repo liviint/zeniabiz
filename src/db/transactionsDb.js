@@ -131,34 +131,23 @@ export async function getTransactionStats(db, date = new Date()) {
   const start = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
   const end = new Date(date.getFullYear(), date.getMonth() + 1, 1).toISOString();
 
-  // 1. Revenue (only income transactions with items)
-  const revenueResult = await db.getFirstAsync(
+  // 1. Revenue and Cost from sales + sale_items
+  const revenueAndCost = await db.getFirstAsync(
     `
-    SELECT SUM(ti.price * ti.quantity) AS revenue
-    FROM transaction_items ti
-    JOIN transactions t ON t.id = ti.transaction_id
-    WHERE t.type = 'income'
-      AND t.date >= ?
-      AND t.date < ?
+    SELECT 
+      SUM(si.price * si.quantity) AS revenue,
+      SUM(p.cost_price * si.quantity) AS cost
+    FROM sale_items si
+    JOIN sales s ON s.id = si.sale_id
+    JOIN products p ON p.id = si.product_id
+    WHERE s.deleted_at IS NULL
+      AND s.created_at >= ?
+      AND s.created_at < ?
     `,
     [start, end]
   );
 
-  // 2. Cost (join with products)
-  const costResult = await db.getFirstAsync(
-    `
-    SELECT SUM(p.cost_price * ti.quantity) AS cost
-    FROM transaction_items ti
-    JOIN products p ON p.id = ti.product_id
-    JOIN transactions t ON t.id = ti.transaction_id
-    WHERE t.type = 'income'
-      AND t.date >= ?
-      AND t.date < ?
-    `,
-    [start, end]
-  );
-
-  // 3. Expenses (no change)
+  // 2. Expenses (still from transactions)
   const expenseResult = await db.getFirstAsync(
     `
     SELECT SUM(amount) AS expenses
@@ -170,8 +159,8 @@ export async function getTransactionStats(db, date = new Date()) {
     [start, end]
   );
 
-  const revenue = revenueResult?.revenue || 0;
-  const cost = costResult?.cost || 0;
+  const revenue = revenueAndCost?.revenue || 0;
+  const cost = revenueAndCost?.cost || 0;
   const expenses = expenseResult?.expenses || 0;
 
   const grossProfit = revenue - cost;
