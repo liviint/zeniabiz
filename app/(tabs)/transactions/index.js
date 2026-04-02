@@ -32,7 +32,6 @@ export default function FinanceListPage() {
     }
     const fetchStats = async () => {
       const summary = await getTransactionStats(db,selectedMonth);
-      console.log(summary,"hello summ")
       setStats(summary);
     };
 

@@ -24,7 +24,6 @@ export default function SaleDetails() {
 
     (async () => {
       const s = await getSaleById(db, sale_id);
-      console.log(sale_id,s,"hello sale")
       setSale(s);
 
       // Load sale items

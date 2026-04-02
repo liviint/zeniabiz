@@ -11,6 +11,8 @@ export async function createOrUpdateSale(
     note = null,
     date,
     title,
+    category,
+    category_id
   }
 ) {
   const now = new Date().toISOString();
@@ -85,11 +87,11 @@ export async function createOrUpdateSale(
       await db.runAsync(
         `
         INSERT INTO transactions (
-          id, type, amount, title, note, date, category, sale_id, created_at, updated_at
+          id, type, amount, title, note, date, category, category_id,  sale_id, created_at, updated_at
         )
-        VALUES (?, 'income', ?, ?, ?, ?, 'Product Sales', ?, ?, ?)
+        VALUES (?, 'income', ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
-        [newUuid(), total, finalTitle, note ?? null, saleDate, id, now, now]
+        [newUuid(), total, finalTitle, note ?? null, saleDate, category,category_id,id, now, now]
       );
     }
 

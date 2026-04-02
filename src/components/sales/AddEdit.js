@@ -113,7 +113,6 @@ export default function SellPage() {
 
   const handleSave = async () => {
     if (cart.length === 0) return Alert.alert("Add items first");
-    console.log(category,"hello category")
     await createOrUpdateSale(db, { items: cart ,transaction_id:id, title,category:category?.name,
       category_id:category.id,});
     Alert.alert("Success", "Sale recorded");
