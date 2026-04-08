@@ -50,7 +50,7 @@ export default function ProductsListPage() {
 
   return (
     <View style={globalStyles.container}>
-      <BodyText style={globalStyles.title}>My Products</BodyText>
+      <BodyText style={globalStyles.title}>My Stock</BodyText>
       <FlatList
         data={products}
         keyExtractor={(item) => item.id}
@@ -71,9 +71,6 @@ export default function ProductsListPage() {
 
       <AddButton 
         primaryAction={{ route: "/inventory/add", label: "Add Product" }}
-        secondaryActions={[
-          { route: "/sales/add", label: "Record Sale" },
-        ]}
       />
     </View>
   );

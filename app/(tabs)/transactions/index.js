@@ -136,7 +136,7 @@ export default function FinanceListPage() {
     <View style={globalStyles.container}>
       <View style={styles.headerRow}>
         <BodyText style={globalStyles.title}>
-          My transactions
+          My Expenses
         </BodyText>
       </View>
       
@@ -168,7 +168,7 @@ export default function FinanceListPage() {
     </> 
 
       <AddButton 
-        primaryAction={{route:"/transactions/add",label:"Add Transaction"}}
+        primaryAction={{route:"/transactions/add",label:"Add Expense"}}
         secondaryActions={[
           {route:"/categories/add/modal",label:"Add Category"},
           {route:"/transactions-templates/add/",label:"Add Template"},
