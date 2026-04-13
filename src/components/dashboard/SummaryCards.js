@@ -92,7 +92,7 @@ export default function SummaryCards({ refreshKey }) {
           label="Stock Value"
           value={formatKES(data.stockValue)}
           subText="Inventory worth"
-          color="#333333"
+          color="#2E8B8B"
         />
       </View>
     </View>
