@@ -26,3 +26,23 @@ export const htmlToPlainText = (html) => {
         .replace(/\n{3,}/g, '\n\n')
         .trim();
 };
+
+const hexToRgb = (hex) => {
+  const bigint = parseInt(hex.replace("#", ""), 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return { r, g, b };
+};
+
+export const chartConfig = (primaryColor, colors) => {
+  const { r, g, b } = hexToRgb(primaryColor);
+
+  return {
+    backgroundGradientFrom: colors.background || "#FAF9F7",
+    backgroundGradientTo: colors.background || "#FAF9F7",
+    decimalPlaces: 0,
+    color: (opacity = 1) => `rgba(${r}, ${g}, ${b}, ${opacity})`,
+    labelColor: () => colors.text || "#333",
+  };
+};

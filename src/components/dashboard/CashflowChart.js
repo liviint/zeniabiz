@@ -1,11 +1,15 @@
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { Text, StyleSheet, Dimensions } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
+import { useThemeStyles } from "../../hooks/useThemeStyles";
+import { chartConfig } from "../../helpers";
+import { Card, BodyText } from "../ThemeProvider/components";
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function CashflowChart() {
+  const {colors} = useThemeStyles()
   const db = useSQLiteContext();
   const [chartData, setChartData] = useState({
     labels: [],
@@ -41,46 +45,32 @@ export default function CashflowChart() {
     });
   };
 
+  if (!chartData.datasets[0]?.data?.length) {
+  return <Text style={{ padding: 16 }}>No data yet</Text>;
+}
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Cashflow (Last 7 days)</Text>
+    <Card >
+      <BodyText style={styles.title}>Cashflow (Last 7 days)</BodyText>
 
       <LineChart
         data={chartData}
         width={screenWidth - 32}
         height={220}
-        chartConfig={chartConfig}
+        chartConfig={chartConfig(colors.primary,colors)}
         bezier
         style={{ borderRadius: 16 }}
       /> 
-    </View>
+    </Card>
   );
 }
 
-const chartConfig = {
-  backgroundGradientFrom: "#FAF9F7",
-  backgroundGradientTo: "#FAF9F7",
-  decimalPlaces: 0,
-  color: (opacity = 1) => `rgba(46, 139, 139, ${opacity})`, // #2E8B8B
-  labelColor: () => "#333",
-  propsForDots: {
-    r: "4",
-    strokeWidth: "2",
-    stroke: "#FF6B6B",
-  },
-};
+
 
 const styles = StyleSheet.create({
-  container: {
-    margin: 12,
-    padding: 16,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-  },
   title: {
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 8,
-    color: "#333333",
   },
 });

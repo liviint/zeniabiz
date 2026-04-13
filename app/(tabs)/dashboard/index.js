@@ -33,7 +33,7 @@ export default function DashboardScreen() {
 
                 <CashflowChart />
 
-                <ExpenseBreakdown /> 
+                <ExpenseBreakdown />   
 
                 <View style={{ height: 24 }} />
             </ScrollView>

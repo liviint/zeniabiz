@@ -2,10 +2,13 @@ import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { PieChart } from "react-native-chart-kit";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
+import { Card,BodyText } from "../ThemeProvider/components";
+import { useThemeStyles } from "../../hooks/useThemeStyles";
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function ExpenseBreakdown() {
+  const {globalStyles} = useThemeStyles()
   const db = useSQLiteContext();
   const [data, setData] = useState([]);
 
@@ -40,21 +43,26 @@ export default function ExpenseBreakdown() {
     setData(formatted);
   };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Expense Breakdown</Text>
 
-      <PieChart
-        data={data}
-        width={screenWidth - 32}
-        height={220}
-        chartConfig={chartConfig}
-        accessor="amount"
-        backgroundColor="transparent"
-        paddingLeft="15"
-        absolute
-      />
-    </View>
+  return (
+    <Card >
+      <BodyText style={styles.title}>Expense Breakdown</BodyText>
+
+        {data?.length > 0 ? 
+          <PieChart
+            data={data}
+            width={screenWidth - 32}
+            height={220}
+            chartConfig={chartConfig}
+            accessor="amount"
+            backgroundColor="transparent"
+            paddingLeft="15"
+            absolute
+          /> 
+          : 
+        <BodyText style={{ padding: 16 }}>No data yet</BodyText>
+      }
+    </Card>
   );
 }
 
@@ -73,6 +81,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 8,
-    color: "#333333",
   },
 });
