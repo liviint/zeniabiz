@@ -34,7 +34,7 @@ export default function CashflowChart() {
     );
 
     const data = result.map((item) => item.net || 0);
-
+    console.log(chartData,"hello chart data")
     setChartData({
       labels,
       datasets: [{ data }],
@@ -52,7 +52,7 @@ export default function CashflowChart() {
         chartConfig={chartConfig}
         bezier
         style={{ borderRadius: 16 }}
-      />
+      /> 
     </View>
   );
 }
