@@ -33,9 +33,7 @@ export default function RootLayout() {
       <ThemeProvider >
         <AppDataProvider>
           <AppLockProvider>
-            {/* <DonateProvider> */}
               <Stack>
-                {/* Main Tabs */}
                 <Stack.Screen
                   name="(tabs)"
                   options={{
@@ -43,7 +41,6 @@ export default function RootLayout() {
                   }}
                 />
 
-                {/* Modal screen */}
                 <Stack.Screen
                   name="modal"
                   options={{
@@ -53,6 +50,7 @@ export default function RootLayout() {
                   }}
                 />
               </Stack>
+              
            {/*  </DonateProvider> */}
           </AppLockProvider>
         </AppDataProvider>

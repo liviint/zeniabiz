@@ -35,14 +35,15 @@ export default function TabLayout() {
         />
 
         <Tabs.Screen
-          name="inventory"
+          name="dashboard"
           options={{
-            title: "Stock",
+            title: "Dashboard",
             tabBarIcon: ({ color }) => (
-              <IconSymbol size={24} name="stock" color={color} />
+              <IconSymbol size={24} name="dashboard" color={color} />
             ),
           }}
         />
+
         <Tabs.Screen
           name="sales"
           options={{
@@ -58,6 +59,16 @@ export default function TabLayout() {
             title: "Expenses",
             tabBarIcon: ({ color }) => (
               <IconSymbol size={24} name="expenses" color={color} />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
+          name="inventory"
+          options={{
+            title: "Stock",
+            tabBarIcon: ({ color }) => (
+              <IconSymbol size={24} name="stock" color={color} />
             ),
           }}
         />
