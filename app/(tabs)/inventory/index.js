@@ -3,12 +3,13 @@ import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
-import { BodyText, Card, SecondaryText } from "../../../src/components/ThemeProvider/components";
+import { BodyText, Card, SecondaryText, Input } from "../../../src/components/ThemeProvider/components";
 import { AddButton } from "../../../src/components/common/AddButton";
 import { getProducts } from "../../../src/db/inventoryDb";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import EmptyState from "../../../src/components/common/EmptyState";
 import { StatCard } from "../../../src/components/common/StatCard";
+import { useDebounce } from "../../../src/hooks/useDebounce";
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();
@@ -18,16 +19,20 @@ export default function ProductsListPage() {
 
   const [products, setProducts] = useState([]);
   const [isLoading,setIsLoading] = useState(true)
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
+  const [filter, setFilter] = useState("all");
 
   const fetchProducts = async () => {
-    const data = await getProducts(db);
+    setIsLoading(true);
+    const data = await getProducts(db, { search: debouncedSearch, filter });
     setProducts(data);
+    setIsLoading(false);
   };
 
   useEffect(() => {
     if (isFocused) fetchProducts();
-    setIsLoading(false)
-  }, [isFocused]);
+  }, [isFocused, debouncedSearch, filter]);
 
   const renderItem = ({ item }) => (
     <Pressable onPress={() => router.push(`/inventory/${item.id}`)}>
@@ -59,12 +64,16 @@ export default function ProductsListPage() {
         ListHeaderComponent={
           <ListHeader
             stats={{count:products.length}}
+            search={search}
+            setSearch={setSearch}
+            filter={filter}
+            setFilter={setFilter}
           />
         }
         ListEmptyComponent={
             <EmptyState 
               title="No products yet"
-              description="Add products to start tracking your stock and sales."
+              description="Try adjusting your filters or add a new product."
             />
         }
       />
@@ -76,18 +85,104 @@ export default function ProductsListPage() {
   );
 }
 
-const ListHeader = ({ stats}) => {
+const ListHeader = ({ stats, search, filter, setSearch, setFilter}) => {
   return (
+    <>
+      <View style={styles.filtersContainer}>
+        <View style={styles.searchRow}>
+          <Input
+            placeholder="Search products..."
+            value={search}
+            onChangeText={setSearch}
+            style={styles.searchInput}
+          />
+
+          {search.length > 0 && (
+            <Pressable onPress={() => setSearch("")} style={styles.clearBtn}>
+              <BodyText style={styles.clearText}>✕</BodyText>
+            </Pressable>
+          )}
+        </View>
+
+        <View style={styles.chipsRow}>
+          <FilterChip label="All" active={filter === "all"} onPress={() => setFilter("all")} />
+          <FilterChip label="Low Stock" active={filter === "low_stock"} onPress={() => setFilter("low_stock")} />
+          <FilterChip label="Out of Stock" active={filter === "out_of_stock"} onPress={() => setFilter("out_of_stock")} />
+        </View>
+      </View>
       <StatCard 
-        label="Total Products"
+        label="Products"
         value={stats.count}
-        subText="Items in stock"
+        subText={
+          filter === "all"
+            ? "All items"
+            : filter === "low_stock"
+            ? "Low stock items"
+            : "Out of stock items"
+        }
       />
+    </>
+      
   )
   
 }
 
+const FilterChip = ({ label, active, onPress }) => {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.chip,
+        { backgroundColor: active ? "#2E8B8B" : "#F4E1D2" },
+      ]}
+    >
+      <BodyText style={{ color: active ? "#fff" : "#333" }}>
+        {label}
+      </BodyText>
+    </Pressable>
+  );
+};
+
 const styles = StyleSheet.create({
+  filtersContainer: {
+    paddingHorizontal: 12,
+    marginBottom: 8,
+  },
+
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom:10,
+  },
+
+searchInput: {
+  flex: 1,
+  padding: 12,
+  borderRadius: 12,
+},
+
+clearBtn: {
+  marginLeft: 8,
+  padding: 10,
+  borderRadius: 10,
+  backgroundColor: "#F4E1D2",
+},
+
+clearText: {
+  color: "#FF6B6B",
+  fontWeight: "bold",
+},
+
+  chipsRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",

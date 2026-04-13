@@ -58,17 +58,25 @@ export async function upsertProduct(
 }
 
 
-export async function getProducts(db, selectedMonth) {
+export async function getProducts(
+  db,
+  {
+    selectedMonth = null,
+    search = "",
+    filter = "all", 
+    sort = "newest", 
+  } = {}
+) {
   let sql = `
     SELECT *
     FROM products
     WHERE deleted_at IS NULL
   `;
+
   const params = [];
 
   if (selectedMonth) {
     const { startDate, endDate } = getMonthRange(selectedMonth);
-    console.log(startDate, endDate, "hello dates");
 
     sql += `
       AND created_at >= ?
@@ -77,9 +85,39 @@ export async function getProducts(db, selectedMonth) {
     params.push(startDate, endDate);
   }
 
-  sql += `
-    ORDER BY datetime(created_at) DESC
-  `;
+  if (search) {
+    sql += `
+      AND (name LIKE ? OR sku LIKE ?)
+    `;
+    params.push(`%${search}%`, `%${search}%`);
+  }
+
+  if (filter === "low_stock") {
+    sql += `
+      AND stock_quantity > 0
+      AND stock_quantity <= 5
+    `;
+  } else if (filter === "out_of_stock") {
+    sql += `
+      AND stock_quantity = 0
+    `;
+  }
+
+  if (sort === "newest") {
+    sql += ` ORDER BY datetime(created_at) DESC`;
+  } else if (sort === "oldest") {
+    sql += ` ORDER BY datetime(created_at) ASC`;
+  } else if (sort === "high_stock") {
+    sql += ` ORDER BY stock_quantity DESC`;
+  } else if (sort === "low_stock") {
+    sql += ` ORDER BY stock_quantity ASC`;
+  } else if (sort === "price_high") {
+    sql += ` ORDER BY selling_price DESC`;
+  } else if (sort === "price_low") {
+    sql += ` ORDER BY selling_price ASC`;
+  } else {
+    sql += ` ORDER BY datetime(created_at) DESC`; // fallback
+  }
 
   return await db.getAllAsync(sql, params);
 }
