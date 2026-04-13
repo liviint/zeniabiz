@@ -147,7 +147,7 @@ export async function getExpenseStats(db, date = new Date()) {
     [start, end]
   );
 
-  // 2. Expenses (still from expenses)
+  // 2. Expenses
   const expenseResult = await db.getFirstAsync(
     `
     SELECT SUM(amount) AS expenses
@@ -159,9 +159,17 @@ export async function getExpenseStats(db, date = new Date()) {
     [start, end]
   );
 
+  // 3. Stock Value (NEW)
+  const stockResult = await db.getFirstAsync(`
+    SELECT SUM(stock_quantity * cost_price) AS stock_value
+    FROM products
+    WHERE deleted_at IS NULL
+  `);
+
   const revenue = revenueAndCost?.revenue || 0;
   const cost = revenueAndCost?.cost || 0;
   const expenses = expenseResult?.expenses || 0;
+  const stockValue = stockResult?.stock_value || 0;
 
   const grossProfit = revenue - cost;
   const netProfit = grossProfit - expenses;
@@ -172,6 +180,7 @@ export async function getExpenseStats(db, date = new Date()) {
     expenses,
     grossProfit,
     netProfit,
+    stockValue,
   };
 }
 

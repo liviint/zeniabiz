@@ -2,62 +2,37 @@ import { useIsFocused } from "@react-navigation/native";
 import { View, StyleSheet } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-
-import { StatCard } from "../common/StatCard"; // adjust path if needed
+import { StatCard } from "../common/StatCard";
+import { getExpenseStats } from "../../db/transactionsDb";
+import { useThemeStyles } from "../../hooks/useThemeStyles";
 
 export default function SummaryCards({ refreshKey }) {
-  const isFocused = useIsFocused()
+  const { colors } = useThemeStyles()
+  const isFocused = useIsFocused();
   const db = useSQLiteContext();
 
-  const [data, setData] = useState({
+  const [stats, setStats] = useState({
     revenue: 0,
     expenses: 0,
-    profit: 0,
+    cost: 0,
+    grossProfit: 0,
+    netProfit: 0,
     stockValue: 0,
   });
 
-  useEffect(() => {
-    loadData();
-  }, [refreshKey, isFocused]);
-
-  const loadData = async () => {
-    try {
-      const revenueRes = await db.getFirstAsync(`
-        SELECT SUM(amount) as total 
-        FROM expenses 
-        WHERE type='income' AND deleted_at IS NULL
-      `);
-
-      const expenseRes = await db.getFirstAsync(`
-        SELECT SUM(amount) as total 
-        FROM expenses 
-        WHERE type='expense' AND deleted_at IS NULL
-      `);
-
-      const stockRes = await db.getFirstAsync(`
-        SELECT SUM(stock_quantity * cost_price) as total 
-        FROM products
-        WHERE deleted_at IS NULL
-      `);
-
-      const revenue = revenueRes?.total || 0;
-      const expenses = expenseRes?.total || 0;
-      const stockValue = stockRes?.total || 0;
-      const profit = revenue - expenses;
-
-      setData({
-        revenue,
-        expenses,
-        profit,
-        stockValue,
-      });
-    } catch (err) {
-      console.log("Dashboard error:", err);
-    }
+  const fetchStats = async () => {
+    const summary = await getExpenseStats(db);
+    setStats(summary);
   };
 
-  const formatKES = (num) =>
-    `${Number(num || 0).toLocaleString()}`;
+  useEffect(() => {
+    fetchStats();
+  }, [refreshKey, isFocused]);
+
+  const formatNumber = (num) =>
+    Number(num || 0).toLocaleString();
+
+  const isProfitPositive = stats.netProfit >= 0;
 
   return (
     <View style={styles.container}>
@@ -65,15 +40,15 @@ export default function SummaryCards({ refreshKey }) {
       <View style={styles.row}>
         <StatCard
           label="Revenue"
-          value={formatKES(data.revenue)}
+          value={formatNumber(stats.revenue)}
           subText="Total income"
           color="#2E8B8B"
         />
 
         <StatCard
           label="Expenses"
-          value={formatKES(data.expenses)}
-          subText="Total spending"
+          value={formatNumber(stats.expenses)}
+          subText="Operating costs"
           color="#FF6B6B"
         />
       </View>
@@ -81,19 +56,31 @@ export default function SummaryCards({ refreshKey }) {
       {/* ROW 2 */}
       <View style={styles.row}>
         <StatCard
-          label="Profit"
-          value={formatKES(data.profit)}
-          subText={
-            data.profit >= 0 ? "You're making money" : "You're losing money"
-          }
-          color={data.profit >= 0 ? "#2E8B8B" : "#FF6B6B"}
+          label="Gross Profit"
+          value={formatNumber(stats.grossProfit)}
+          subText="Revenue - Cost of goods"
+          color="#2E8B8B"
         />
 
         <StatCard
+          label="Net Profit"
+          value={formatNumber(stats.netProfit)}
+          subText={
+            isProfitPositive
+              ? "You're profitable 📈"
+              : "You're losing money 📉"
+          }
+          color={isProfitPositive ? "#2E8B8B" : "#FF6B6B"}
+        />
+      </View>
+
+      {/* ROW 3 (optional but powerful) */}
+      <View style={styles.row}>
+        <StatCard
           label="Stock Value"
-          value={formatKES(data.stockValue)}
+          value={formatNumber(stats.stockValue)}
           subText="Inventory worth"
-          color="#2E8B8B"
+          color={colors.text}
         />
       </View>
     </View>
