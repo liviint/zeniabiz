@@ -56,7 +56,7 @@ export default function SummaryCards({ refreshKey }) {
   };
 
   const formatKES = (num) =>
-    `KES ${Number(num || 0).toLocaleString()}`;
+    `${Number(num || 0).toLocaleString()}`;
 
   return (
     <View style={styles.container}>

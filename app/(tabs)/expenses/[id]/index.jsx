@@ -55,7 +55,7 @@ export default function FinanceEntryViewPage() {
         <BodyText
           style={[styles.amount, isExpense ? styles.expense : styles.income]}
         >
-          {isExpense ? "-" : "+"}KES{" "}
+          {isExpense ? "-" : "+"}KE{" "}
           {Math.abs(transaction.amount).toLocaleString()}
         </BodyText>
       </Card>

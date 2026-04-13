@@ -57,7 +57,7 @@ export default function SalesList() {
         data={sales}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
-          const fallbackTitle = `Sale - KES ${item.amount}`;
+          const fallbackTitle = `Sale -  ${item.amount}`;
 
           return (
             <Pressable onPress={() => router.push(`/sales/${item.id}`)}>
@@ -75,7 +75,7 @@ export default function SalesList() {
                 >
                   <SecondaryText>{formatDate(item.date)}</SecondaryText>
                   <BodyText style={{ fontWeight: "700" }}>
-                    KES {item.amount}
+                    {item.amount}
                   </BodyText>
                 </View>
               </Card>

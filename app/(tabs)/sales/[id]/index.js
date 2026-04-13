@@ -44,7 +44,7 @@ export default function SaleDetails() {
       </BodyText>
 
       <Card>
-        <BodyText>Total: KES {sale?.amount}</BodyText>
+        <BodyText>Total: {sale?.amount}</BodyText>
         <SecondaryText>{dateFormat(sale?.date)}</SecondaryText>
       </Card>
 
@@ -52,7 +52,7 @@ export default function SaleDetails() {
         <Card key={item.id}>
           <BodyText>{item.name}</BodyText>
           <SecondaryText>
-            {item.quantity} x KES {item.price}
+            {item.quantity} x {item.price}
           </SecondaryText>
         </Card>
       ))}

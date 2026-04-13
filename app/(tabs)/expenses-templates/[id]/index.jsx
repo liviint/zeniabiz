@@ -72,7 +72,7 @@ export default function TransactionTemplateDetailsScreen() {
           template.type === "income" ? styles.income : styles.expense,
         ]}
       >
-        {template.type === "income" ? "+" : "-"} KES {template.amount || "—"}
+        {template.type === "income" ? "+" : "-"} K {template.amount || "—"}
       </Text>
 
       <Card style={styles.card}>

@@ -50,7 +50,7 @@ export default function SellPage() {
 
       const topItem = cart.sort((a, b) => b.quantity - a.quantity)[0];
 
-      const finalTitle = `${topItem?.name || "Sale"} - KES ${total}`;
+      const finalTitle = `${topItem?.name || "Sale"} - ${total}`;
 
       setTitle(finalTitle);
     }, [isFocused,cart]);
@@ -134,7 +134,7 @@ export default function SellPage() {
           <Pressable onPress={() => addToCart(item)}>
             <Card style={styles.productCard}>
               <BodyText>{item?.name}</BodyText>
-              <SecondaryText>KES {item.selling_price}</SecondaryText>
+              <SecondaryText>{item.selling_price}</SecondaryText>
             </Card>
           </Pressable>
         )}
@@ -153,7 +153,7 @@ export default function SellPage() {
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
               <BodyText>{item?.name}</BodyText>
-              <SecondaryText>KES {item.price}</SecondaryText>
+              <SecondaryText>{item.price}</SecondaryText>
             </View>
 
             <Input
@@ -169,7 +169,7 @@ export default function SellPage() {
       {/* TOTAL */}
       <Card style={styles.totalCard}>
         <BodyText>Total</BodyText>
-        <BodyText style={styles.total}>KES {total}</BodyText>
+        <BodyText style={styles.total}>{total}</BodyText>
       </Card>
 
       {/* SAVE */}

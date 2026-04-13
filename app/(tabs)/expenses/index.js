@@ -124,7 +124,7 @@ export default function FinanceListPage() {
             ]}
           >
             {item.type === "expense" ? "-" : "+"}
-            KES {Math.abs(item?.amount || 0).toLocaleString()}
+            {Math.abs(item?.amount || 0).toLocaleString()}
           </BodyText>
         </View>
       </Card>
@@ -196,7 +196,7 @@ const ListHeader = ({ stats, selectedMonth, onMonthChange}) => {
           { color: stats.netProfit >= 0 ? "#2E8B8B" : "#FF6B6B" },
         ]}
       >
-        KES {stats?.netProfit?.toLocaleString()}
+        {stats?.netProfit?.toLocaleString()}
       </BodyText>
     </Card>
 
@@ -204,14 +204,14 @@ const ListHeader = ({ stats, selectedMonth, onMonthChange}) => {
       <Card style={styles.statCard}>
         <SecondaryText style={styles.statLabel}>Revenue</SecondaryText>
         <BodyText style={[styles.statAmount, styles.income]}>
-          +KES {stats.revenue.toLocaleString()}
+          {stats.revenue.toLocaleString()}
         </BodyText>
       </Card>
 
       <Card style={styles.statCard}>
         <SecondaryText style={styles.statLabel}>Expenses</SecondaryText>
         <BodyText style={[styles.statAmount, styles.expense]}>
-          -KES {stats.expenses.toLocaleString()}
+          {stats.expenses.toLocaleString()}
         </BodyText>
       </Card>
       

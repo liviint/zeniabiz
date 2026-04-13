@@ -36,12 +36,12 @@ export default function ProductsListPage() {
           <View style={styles.left}>
             <BodyText style={styles.title}>{item.name}</BodyText>
             <SecondaryText style={styles.meta}>
-              Stock: {item.stock_quantity} • Cost: KES {item.cost_price}
+              Stock: {item.stock_quantity} • Cost:  {item.cost_price}
             </SecondaryText>
           </View>
 
           <BodyText style={styles.price}>
-            KES {item.selling_price}
+            {item.selling_price}
           </BodyText>
         </View>
       </Card>

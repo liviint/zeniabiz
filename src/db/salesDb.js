@@ -31,7 +31,7 @@ export async function createOrUpdateSale(
   const finalTitle =
     title && title.trim().length > 0
       ? title
-      : `Sold ${totalItems} item${totalItems > 1 ? "s" : ""} - KES ${total}`;
+      : `Sold ${totalItems} item${totalItems > 1 ? "s" : ""} - ${total}`;
 
   await db.runAsync("BEGIN TRANSACTION");
 

@@ -57,7 +57,7 @@ export default function TransactionTemplatesListScreen() {
                 : styles.expenseAmount,
             ]}
           >
-            {item.type === "income" ? "+" : "-"} KES {item.amount}
+            {item.type === "income" ? "+" : "-"} K {item.amount}
           </SecondaryText>
         </View>
 
