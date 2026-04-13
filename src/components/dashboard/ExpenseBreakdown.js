@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { useIsFocused } from "@react-navigation/native";
 import { PieChart } from "react-native-chart-kit";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
@@ -8,13 +9,14 @@ import { useThemeStyles } from "../../hooks/useThemeStyles";
 const screenWidth = Dimensions.get("window").width;
 
 export default function ExpenseBreakdown() {
+  const isFocused = useIsFocused()
   const {globalStyles} = useThemeStyles()
   const db = useSQLiteContext();
   const [data, setData] = useState([]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [isFocused]);
 
   const loadData = async () => {
     const result = await db.getAllAsync(`

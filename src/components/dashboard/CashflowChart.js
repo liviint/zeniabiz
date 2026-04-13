@@ -1,4 +1,5 @@
 import { Text, StyleSheet, Dimensions } from "react-native";
+import { useIsFocused } from "@react-navigation/native";
 import { LineChart } from "react-native-chart-kit";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
@@ -9,6 +10,7 @@ import { Card, BodyText } from "../ThemeProvider/components";
 const screenWidth = Dimensions.get("window").width;
 
 export default function CashflowChart() {
+  const isFocused = useIsFocused()
   const {colors} = useThemeStyles()
   const db = useSQLiteContext();
   const [chartData, setChartData] = useState({
@@ -18,7 +20,7 @@ export default function CashflowChart() {
 
   useEffect(() => {
     loadChart();
-  }, []);
+  }, [isFocused]);
 
   const loadChart = async () => {
     const result = await db.getAllAsync(`

@@ -1,4 +1,4 @@
-// components/dashboard/SummaryCards.js
+import { useIsFocused } from "@react-navigation/native";
 import { View, StyleSheet } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { StatCard } from "../common/StatCard"; // adjust path if needed
 
 export default function SummaryCards({ refreshKey }) {
+  const isFocused = useIsFocused()
   const db = useSQLiteContext();
 
   const [data, setData] = useState({
@@ -17,7 +18,7 @@ export default function SummaryCards({ refreshKey }) {
 
   useEffect(() => {
     loadData();
-  }, [refreshKey]);
+  }, [refreshKey, isFocused]);
 
   const loadData = async () => {
     try {
