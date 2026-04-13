@@ -1,11 +1,11 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-import { HapticTab } from '../../src/components/haptic-tab';
-import { useThemeStyles } from '../../src/hooks/useThemeStyles';
-import { IconSymbol } from '@/src/components/ui/icon-symbol.ios';
+import { IconSymbol } from "@/src/components/ui/icon-symbol.ios";
+import { Tabs } from "expo-router";
+import React from "react";
+import { HapticTab } from "../../src/components/haptic-tab";
+import { useThemeStyles } from "../../src/hooks/useThemeStyles";
 
 export default function TabLayout() {
-  const {colors} = useThemeStyles()
+  const { colors } = useThemeStyles();
   return (
     <>
       <Tabs
@@ -14,7 +14,7 @@ export default function TabLayout() {
           headerShown: false,
           tabBarButton: HapticTab,
           tabBarActiveTintColor: colors.tint,
-          tabBarInactiveTintColor: colors.textMuted, 
+          tabBarInactiveTintColor: colors.textMuted,
           tabBarStyle: {
             backgroundColor: colors.surface,
             borderTopColor: colors.border,
@@ -27,73 +27,76 @@ export default function TabLayout() {
           },
         }}
       >
+        <Tabs.Screen
+          name="index"
+          options={{
+            href: null,
+          }}
+        />
 
-      
-      <Tabs.Screen
-        name="index"
-        options={{
-          href: null,
-        }}
-      />
+        <Tabs.Screen
+          name="inventory"
+          options={{
+            title: "Stock",
+            tabBarIcon: ({ color }) => (
+              <IconSymbol size={24} name="stock" color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="sales"
+          options={{
+            title: "Sales",
+            tabBarIcon: ({ color }) => (
+              <IconSymbol size={24} name="sales" color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="expenses"
+          options={{
+            title: "Expenses",
+            tabBarIcon: ({ color }) => (
+              <IconSymbol size={24} name="expenses" color={color} />
+            ),
+          }}
+        />
 
-      <Tabs.Screen
-        name="inventory"
-        options={{
-          title: 'Stock',
-          tabBarIcon: ({ color }) => <IconSymbol size={24} name="stock" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="sales"
-        options={{
-          title: 'Sales',
-          tabBarIcon: ({ color }) => <IconSymbol size={24} name="sales" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="transactions"
-        options={{
-          title: 'Expenses',
-          tabBarIcon: ({ color }) => <IconSymbol size={24} name="transactions" color={color} />,
-        }}
-      />
+        <Tabs.Screen
+          name="categories"
+          options={{
+            href: null,
+          }}
+        />
 
-      <Tabs.Screen
-        name="categories"
-        options={{
-          href: null,
-        }}
-      />
+        <Tabs.Screen
+          name="expenses-templates"
+          options={{
+            href: null,
+          }}
+        />
 
-      <Tabs.Screen
-        name="transactions-templates"
-        options={{
-          href: null,
-        }}
-      />
+        <Tabs.Screen
+          name="settings/index"
+          options={{
+            href: null,
+          }}
+        />
 
-      <Tabs.Screen
-        name="settings/index"
-        options={{
-          href: null,
-        }}
-      />
+        <Tabs.Screen
+          name="support/index"
+          options={{
+            href: null,
+          }}
+        />
 
-      <Tabs.Screen
-        name="support/index"
-        options={{
-          href: null,
-        }}
-      />
-      
-      <Tabs.Screen
-        name="[...notfound]"
-        options={{
-          href: null,
-        }}
-      />
-      
-    </Tabs>
+        <Tabs.Screen
+          name="[...notfound]"
+          options={{
+            href: null,
+          }}
+        />
+      </Tabs>
     </>
   );
 }

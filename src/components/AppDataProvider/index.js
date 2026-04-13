@@ -1,9 +1,9 @@
 import { SQLiteProvider } from "expo-sqlite";
-import CategoriesProvider from "./CategoriesProvider"
+import CategoriesProvider from "./CategoriesProvider";
 
 const migrateDbIfNeeded = async (db) => {
 
-  // await db.execAsync(`DROP TABLE IF EXISTS transactions;`);
+  // await db.execAsync(`DROP TABLE IF EXISTS expenses;`);
   // await db.execAsync(`DROP TABLE IF EXISTS transaction_categories;`);
   // await db.execAsync(`DROP TABLE IF EXISTS transaction_templates;`);
   // await db.execAsync(`DROP TABLE IF EXISTS products;`);
@@ -12,7 +12,7 @@ const migrateDbIfNeeded = async (db) => {
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
 
-    CREATE TABLE IF NOT EXISTS transactions (
+    CREATE TABLE IF NOT EXISTS expenses (
       id TEXT PRIMARY KEY,
       type TEXT NOT NULL CHECK (type IN ('income', 'expense')),
       amount REAL NOT NULL,

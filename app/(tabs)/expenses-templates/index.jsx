@@ -1,25 +1,29 @@
+import { useIsFocused } from "@react-navigation/native";
+import { useRouter } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
+    FlatList,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { useSQLiteContext } from "expo-sqlite";
-import { useRouter } from "expo-router";
-import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
-import { BodyText, Card, SecondaryText } from "../../../src/components/ThemeProvider/components";
-import { getTransactionTemplates } from "../../../src/db/transactionsTempsDb";
-import { useIsFocused } from "@react-navigation/native";
-import EmptyState from "../../../src/components/common/EmptyState";
 import { AddButton } from "../../../src/components/common/AddButton";
+import EmptyState from "../../../src/components/common/EmptyState";
+import {
+    BodyText,
+    Card,
+    SecondaryText,
+} from "../../../src/components/ThemeProvider/components";
+import { getTransactionTemplates } from "../../../src/db/transactionsTempsDb";
+import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 
 export default function TransactionTemplatesListScreen() {
-  const isFocused = useIsFocused()
-  const {globalStyles} = useThemeStyles()
+  const isFocused = useIsFocused();
+  const { globalStyles } = useThemeStyles();
   const db = useSQLiteContext();
-  const router = useRouter()
+  const router = useRouter();
 
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,11 +31,10 @@ export default function TransactionTemplatesListScreen() {
   const loadTemplates = async () => {
     setLoading(true);
 
-    const result = await getTransactionTemplates(db)
+    const result = await getTransactionTemplates(db);
 
     setTemplates(result);
     setLoading(false);
-    
   };
 
   useEffect(() => {
@@ -40,9 +43,7 @@ export default function TransactionTemplatesListScreen() {
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
-      onPress={() =>
-        router.push(`transactions-templates/${item.id}`)
-      }
+      onPress={() => router.push(`expenses-templates/${item.id}`)}
     >
       <Card>
         <View style={styles.row}>
@@ -65,9 +66,7 @@ export default function TransactionTemplatesListScreen() {
             {item.category || "Uncategorized"}
           </SecondaryText>
 
-          <Text style={styles.typeBadge}>
-            {item.type.toUpperCase()}
-          </Text>
+          <Text style={styles.typeBadge}>{item.type.toUpperCase()}</Text>
         </View>
 
         {item.note ? (
@@ -82,13 +81,12 @@ export default function TransactionTemplatesListScreen() {
   return (
     <View style={globalStyles.container}>
       <BodyText style={globalStyles.title}>My Templates</BodyText>
-      {
-        !loading && templates.length === 0 ? 
+      {!loading && templates.length === 0 ? (
         <EmptyState
           title="No Templates Yet."
-          description="Create transaction templates to quickly reuse transactions."
-        /> : 
-
+          description="Create transaction templates to quickly reuse expenses."
+        />
+      ) : (
         <FlatList
           data={templates}
           keyExtractor={(item) => item.id}
@@ -97,22 +95,23 @@ export default function TransactionTemplatesListScreen() {
           onRefresh={loadTemplates}
           contentContainerStyle={{ paddingBottom: 40 }}
         />
-      }
-      <AddButton  
-        primaryAction={{route:"/transactions-templates/add",label:"Add Template"}}
+      )}
+      <AddButton
+        primaryAction={{
+          route: "/expenses-templates/add",
+          label: "Add Template",
+        }}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-
 
   amount: {
     fontSize: 15,
@@ -161,5 +160,4 @@ const styles = StyleSheet.create({
     padding: 30,
     backgroundColor: "#FAF9F7",
   },
-
 });

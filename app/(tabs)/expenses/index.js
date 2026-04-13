@@ -1,21 +1,21 @@
-import { useEffect, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
-import { View, StyleSheet, Pressable, SectionList } from "react-native";
-import { Card, BodyText, SecondaryText } from "../../../src/components/ThemeProvider/components";
-import { AddButton } from "../../../src/components/common/AddButton";
 import { useRouter } from "expo-router";
-import { getTransactions, getTransactionStats } from "../../../src/db/transactionsDb";
 import { useSQLiteContext } from "expo-sqlite";
-import { dateFormat } from "../../../utils/dateFormat";
-import { useThemeStyles } from "../../../src/hooks/useThemeStyles"
+import { useEffect, useState } from "react";
+import { Pressable, SectionList, StyleSheet, View } from "react-native";
+import { BodyText, Card, SecondaryText } from "../../../src/components/ThemeProvider/components";
+import { AddButton } from "../../../src/components/common/AddButton";
 import ButtonLinks from "../../../src/components/common/ButtonLinks";
 import EmptyState from "../../../src/components/common/EmptyState";
 import TimeFilters from "../../../src/components/common/TimeFilters";
+import { getExpenses, getExpenseStats } from "../../../src/db/transactionsDb";
+import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import { dateFormat } from "../../../utils/dateFormat";
 
 export default function FinanceListPage() {
     const db = useSQLiteContext()
     const router = useRouter();
-    const [transactions,setTransactions] = useState([])
+    const [expenses,setTransactions] = useState([])
     const [isLoading,setIsLoading] = useState(true)
     const isFocused = useIsFocused()
     const {globalStyles} = useThemeStyles()
@@ -26,24 +26,25 @@ export default function FinanceListPage() {
       });
     const [selectedMonth, setSelectedMonth] = useState(new Date());
 
-    let fetchTransactions = async() => {
-        let transactions = await getTransactions(db, selectedMonth)
-        setTransactions(transactions)
+    let fetchExpenses = async() => {
+        let expenses = await getExpenses(db, selectedMonth)
+        console.log(expenses,"hello expenses")
+        setTransactions(expenses)
     }
     const fetchStats = async () => {
-      const summary = await getTransactionStats(db,selectedMonth);
+      const summary = await getExpenseStats(db,selectedMonth);
       setStats(summary);
     };
 
     useEffect(() => {
     if (isFocused) {
-      fetchTransactions()
+      fetchExpenses()
       fetchStats()
     }
     setIsLoading(false)
     },[isFocused, selectedMonth])
 
-    const groupTransactions = (transactions) => {
+    const groupTransactions = (expenses) => {
       const today = new Date();
       const todayStr = today.toISOString().slice(0, 10);
 
@@ -67,7 +68,7 @@ export default function FinanceListPage() {
         Older: [],
   };
 
-  transactions.forEach((transaction) => {
+  expenses.forEach((transaction) => {
     const date = new Date(transaction.date);
     const dateStr = date.toISOString().slice(0, 10);
 
@@ -92,10 +93,10 @@ export default function FinanceListPage() {
     .filter((section) => section.data.length > 0);
 };
 
-  const sections = groupTransactions(transactions);
+  const sections = groupTransactions(expenses);
 
   const renderItem = ({ item }) => (
-    <Pressable onPress={() => router.push(`/transactions/${item.id}`)}>
+    <Pressable onPress={() => router.push(`/expenses/${item.id}`)}>
       <Card>
         <View style={styles.row}>
           <View style={styles.left}>
@@ -159,7 +160,7 @@ export default function FinanceListPage() {
         }
         ListEmptyComponent={
           <EmptyState 
-            title="No transactions yet"
+            title="No expenses yet"
             description="Record a sale or expense to start tracking your business."
         />
         }
@@ -168,10 +169,10 @@ export default function FinanceListPage() {
     </> 
 
       <AddButton 
-        primaryAction={{route:"/transactions/add",label:"Add Expense"}}
+        primaryAction={{route:"/expenses/add",label:"Add Expense"}}
         secondaryActions={[
           {route:"/categories/add/modal",label:"Add Category"},
-          {route:"/transactions-templates/add/",label:"Add Template"},
+          {route:"/expenses-templates/add/",label:"Add Template"},
         ]}
       />
   </View>
@@ -218,8 +219,8 @@ const ListHeader = ({ stats, selectedMonth, onMonthChange}) => {
 
     <ButtonLinks 
       links={[
-        {name:"View Templates", route:"/transactions-templates"},
-       /*  {name:"View Statistics", route:"/transactions/stats"}, */
+        {name:"View Templates", route:"/expenses-templates"},
+       /*  {name:"View Statistics", route:"/expenses/stats"}, */
       ]}
     />
     

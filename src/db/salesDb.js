@@ -1,5 +1,5 @@
 import uuid from "react-native-uuid";
-import { getMonthRange } from "./utils"; 
+import { getMonthRange } from "./utils";
 
 const newUuid = () => uuid.v4();
 
@@ -66,7 +66,7 @@ export async function createOrUpdateSale(
       // 4️⃣ Update transaction linked to this sale
       await db.runAsync(
         `
-        UPDATE transactions
+        UPDATE expenses
         SET amount = ?, title = ?, note = ?, date = ?, updated_at = ?
         WHERE sale_id = ?
         `,
@@ -86,7 +86,7 @@ export async function createOrUpdateSale(
       // 2️⃣ Insert new transaction
       await db.runAsync(
         `
-        INSERT INTO transactions (
+        INSERT INTO expenses (
           id, type, amount, title, note, date, category, category_id,  sale_id, created_at, updated_at
         )
         VALUES (?, 'income', ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -195,7 +195,7 @@ export async function deleteSale(db, sale_id) {
 
     // Delete everything
     await db.runAsync(`DELETE FROM sale_items WHERE sale_id = ?`, [sale_id]);
-    await db.runAsync(`DELETE FROM transactions WHERE sale_id = ?`, [sale_id]);
+    await db.runAsync(`DELETE FROM expenses WHERE sale_id = ?`, [sale_id]);
     await db.runAsync(`DELETE FROM sales WHERE id = ?`, [sale_id]);
 
     await db.runAsync("COMMIT");

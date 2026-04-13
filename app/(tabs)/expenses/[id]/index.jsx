@@ -1,60 +1,73 @@
-import {useState,useEffect} from "react"
-import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
-import { Card, BodyText , SecondaryText} from "../../../../src/components/ThemeProvider/components";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { getTransactionById, deleteTransaction } from "../../../../src/db/transactionsDb";
-import { dateFormat } from "../../../../utils/dateFormat";
+import { useEffect, useState } from "react";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import DeleteButton from "../../../../src/components/common/DeleteButton";
+import {
+    BodyText,
+    Card,
+    SecondaryText,
+} from "../../../../src/components/ThemeProvider/components";
+import {
+    deleteTransaction,
+    getTransactionById,
+} from "../../../../src/db/transactionsDb";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
+import { dateFormat } from "../../../../utils/dateFormat";
 
 export default function FinanceEntryViewPage() {
-  const db = useSQLiteContext()
-  const router = useRouter()
-  const { globalStyles } = useThemeStyles()
-  const {id:uuid} = useLocalSearchParams()
-  const [transaction,setTransaction] = useState(0)
-  const [isExpense,setIsExpense] = useState(transaction.amount < 0)
+  const db = useSQLiteContext();
+  const router = useRouter();
+  const { globalStyles } = useThemeStyles();
+  const { id: uuid } = useLocalSearchParams();
+  const [transaction, setTransaction] = useState(0);
+  const [isExpense, setIsExpense] = useState(transaction.amount < 0);
 
-  const handleDelete = async() => {
+  const handleDelete = async () => {
     try {
-      await deleteTransaction(db,uuid)
+      await deleteTransaction(db, uuid);
       Alert.alert("Removed", "This transaction has been deleted.");
-      router.push("/transactions")
+      router.push("/expenses");
     } catch (error) {
-      console.log(error,"hello error")
+      console.log(error, "hello error");
     }
-  }
+  };
 
   useEffect(() => {
-    if(!uuid) return
-    let getTransaction = async() => {
-      let transaction = await getTransactionById(db,uuid)
-      console.log(transaction,"hello transa")
-      setTransaction(transaction)
-      setIsExpense(transaction.type === "expense")
-    }
-    getTransaction()
-  },[])
+    if (!uuid) return;
+    let getTransaction = async () => {
+      let transaction = await getTransactionById(db, uuid);
+      console.log(transaction, "hello transa");
+      setTransaction(transaction);
+      setIsExpense(transaction.type === "expense");
+    };
+    getTransaction();
+  }, []);
 
   return (
     <View style={globalStyles.container}>
       <BodyText style={globalStyles.title}>Transaction Details</BodyText>
 
       <Card style={styles.amountCard}>
-        <SecondaryText style={styles.amountLabel}>{isExpense ? "Expense" : "Income"}</SecondaryText>
-        <BodyText style={[styles.amount, isExpense ? styles.expense : styles.income]}>
-          {isExpense ? "-" : "+"}KES {Math.abs(transaction.amount).toLocaleString()}
+        <SecondaryText style={styles.amountLabel}>
+          {isExpense ? "Expense" : "Income"}
+        </SecondaryText>
+        <BodyText
+          style={[styles.amount, isExpense ? styles.expense : styles.income]}
+        >
+          {isExpense ? "-" : "+"}KES{" "}
+          {Math.abs(transaction.amount).toLocaleString()}
         </BodyText>
       </Card>
 
       <Card style={styles.detailsCard}>
         <DetailRow label="Title" value={transaction.title} />
         <DetailRow label="Category" value={transaction.category} />
-        {transaction.payee ? 
+        {transaction.payee ? (
           <DetailRow label="Payee" value={transaction.payee} />
-          : ""
-        }
+        ) : (
+          ""
+        )}
         <DetailRow label="Date" value={dateFormat(transaction.date)} />
 
         {transaction.note ? (
@@ -66,13 +79,16 @@ export default function FinanceEntryViewPage() {
       </Card>
 
       <View style={styles.actionsRow}>
-        <Pressable style={globalStyles.editBtn} onPress={() => router.push(`transactions/${uuid}/edit`)}>
+        <Pressable
+          style={globalStyles.editBtn}
+          onPress={() => router.push(`expenses/${uuid}/edit`)}
+        >
           <Text style={globalStyles.editBtnText}>Edit</Text>
         </Pressable>
-        <DeleteButton 
-            handleOk={handleDelete}
-            item={"transaction"}
-            cusomStyles={{flex: 1}}
+        <DeleteButton
+          handleOk={handleDelete}
+          item={"transaction"}
+          cusomStyles={{ flex: 1 }}
         />
       </View>
     </View>
@@ -137,7 +153,7 @@ const styles = StyleSheet.create({
   },
   actionsRow: {
     flexDirection: "row",
-    justifyContent:"flex-end",
+    justifyContent: "flex-end",
     gap: 12,
     marginTop: 20,
   },

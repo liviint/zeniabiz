@@ -1,21 +1,28 @@
-import { useEffect, useState } from "react";
-import { View, Text, Alert, StyleSheet, TouchableOpacity } from "react-native";
-import { useSQLiteContext } from "expo-sqlite";
-import { BodyText, Card,  SecondaryText } from "../../../../src/components/ThemeProvider/components";
-import PageLoader from "../../../../src/components/common/PageLoader"
-import { getTransactionTemplateByid, deleteTransactionTemplate,  } from "../../../../src/db/transactionsTempsDb";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
-import DeleteButton from "../../../../src/components/common/DeleteButton"
 import { useIsFocused } from "@react-navigation/native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+    BodyText,
+    Card,
+    SecondaryText,
+} from "../../../../src/components/ThemeProvider/components";
+import DeleteButton from "../../../../src/components/common/DeleteButton";
+import PageLoader from "../../../../src/components/common/PageLoader";
+import {
+    deleteTransactionTemplate,
+    getTransactionTemplateByid,
+} from "../../../../src/db/transactionsTempsDb";
+import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import { dateFormat } from "../../../../utils/dateFormat";
 
 export default function TransactionTemplateDetailsScreen() {
-  const {globalStyles} = useThemeStyles()
-  const isFocused = useIsFocused()
-  const {id} = useLocalSearchParams()
+  const { globalStyles } = useThemeStyles();
+  const isFocused = useIsFocused();
+  const { id } = useLocalSearchParams();
   const db = useSQLiteContext();
-  const router = useRouter()
+  const router = useRouter();
 
   const [template, setTemplate] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -33,26 +40,24 @@ export default function TransactionTemplateDetailsScreen() {
     loadTemplate();
   }, [isFocused]);
 
-  const handleDelete = async() => {
+  const handleDelete = async () => {
     await deleteTransactionTemplate(db, id);
     Alert.alert("Deleted ✅", "Template removed successfully.");
     router.back();
   };
 
   const handleEdit = () => {
-    router.push(`transactions-templates/${id}/edit`)
+    router.push(`expenses-templates/${id}/edit`);
   };
 
   if (loading) {
-    return <PageLoader />
+    return <PageLoader />;
   }
 
   if (!template) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>
-          Template not found.
-        </Text>
+        <Text style={styles.errorText}>Template not found.</Text>
       </View>
     );
   }
@@ -64,13 +69,10 @@ export default function TransactionTemplateDetailsScreen() {
       <Text
         style={[
           styles.amount,
-          template.type === "income"
-            ? styles.income
-            : styles.expense,
+          template.type === "income" ? styles.income : styles.expense,
         ]}
       >
-        {template.type === "income" ? "+" : "-"} KES{" "}
-        {template.amount || "—"}
+        {template.type === "income" ? "+" : "-"} KES {template.amount || "—"}
       </Text>
 
       <Card style={styles.card}>
@@ -79,30 +81,19 @@ export default function TransactionTemplateDetailsScreen() {
           label="Category"
           value={template.category || "Uncategorized"}
         />
-        <DetailRow
-          label="Payee"
-          value={template.payee || "—"}
-        />
-        <DetailRow
-          label="Note"
-          value={template.note || "—"}
-        />
-        <DetailRow
-          label="Created"
-          value={dateFormat(template.created_at)}
-        />
+        <DetailRow label="Payee" value={template.payee || "—"} />
+        <DetailRow label="Note" value={template.note || "—"} />
+        <DetailRow label="Created" value={dateFormat(template.created_at)} />
       </Card>
 
-      <View style={{ marginTop: 20 }}> 
-        <TouchableOpacity style={{...globalStyles.editBtn, marginBottom:12}} onPress={handleEdit}>
-            <BodyText style={globalStyles.editBtnText}>
-              Edit Template
-            </BodyText>
-          </TouchableOpacity>
-          <DeleteButton 
-            handleOk={handleDelete} 
-            item="template"
-          />
+      <View style={{ marginTop: 20 }}>
+        <TouchableOpacity
+          style={{ ...globalStyles.editBtn, marginBottom: 12 }}
+          onPress={handleEdit}
+        >
+          <BodyText style={globalStyles.editBtnText}>Edit Template</BodyText>
+        </TouchableOpacity>
+        <DeleteButton handleOk={handleDelete} item="template" />
       </View>
     </View>
   );
@@ -118,7 +109,6 @@ function DetailRow({ label, value }) {
 }
 
 const styles = StyleSheet.create({
-
   amount: {
     fontSize: 18,
     fontWeight: "700",

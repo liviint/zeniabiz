@@ -30,7 +30,7 @@ export async function upsertTransaction(
 
     await db.runAsync(
       `
-      INSERT INTO transactions (
+      INSERT INTO expenses (
         id,
         title,
         type,
@@ -80,14 +80,14 @@ export async function upsertTransaction(
 // ------------------------
 // Get Transactions by Month
 // ------------------------
-export async function getTransactions(db, date = new Date()) {
+export async function getExpenses(db, date = new Date()) {
   const start = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
   const end = new Date(date.getFullYear(), date.getMonth() + 1, 1).toISOString();
 
   return await db.getAllAsync(
     `
     SELECT *
-    FROM transactions
+    FROM expenses
     WHERE 
       date >= ?
       AND date < ?
@@ -103,7 +103,7 @@ export async function getTransactions(db, date = new Date()) {
 export async function getTransactionById(db, id) {
   return await db.getFirstAsync(
     `
-    SELECT * FROM transactions
+    SELECT * FROM expenses
     WHERE id = ? 
     LIMIT 1
     `,
@@ -119,7 +119,7 @@ export async function deleteTransaction(db, id) {
 
   await db.runAsync(
     `
-    UPDATE transactions
+    UPDATE expenses
     SET deleted_at = ?, updated_at = ?, is_synced = 0
     WHERE id = ? 
     `,
@@ -127,7 +127,7 @@ export async function deleteTransaction(db, id) {
   );
 }
 
-export async function getTransactionStats(db, date = new Date()) {
+export async function getExpenseStats(db, date = new Date()) {
   const start = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
   const end = new Date(date.getFullYear(), date.getMonth() + 1, 1).toISOString();
 
@@ -147,11 +147,11 @@ export async function getTransactionStats(db, date = new Date()) {
     [start, end]
   );
 
-  // 2. Expenses (still from transactions)
+  // 2. Expenses (still from expenses)
   const expenseResult = await db.getFirstAsync(
     `
     SELECT SUM(amount) AS expenses
-    FROM transactions
+    FROM expenses
     WHERE type = 'expense'
       AND date >= ?
       AND date < ?

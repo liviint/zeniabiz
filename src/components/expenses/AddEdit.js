@@ -123,7 +123,7 @@ const isFormValid = () => {
     if(!isFormValid()) return
     try {
       await upsertTransaction(db,form)
-      router.push("/transactions")
+      router.push("/expenses")
     } catch (error) {
       console.log(error,"hello error creating a transaction")
     }
@@ -330,7 +330,7 @@ const UseTemplateComponent = ({id,templates, handleUseTemplate,showTemplates, se
           <Pressable
             onPress={() => {
               setShowTemplates(false);
-              router.push("/transactions-templates/add");
+              router.push("/expenses-templates/add");
             }}
             style={globalStyles.primaryBtn}
           >
