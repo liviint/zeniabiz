@@ -1,24 +1,29 @@
-import { useState, useEffect } from "react";
-import { View, Alert, ScrollView , TouchableOpacity, StyleSheet, Pressable} from "react-native";
-import { useSQLiteContext } from "expo-sqlite";
-import {
-  FormLabel,
-  Input,
-  BodyText,
-  Card
-} from "../ThemeProvider/components";
-import { upsertTransactionTemplate, getTransactionTemplateByid } from "../../db/transactionsTempsDb"
-import { useThemeStyles } from '../../hooks/useThemeStyles';
-import CategoriesPicker from "../common/CategoriesPicker";
-import { useLocalSearchParams , useRouter} from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
+import {
+    Alert,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    View,
+} from "react-native";
+import {
+    getTransactionTemplateByid,
+    upsertExpenseTemplate,
+} from "../../db/transactionsTempsDb";
+import { useThemeStyles } from "../../hooks/useThemeStyles";
+import CategoriesPicker from "../common/CategoriesPicker";
+import { BodyText, Card, FormLabel, Input } from "../ThemeProvider/components";
 
 export default function AddTransactionTemplateScreen() {
-  const isFocused = useIsFocused()
-  const {globalStyles} = useThemeStyles()
-  const {id:id} = useLocalSearchParams()
+  const isFocused = useIsFocused();
+  const { globalStyles } = useThemeStyles();
+  const { id: id } = useLocalSearchParams();
   const db = useSQLiteContext();
-  const router = useRouter()
+  const router = useRouter();
 
   const initialForm = {
     title: "",
@@ -28,14 +33,19 @@ export default function AddTransactionTemplateScreen() {
     category_id: "",
     payee: "",
     note: "",
-    id:"",
-  }
+    id: "",
+  };
 
   const [form, setForm] = useState(initialForm);
 
   const handleCategoryChange = (selected) => {
-    setForm((prev) => ({ ...prev, category_id: selected.id, category:selected.name, type:selected.type }))
-  } 
+    setForm((prev) => ({
+      ...prev,
+      category_id: selected.id,
+      category: selected.name,
+      type: selected.type,
+    }));
+  };
 
   const handleChange = (field, value) => {
     setForm((prev) => ({
@@ -53,7 +63,7 @@ export default function AddTransactionTemplateScreen() {
       return Alert.alert("Validation Error", "Transaction type is required.");
     }
 
-    await upsertTransactionTemplate(db, {
+    await upsertExpenseTemplate(db, {
       title: form.title,
       amount: form.amount ? parseFloat(form.amount) : null,
       type: form.type,
@@ -63,14 +73,14 @@ export default function AddTransactionTemplateScreen() {
 
       payee: form.payee,
       note: form.note,
-      id:form.id,
+      id: form.id,
     });
 
     Alert.alert("Success ✅", "Template saved successfully!");
-    setForm(initialForm)
+    setForm(initialForm);
     router.back();
   };
-  
+
   useEffect(() => {
     const loadTemplate = async () => {
       const result = await getTransactionTemplateByid(db, id);
@@ -82,9 +92,7 @@ export default function AddTransactionTemplateScreen() {
   return (
     <ScrollView style={globalStyles.container}>
       <BodyText style={globalStyles.title}>
-        {
-          id ? "Edit Template" : "Add Template"
-        }
+        {id ? "Edit Template" : "Add Template"}
       </BodyText>
       <Card>
         <View style={{ marginBottom: 16 }}>
@@ -115,17 +123,37 @@ export default function AddTransactionTemplateScreen() {
           <Pressable
             disabled={form.category_id !== ""}
             onPress={() => handleChange("type", "expense")}
-            style={[styles.typeButton, form.type === "expense" && styles.expenseActive]}
+            style={[
+              styles.typeButton,
+              form.type === "expense" && styles.expenseActive,
+            ]}
           >
-            <BodyText style={[styles.typeText, form.type === "expense" && styles.activeText]}>Expense</BodyText>
+            <BodyText
+              style={[
+                styles.typeText,
+                form.type === "expense" && styles.activeText,
+              ]}
+            >
+              Expense
+            </BodyText>
           </Pressable>
 
           <Pressable
             disabled={form.category_id !== ""}
             onPress={() => handleChange("type", "income")}
-            style={[styles.typeButton, form.type === "income" && styles.incomeActive]}
+            style={[
+              styles.typeButton,
+              form.type === "income" && styles.incomeActive,
+            ]}
           >
-            <BodyText style={[styles.typeText, form.type === "income" && styles.activeText]}>Income</BodyText>
+            <BodyText
+              style={[
+                styles.typeText,
+                form.type === "income" && styles.activeText,
+              ]}
+            >
+              Income
+            </BodyText>
           </Pressable>
         </View>
 
@@ -149,15 +177,14 @@ export default function AddTransactionTemplateScreen() {
         </View>
 
         <TouchableOpacity style={globalStyles.primaryBtn} onPress={handleSave}>
-            <BodyText style={globalStyles.primaryBtnText}>
-              {id ? "Update Template" : "Save Template"}
-            </BodyText>
+          <BodyText style={globalStyles.primaryBtnText}>
+            {id ? "Update Template" : "Save Template"}
+          </BodyText>
         </TouchableOpacity>
       </Card>
     </ScrollView>
   );
 }
-
 
 const styles = StyleSheet.create({
   typeRow: {

@@ -1,28 +1,30 @@
 export const getCashFlow = async (db) => {
-    const result = await db.getAllAsync(`
-        SELECT 
-            d.date,
-            COALESCE(s.revenue, 0) - COALESCE(e.expenses, 0) as net
-        FROM (
-        -- Get all unique dates from both tables
-        SELECT date FROM sales
-        UNION
-        SELECT date FROM expenses WHERE type='expense'
-        ) d
-        LEFT JOIN (
-        SELECT date, SUM(amount) as revenue
-        FROM sales
-        GROUP BY date
-        ) s ON s.date = d.date
-        LEFT JOIN (
-        SELECT date, SUM(amount) as expenses
-        FROM expenses
-        WHERE type='expense' AND deleted_at IS NULL
-        GROUP BY date
-        ) e ON e.date = d.date
-        ORDER BY d.date ASC
-        LIMIT 7
-    `);
+  const result = await db.getAllAsync(`
+    SELECT 
+      d.date,
+      COALESCE(s.revenue, 0) - COALESCE(e.expenses, 0) as net
+    FROM (
+      SELECT DATE(date) as date FROM sales
+      UNION
+      SELECT DATE(date) as date FROM expenses
+    ) d
+
+    LEFT JOIN (
+      SELECT DATE(date) as date, SUM(amount) as revenue
+      FROM sales
+      GROUP BY DATE(date)
+    ) s ON s.date = d.date
+
+    LEFT JOIN (
+      SELECT DATE(date) as date, SUM(amount) as expenses
+      FROM expenses
+      WHERE deleted_at IS NULL
+      GROUP BY DATE(date)
+    ) e ON e.date = d.date
+
+    ORDER BY d.date ASC
+    LIMIT 7
+  `);
 
   const labels = result.map((item) =>
     new Date(item.date).getDate().toString()
@@ -33,14 +35,14 @@ export const getCashFlow = async (db) => {
   return {
     labels,
     datasets: [{ data }],
-  }
-}
+  };
+};
 
 export const getExpensesBreakDown  = async(db) => {
     return db.getAllAsync(`
         SELECT category, SUM(amount) as total
         FROM expenses
-        WHERE type='expense' AND deleted_at IS NULL
+        WHERE deleted_at IS NULL
         GROUP BY category
     `);
 }
@@ -65,13 +67,12 @@ export async function getFinancialStats(db, date = new Date()) {
     [start, end]
   );
 
-  // 2. Expenses (ONLY real expenses)
+  // 2. Expenses (pure expenses only)
   const expenseResult = await db.getFirstAsync(
     `
     SELECT COALESCE(SUM(amount), 0) AS expenses
     FROM expenses
-    WHERE type = 'expense'
-      AND deleted_at IS NULL
+    WHERE deleted_at IS NULL
       AND date >= ?
       AND date < ?
     `,

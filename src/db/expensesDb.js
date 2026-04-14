@@ -2,35 +2,32 @@ import uuid from "react-native-uuid";
 
 const newUuid = () => uuid.v4();
 
-export async function upsertTransaction(
+export async function upsertExpense(
   db,
   {
     id,
     title,
-    type,
     amount,
     category = null,
-    category_id,
+    category_id = null,
     note = null,
     date,
-    created_at,
   }
 ) {
   const now = new Date().toISOString();
   const transactionDate = date ? date.toISOString() : now;
-  amount = parseFloat(amount) || 0;
+
+  const expenseId = id || newUuid();
+  const cleanAmount = parseFloat(amount) || 0;
 
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
-    id = id || newUuid();
-
     await db.runAsync(
       `
       INSERT INTO expenses (
         id,
         title,
-        type,
         amount,
         category,
         category_id,
@@ -39,10 +36,8 @@ export async function upsertTransaction(
         updated_at,
         date
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
-        type = excluded.type,
         title = excluded.title,
         amount = excluded.amount,
         category = excluded.category,
@@ -52,24 +47,23 @@ export async function upsertTransaction(
         date = excluded.date
       `,
       [
-        id,
+        expenseId,
         title,
-        type,
-        amount,
+        cleanAmount,
         category,
         category_id,
         note,
-        created_at,
+        now,
         now,
         transactionDate,
       ]
     );
 
     await db.runAsync("COMMIT");
-    return id;
+    return expenseId;
   } catch (error) {
     await db.runAsync("ROLLBACK");
-    console.log(error,"hello error")
+    console.log(error, "upsert expense error");
     throw error;
   }
 }

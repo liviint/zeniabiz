@@ -4,8 +4,8 @@ import CategoriesProvider from "./CategoriesProvider";
 const migrateDbIfNeeded = async (db) => {
 
   /* await db.execAsync(`DROP TABLE IF EXISTS expenses;`);
-  await db.execAsync(`DROP TABLE IF EXISTS transaction_categories;`);
-  await db.execAsync(`DROP TABLE IF EXISTS transaction_templates;`);
+  await db.execAsync(`DROP TABLE IF EXISTS expense_categories;`);
+  await db.execAsync(`DROP TABLE IF EXISTS expense_templates;`);
   await db.execAsync(`DROP TABLE IF EXISTS products;`);
   await db.execAsync(`DROP TABLE IF EXISTS sales;`); */
 
@@ -14,11 +14,9 @@ const migrateDbIfNeeded = async (db) => {
 
     CREATE TABLE IF NOT EXISTS expenses (
       id TEXT PRIMARY KEY,
-      type TEXT NOT NULL CHECK (type IN ('income', 'expense')),
       amount REAL NOT NULL,
       category TEXT,
       category_id TEXT,
-      sale_id Text,
       title Text,
       payee Text,
       note TEXT,
@@ -28,11 +26,10 @@ const migrateDbIfNeeded = async (db) => {
       deleted_at TEXT
     );
 
-    CREATE TABLE IF NOT EXISTS transaction_categories (
+    CREATE TABLE IF NOT EXISTS expense_categories (
       id TEXT PRIMARY KEY,
 
       name TEXT NOT NULL,
-      type TEXT NOT NULL CHECK (type IN ('income', 'expense')),
       spendingType TEXT DEFAULT 'neutral' CHECK(spendingType IN ('neutral', 'needs', 'wants','savings')),
 
       color TEXT,
@@ -44,7 +41,7 @@ const migrateDbIfNeeded = async (db) => {
       is_synced INTEGER DEFAULT 0
     );
 
-    CREATE TABLE IF NOT EXISTS transaction_templates (
+    CREATE TABLE IF NOT EXISTS expense_templates (
       id TEXT PRIMARY KEY,
 
       title TEXT NOT NULL,

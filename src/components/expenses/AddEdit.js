@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Pressable, TouchableOpacity, Alert, ScrollView , Modal} from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { Card, BodyText,Input,TextArea , FormLabel, SecondaryText} from "../ThemeProvider/components";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useIsFocused } from "@react-navigation/native";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { getTransactionById, upsertTransaction } from "../../db/expensesDb.js";
+import { useEffect, useState } from "react";
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { getTransactionById, upsertExpense } from "../../db/expensesDb.js";
 import { getTransactionTemplates } from "../../db/transactionsTempsDb";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import CategoriesPicker from "../common/CategoriesPicker";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { useIsFocused } from "@react-navigation/native";
+import { BodyText, Card, FormLabel, Input, SecondaryText, TextArea } from "../ThemeProvider/components";
 
 export default function AddEdit() {
   const isFocused = useIsFocused()
@@ -20,8 +20,7 @@ export default function AddEdit() {
     title: "",
     amount: "",
     category: "",
-    category_id:"",
-    type: "expense", 
+    category_id:"", 
     note: "",
     id:"",
     payee:"",
@@ -65,7 +64,7 @@ export default function AddEdit() {
   };
 
   const handleCategoryChange = (selected) => {
-    setForm((prev) => ({ ...prev, category_id: selected.id, category:selected.name, type:selected.type }))
+    setForm((prev) => ({ ...prev, category_id: selected.id, category:selected.name,}))
   } 
 
 const isFormValid = () => {
@@ -92,12 +91,6 @@ const isFormValid = () => {
     return false;
   }
 
-
-  if (!["income", "expense"].includes(form.type)) {
-    Alert.alert("Invalid type", "Transaction type is invalid.");
-    return false;
-  }
-
   return true;
 };
 
@@ -109,7 +102,6 @@ const isFormValid = () => {
       amount: template.amount ? String(template.amount) : "",
       category: template.category || "",
       category_id: template.category_id || "",
-      type: template.type,
       note: template.note || "",
       payee: template.payee || "",
       template:template.id,
@@ -122,7 +114,7 @@ const isFormValid = () => {
   const handleSave = async () => {
     if(!isFormValid()) return
     try {
-      await upsertTransaction(db,form)
+      await upsertExpense(db,form)
       router.push("/expenses")
     } catch (error) {
       console.log(error,"hello error creating a transaction")
@@ -203,22 +195,6 @@ const isFormValid = () => {
             value={form.payee || ""}
             onChangeText={(v) => handleChange("payee", v)}
           />
-        </View>
-
-        <View style={styles.typeRow}>
-          <Pressable
-            onPress={() => handleChange("type", "expense")}
-            style={[styles.typeButton, form.type === "expense" && styles.expenseActive]}
-          >
-            <Text style={[styles.typeText, form.type === "expense" && styles.activeText]}>Expense</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => handleChange("type", "income")}
-            style={[styles.typeButton, form.type === "income" && styles.incomeActive]}
-          >
-            <Text style={[styles.typeText, form.type === "income" && styles.activeText]}>Income</Text>
-          </Pressable>
         </View>
 
         <View style={globalStyles.formGroup}>
@@ -356,7 +332,7 @@ const UseTemplateComponent = ({id,templates, handleUseTemplate,showTemplates, se
                   {tpl.title}
                 </BodyText>
                 <SecondaryText style={styles.templateMeta}>
-                  {tpl.category || "Uncategorized"} • {tpl.type}
+                  {tpl.category || "Uncategorized"}
                 </SecondaryText>
               </Pressable>
             ))}
@@ -389,24 +365,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
     marginBottom: 16,
-  },
-  
-  typeRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 16,
-  },
-  typeButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 14,
-    backgroundColor: "#F0F0F0",
-    alignItems: "center",
-  },
-  typeText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#666",
   },
   expenseActive: {
     backgroundColor: "#FF6B6B",
