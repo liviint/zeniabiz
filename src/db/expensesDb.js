@@ -11,6 +11,7 @@ export async function upsertExpense(
     category = null,
     category_id = null,
     note = null,
+    payee="",
     date,
   }
 ) {
@@ -32,17 +33,19 @@ export async function upsertExpense(
         category,
         category_id,
         note,
+        payee,
         created_at,
         updated_at,
         date
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
         amount = excluded.amount,
         category = excluded.category,
         category_id = excluded.category_id,
         note = excluded.note,
+        payee = excluded.payee,
         updated_at = excluded.updated_at,
         date = excluded.date
       `,
@@ -53,6 +56,7 @@ export async function upsertExpense(
         category,
         category_id,
         note,
+        payee,
         now,
         now,
         transactionDate,
