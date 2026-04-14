@@ -16,167 +16,132 @@ import uuid from 'react-native-uuid';
 import { COLORS } from "../../../utils/constants";
 
 export default function AddEdit() {
-  const router = useRouter()
-  const {globalStyles} = useThemeStyles()
-  const db = useSQLiteContext();
-  const {id:categoryUuid} = useLocalSearchParams()
-  let initialForm = {
-    name:"",
-    type:"expense",
-    color:COLORS[1],
-    icon:"🛒",
-    id:"",
-    spendingType:"neutral",
-  }
-  const [form,setForm] = useState(initialForm)
+    const router = useRouter()
+    const {globalStyles} = useThemeStyles()
+    const db = useSQLiteContext();
+    const {id:categoryUuid} = useLocalSearchParams()
+    const initialForm = {
+        name: "",
+        color: COLORS[1],
+        icon: "🛒",
+        id: "",
+    };
+    const [form,setForm] = useState(initialForm)
 
-  const handleFormChange = (key,value) => {
-    setForm(prev => ({
-        ...prev,
-        [key]:value
-    }))
-  }
-  
-
-  useEffect(() => {
-    if (!categoryUuid) return;
-    let fetchCategory = async() => {
-        let category = await getCategories(db,categoryUuid)
-        setForm(category)
+    const handleFormChange = (key,value) => {
+        setForm(prev => ({
+            ...prev,
+            [key]:value
+        }))
     }
-    fetchCategory()
-  }, [categoryUuid]);
 
-  const saveCategory = async () => {
-    if (!form.name.trim()) {
-        Alert.alert("Validation", "Category name is required");
-        return;
-    }
-    try {
-        await upsertCategory(db,form)
-        router.back();
-        setForm(initialForm)
-    } catch (error) {
-      console.log(error,"hello error")
-    }
-  };
+    useEffect(() => {
+        if (!categoryUuid) return;
 
-  return (
-    <ScrollView style={globalStyles.container}>
+        const fetchCategory = async () => {
+            const category = await getCategories(db, categoryUuid);
 
-        <BodyText style={globalStyles.title}>
-            {categoryUuid ? "Edit Category" : "Add Category"}
-        </BodyText>
+            if (category) {
+                setForm((prev) => ({
+                    ...prev,
+                    ...category,
+                }));
+            }
+        };
 
-        <Card>
+        fetchCategory();
+    }, [categoryUuid]);
+
+    const saveCategory = async () => {
+        if (!form.name?.trim()) {
+            Alert.alert("Validation", "Category name is required");
+            return;
+        }
+
+        try {
+            await upsertCategory(db, {
+            id: form.id,
+            name: form.name,
+            color: form.color,
+            icon: form.icon,
+            });
+            setForm(initialForm)
+            router.back();
+        } catch (error) {
+            console.log(error, "category error");
+        }
+    };
+
+    return (
+        <ScrollView style={globalStyles.container}>
+
+            <BodyText style={globalStyles.title}>
+                {categoryUuid ? "Edit Category" : "Add Category"}
+            </BodyText>
+
+            <Card>
+                <View style={globalStyles.formGroup}>
+                <FormLabel >Name</FormLabel>
+                <Input
+                    value={form.name}
+                    onChangeText={(value) => handleFormChange("name",value)}
+                    placeholder="e.g. Food"
+                />
+            </View>
+
+
             <View style={globalStyles.formGroup}>
-            <FormLabel >Name</FormLabel>
-            <Input
-                value={form.name}
-                onChangeText={(value) => handleFormChange("name",value)}
-                placeholder="e.g. Food"
-            />
-        </View>
+                <FormLabel >Icon</FormLabel>
+                <Input
+                    value={form.icon}
+                    onChangeText={(text) => {
+                    handleFormChange("icon",text.slice(0, 2))
+                    }}
+                    placeholder="e.g. 🍔"
+                    maxLength={2}
+                />
+            </View>
 
-        <View style={globalStyles.formGroup}>
-        <>
-            <FormLabel>Type</FormLabel>
-            <View style={{ flexDirection: "row", marginBottom: 16 }}>
-                {["expense", "income"].map((t) => (
-                    <TouchableOpacity
-                        key={t}
-                        onPress={() => handleFormChange("type",t)}
-                        disabled={!!categoryUuid}
-                        style={{
-                        flex: 1,
-                        padding: 12,
-                        borderRadius: 10,
-                        backgroundColor:
-                            form.type === t ? "#2E8B8B" : "#EEE",
-                        marginRight: t === "expense" ? 8 : 0,
-                        }}
-                    >
-                        <Text
+            <View style={globalStyles.formGroup}>
+                <FormLabel >Color</FormLabel>
+                <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                    {COLORS.map((c) => {
+                    const isSelected = form.color === c;
+
+                    return (
+                        <TouchableOpacity
+                            key={c}
+                            onPress={() => handleFormChange("color",c)}
                             style={{
-                                textAlign: "center",
-                                color: form.type === t ? "#FFF" : "#333",
-                                fontWeight: "600",
+                                width: 36,
+                                height: 36,
+                                borderRadius: 18,
+                                backgroundColor: c,
+                                margin: 8,
+                                borderWidth: isSelected ? 3 : 1,
+                                borderColor: isSelected ? "#333" : "#DDD",
+                                alignItems: "center",
+                                justifyContent: "center",
                             }}
                         >
-                        {t === "expense" ? "expense" : "income"}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
+                        {isSelected && (
+                            <Text style={{ color: "#FFF", fontWeight: "700" }}>✓</Text>
+                        )}
+                        </TouchableOpacity>
+                    );
+                    })}
+                </View>
             </View>
-        </>
-        </View>
 
-        <View style={globalStyles.formGroup}>
-            <FormLabel>Spending Type (Optional)</FormLabel>
-            <CustomPicker
-                selectedValue={form.spendingType || ""}
-                onValueChange={(v) => handleFormChange("spendingType", v)}
+            <TouchableOpacity
+                onPress={saveCategory}
+                style={globalStyles.primaryBtn}
             >
-                <Picker.Item label="Neutral" value="neutral" />
-                <Picker.Item label="Needs" value="needs" />
-                <Picker.Item label="Wants" value="wants" />
-                <Picker.Item label="Savings" value="savings" />
-            </CustomPicker>
-
-        </View>
-
-        <View style={globalStyles.formGroup}>
-            <FormLabel >Icon</FormLabel>
-            <Input
-                value={form.icon}
-                onChangeText={(text) => {
-                handleFormChange("icon",text.slice(0, 2))
-                }}
-                placeholder="e.g. 🍔"
-                maxLength={2}
-            />
-        </View>
-
-        <View style={globalStyles.formGroup}>
-            <FormLabel >Color</FormLabel>
-            <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-                {COLORS.map((c) => {
-                const isSelected = form.color === c;
-
-                return (
-                    <TouchableOpacity
-                        key={c}
-                        onPress={() => handleFormChange("color",c)}
-                        style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 18,
-                            backgroundColor: c,
-                            margin: 8,
-                            borderWidth: isSelected ? 3 : 1,
-                            borderColor: isSelected ? "#333" : "#DDD",
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
-                    >
-                    {isSelected && (
-                        <Text style={{ color: "#FFF", fontWeight: "700" }}>✓</Text>
-                    )}
-                    </TouchableOpacity>
-                );
-                })}
-            </View>
-        </View>
-
-        <TouchableOpacity
-            onPress={saveCategory}
-            style={globalStyles.primaryBtn}
-        >
-            <Text style={globalStyles.primaryBtnText}>
-                {categoryUuid ? "Update Category": "Save Category"}
-            </Text>
-        </TouchableOpacity>
-        </Card>
-    </ScrollView>
-  );
+                <Text style={globalStyles.primaryBtnText}>
+                    {categoryUuid ? "Update Category": "Save Category"}
+                </Text>
+            </TouchableOpacity>
+            </Card>
+        </ScrollView>
+    );
 }
