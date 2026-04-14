@@ -5,9 +5,8 @@ import { Card, BodyText, SecondaryText, Input } from "../../../src/components/Th
 import { useSQLiteContext } from "expo-sqlite";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { getProducts } from "../../../src/db/inventoryDb";
-import { createOrUpdateSale, getTransactionItems } from "../../../src/db/salesDb";
+import { createOrUpdateSale, getSaleItems, getSaleById } from "../../../src/db/salesDb";
 import { getCategories } from "../../../src/db/categoriesDb";
-import { getTransactionById } from "../../../src/db/expensesDb.js";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 
 export default function SellPage() {
@@ -32,7 +31,7 @@ export default function SellPage() {
   useEffect(() => {
       if(!id) return
       (async () => {
-        const i = await getTransactionItems(db, id);
+        const i = await getSaleItems(db, id);
         setCart(i);
       })();
     }, [isFocused]);
@@ -40,7 +39,7 @@ export default function SellPage() {
     useEffect(() => {
       if(cart.length === 0) return
       (async () => {
-        const t = await getTransactionById(db, id);
+        const t = await getSaleById(db, id);
         setTitle(t?.title)
       })();
     }, [isFocused]);
@@ -113,10 +112,15 @@ export default function SellPage() {
 
   const handleSave = async () => {
     if (cart.length === 0) return Alert.alert("Add items first");
-    await createOrUpdateSale(db, { items: cart ,transaction_id:id, title,category:category?.name,
-      category_id:category.id,});
+    await createOrUpdateSale(db, {
+      items: cart,
+      sale_id: id,  
+      title,
+      category: category?.name,
+      category_id: category?.id || null,
+    });
     Alert.alert("Success", "Sale recorded");
-    router.back();
+    router.push("/sales");
   };
 
   return (

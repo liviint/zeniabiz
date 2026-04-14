@@ -11,8 +11,6 @@ export async function createOrUpdateSale(
     note = null,
     date,
     title,
-    category,
-    category_id
   }
 ) {
   const now = new Date().toISOString();
@@ -21,23 +19,26 @@ export async function createOrUpdateSale(
   const isEdit = !!sale_id;
   const id = sale_id || newUuid();
 
-  // Calculate totals
   const total = items.reduce(
     (sum, item) => sum + Number(item.price) * Number(item.quantity),
     0
   );
-  const totalItems = items.reduce((sum, item) => sum + Number(item.quantity), 0);
+
+  const totalItems = items.reduce(
+    (sum, item) => sum + Number(item.quantity),
+    0
+  );
 
   const finalTitle =
-    title && title.trim().length > 0
+    title?.trim()?.length > 0
       ? title
       : `Sold ${totalItems} item${totalItems > 1 ? "s" : ""} - ${total}`;
 
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
+    // 1️⃣ If editing → restore stock first
     if (isEdit) {
-      // 1️⃣ Restore stock for old items
       const oldItems = await db.getAllAsync(
         `SELECT product_id, quantity FROM sale_items WHERE sale_id = ?`,
         [id]
@@ -45,15 +46,18 @@ export async function createOrUpdateSale(
 
       for (const item of oldItems) {
         await db.runAsync(
-          `UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?`,
+          `UPDATE products 
+           SET stock_quantity = stock_quantity + ? 
+           WHERE id = ?`,
           [item.quantity, item.product_id]
         );
       }
 
-      // 2️⃣ Delete old items
-      await db.runAsync(`DELETE FROM sale_items WHERE sale_id = ?`, [id]);
+      await db.runAsync(
+        `DELETE FROM sale_items WHERE sale_id = ?`,
+        [id]
+      );
 
-      // 3️⃣ Update sale record including total
       await db.runAsync(
         `
         UPDATE sales
@@ -62,10 +66,7 @@ export async function createOrUpdateSale(
         `,
         [finalTitle, note ?? null, saleDate, total, now, id]
       );
-
     } else {
-      // ➕ CREATE MODE
-      // 1️⃣ Insert new sale
       await db.runAsync(
         `
         INSERT INTO sales (id, title, note, date, amount, created_at, updated_at)
@@ -73,32 +74,38 @@ export async function createOrUpdateSale(
         `,
         [id, finalTitle, note ?? null, saleDate, total, now, now]
       );
-
-      
     }
 
-    // ➕ Insert items & reduce stock
+    // 2️⃣ VALIDATE ALL STOCK FIRST (before writing anything)
     for (const item of items) {
-      // Validate stock
       const product = await db.getFirstAsync(
         `SELECT stock_quantity FROM products WHERE id = ?`,
         [item.product_id]
       );
 
       if (!product || product.stock_quantity < item.quantity) {
-        throw new Error(`Not enough stock for ${item.name || item.product_id}`);
+        throw new Error(
+          `Not enough stock for ${item.name || item.product_id}`
+        );
       }
+    }
 
-      // Insert sale item
+    // 3️⃣ APPLY CHANGES
+    for (const item of items) {
       await db.runAsync(
-        `INSERT INTO sale_items (id, sale_id, product_id, quantity, price)
-         VALUES (?, ?, ?, ?, ?)`,
-        [newUuid(), id, item.product_id, Number(item.quantity), Number(item.price)]
+        `
+        INSERT INTO sale_items (id, sale_id, product_id, quantity, price)
+        VALUES (?, ?, ?, ?, ?)
+        `,
+        [newUuid(), id, item.product_id, item.quantity, item.price]
       );
 
-      // Reduce stock
       await db.runAsync(
-        `UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?`,
+        `
+        UPDATE products 
+        SET stock_quantity = stock_quantity - ? 
+        WHERE id = ?
+        `,
         [item.quantity, item.product_id]
       );
     }
