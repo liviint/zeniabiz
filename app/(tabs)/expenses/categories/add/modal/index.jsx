@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import AddEdit from "../../../../../src/components/categories/AddEdit";
+import AddEdit from "../../../../../../src/components/categories/AddEdit";
 
 export default function AddCategoryModal() {
     return (

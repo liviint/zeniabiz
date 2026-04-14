@@ -74,20 +74,6 @@ export default function TabLayout() {
         />
 
         <Tabs.Screen
-          name="categories"
-          options={{
-            href: null,
-          }}
-        />
-
-        <Tabs.Screen
-          name="expenses-templates"
-          options={{
-            href: null,
-          }}
-        />
-
-        <Tabs.Screen
           name="settings/index"
           options={{
             href: null,

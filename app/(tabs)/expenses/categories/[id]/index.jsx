@@ -2,12 +2,12 @@ import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet} from "reac
 import { useEffect, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import {getCategories, deleteCategory} from "../../../../src/db/categoriesDb"
+import {getCategories, deleteCategory} from "../../../../../src/db/categoriesDb"
 import { useSQLiteContext } from "expo-sqlite";
-import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
-import { BodyText, SecondaryText } from "../../../../src/components/ThemeProvider/components";
-import { dateFormat } from "../../../../utils/dateFormat";
-import DeleteButton from "../../../../src/components/common/DeleteButton";
+import { useThemeStyles } from "../../../../../src/hooks/useThemeStyles";
+import { BodyText, SecondaryText } from "../../../../../src/components/ThemeProvider/components";
+import { dateFormat } from "../../../../../utils/dateFormat";
+import DeleteButton from "../../../../../src/components/common/DeleteButton";
 
 export default function CategoryDetailsScreen() {
     const db = useSQLiteContext();

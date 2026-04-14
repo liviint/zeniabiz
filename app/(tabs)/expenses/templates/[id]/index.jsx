@@ -7,15 +7,15 @@ import {
     BodyText,
     Card,
     SecondaryText,
-} from "../../../../src/components/ThemeProvider/components";
-import DeleteButton from "../../../../src/components/common/DeleteButton";
-import PageLoader from "../../../../src/components/common/PageLoader";
+} from "../../../../../src/components/ThemeProvider/components";
+import DeleteButton from "../../../../../src/components/common/DeleteButton";
+import PageLoader from "../../../../../src/components/common/PageLoader";
 import {
     deleteTransactionTemplate,
     getTransactionTemplateByid,
-} from "../../../../src/db/transactionsTempsDb";
-import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
-import { dateFormat } from "../../../../utils/dateFormat";
+} from "../../../../../src/db/transactionsTempsDb";
+import { useThemeStyles } from "../../../../../src/hooks/useThemeStyles";
+import { dateFormat } from "../../../../../utils/dateFormat";
 
 export default function TransactionTemplateDetailsScreen() {
   const { globalStyles } = useThemeStyles();

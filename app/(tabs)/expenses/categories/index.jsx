@@ -8,11 +8,11 @@ import {
 import { useIsFocused } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useRouter } from "expo-router";
-import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
-import { SecondaryText , BodyText} from "../../../src/components/ThemeProvider/components";
-import { syncManager } from "../../../utils/syncManager";
-import { AddButton } from "../../../src/components/common/AddButton";
-import { getCategories } from "../../../src/db/categoriesDb";
+import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
+import { SecondaryText , BodyText} from "../../../../src/components/ThemeProvider/components";
+import { syncManager } from "../../../../utils/syncManager";
+import { AddButton } from "../../../../src/components/common/AddButton";
+import { getCategories } from "../../../../src/db/categoriesDb";
 
 export default function CategoriesListScreen({ navigation }) {
   const db = useSQLiteContext();
@@ -70,11 +70,6 @@ export default function CategoriesListScreen({ navigation }) {
 
   const Section = ({ title, data }) => (
     <View style={{ marginBottom: 24 }}>
-      <SecondaryText
-        style={{...globalStyles.subTitle,textAlign:'left'}}
-      >
-        {title}
-      </SecondaryText>
 
       {data.length === 0 ? (
         <Text style={{ color: "#888" }}>No categories</Text>
@@ -91,10 +86,9 @@ export default function CategoriesListScreen({ navigation }) {
       <ScrollView style={globalStyles.container}>
 
         <BodyText style={globalStyles.title}>
-          My Categories
+          My Expense Categories
         </BodyText>
 
-        <Section title="Income" data={incomeCategories} />
         <Section title="Expenses" data={expenseCategories} />
 
       </ScrollView>

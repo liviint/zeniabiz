@@ -23,6 +23,7 @@ export default function HabitsStackLayout() {
                 name="add/index" 
                 options={{ title: 'Add Transaction' }} 
             />
+
         </Stack>
     );
 }

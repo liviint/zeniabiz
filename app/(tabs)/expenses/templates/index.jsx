@@ -9,15 +9,15 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { AddButton } from "../../../src/components/common/AddButton";
-import EmptyState from "../../../src/components/common/EmptyState";
+import { AddButton } from "../../../../src/components/common/AddButton";
+import EmptyState from "../../../../src/components/common/EmptyState";
 import {
     BodyText,
     Card,
     SecondaryText,
-} from "../../../src/components/ThemeProvider/components";
-import { getTransactionTemplates } from "../../../src/db/transactionsTempsDb";
-import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+} from "../../../../src/components/ThemeProvider/components";
+import { getTransactionTemplates } from "../../../../src/db/transactionsTempsDb";
+import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 
 export default function TransactionTemplatesListScreen() {
   const isFocused = useIsFocused();

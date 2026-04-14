@@ -1,5 +1,5 @@
 import AddEdit from "../../../../../src/components/transactionsTemps/AddEdit";
 
-export default function EditTemplatesScreen() {
+export default function AddTemplatesScreen() {
     return <AddEdit />
 }
