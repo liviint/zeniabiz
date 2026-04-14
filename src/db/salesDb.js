@@ -162,7 +162,7 @@ export async function deleteSale(db, sale_id) {
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
-    // Restore stock
+    // 1. Restore stock
     const items = await db.getAllAsync(
       `SELECT product_id, quantity FROM sale_items WHERE sale_id = ?`,
       [sale_id]
@@ -170,15 +170,24 @@ export async function deleteSale(db, sale_id) {
 
     for (const item of items) {
       await db.runAsync(
-        `UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?`,
+        `UPDATE products 
+         SET stock_quantity = stock_quantity + ? 
+         WHERE id = ?`,
         [item.quantity, item.product_id]
       );
     }
 
-    // Delete everything
-    await db.runAsync(`DELETE FROM sale_items WHERE sale_id = ?`, [sale_id]);
-    await db.runAsync(`DELETE FROM expenses WHERE sale_id = ?`, [sale_id]);
-    await db.runAsync(`DELETE FROM sales WHERE id = ?`, [sale_id]);
+    // 2. Delete sale items
+    await db.runAsync(
+      `DELETE FROM sale_items WHERE sale_id = ?`,
+      [sale_id]
+    );
+
+    // 3. Delete sale itself
+    await db.runAsync(
+      `DELETE FROM sales WHERE id = ?`,
+      [sale_id]
+    );
 
     await db.runAsync("COMMIT");
   } catch (err) {

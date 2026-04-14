@@ -34,6 +34,9 @@ export default function SummaryCards({ refreshKey }) {
     Number(num || 0).toLocaleString();
 
   const isProfitPositive = stats.netProfit >= 0;
+  const profitRemark = stats.netProfit === 0 ? "" : stats.netProfit > 0
+            ? "You're making money 📈"
+            : "You're losing money 📉"
 
   return (
     <View style={styles.container}>
@@ -41,11 +44,7 @@ export default function SummaryCards({ refreshKey }) {
       <StatCard
         label="Net Profit"
         value={formatNumber(stats.netProfit)}
-        subText={
-          isProfitPositive
-            ? "You're making money 📈"
-            : "You're losing money 📉"
-        }
+        subText={profitRemark}
         color={isProfitPositive ? "#2E8B8B" : "#FF6B6B"}
         style={heroStyles.card}
         labelStyle={heroStyles.label}

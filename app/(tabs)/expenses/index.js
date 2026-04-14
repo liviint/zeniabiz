@@ -8,7 +8,7 @@ import { AddButton } from "../../../src/components/common/AddButton";
 import ButtonLinks from "../../../src/components/common/ButtonLinks";
 import EmptyState from "../../../src/components/common/EmptyState";
 import TimeFilters from "../../../src/components/common/TimeFilters";
-import { getExpenses, getExpenseStats } from "../../../src/db/transactionsDb";
+import { getExpenses } from "../../../src/db/expensesDb"
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { dateFormat } from "../../../utils/dateFormat";
 
@@ -19,11 +19,6 @@ export default function FinanceListPage() {
     const [isLoading,setIsLoading] = useState(true)
     const isFocused = useIsFocused()
     const {globalStyles} = useThemeStyles()
-    const [stats, setStats] = useState({
-        profit: 0,
-        revenue: 0,
-        expenses: 0,
-      });
     const [selectedMonth, setSelectedMonth] = useState(new Date());
 
     let fetchExpenses = async() => {
@@ -31,15 +26,10 @@ export default function FinanceListPage() {
         console.log(expenses,"hello expenses")
         setTransactions(expenses)
     }
-    const fetchStats = async () => {
-      const summary = await getExpenseStats(db,selectedMonth);
-      setStats(summary);
-    };
 
     useEffect(() => {
     if (isFocused) {
       fetchExpenses()
-      fetchStats()
     }
     setIsLoading(false)
     },[isFocused, selectedMonth])
@@ -151,7 +141,6 @@ export default function FinanceListPage() {
         )}
         ListHeaderComponent={
           <ListHeader
-            stats={stats}
             selectedMonth={selectedMonth}
             onMonthChange={setSelectedMonth}
           />

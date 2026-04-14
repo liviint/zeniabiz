@@ -7,7 +7,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { getProducts } from "../../../src/db/inventoryDb";
 import { createOrUpdateSale, getTransactionItems } from "../../../src/db/salesDb";
 import { getCategories } from "../../../src/db/categoriesDb";
-import { getTransactionById } from "../../../src/db/transactionsDb";
+import { getTransactionById } from "../../../src/db/expensesDb.js";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 
 export default function SellPage() {

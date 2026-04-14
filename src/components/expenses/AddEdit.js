@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable, TouchableOpacity, Alert, ScrollView 
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Card, BodyText,Input,TextArea , FormLabel, SecondaryText} from "../ThemeProvider/components";
 import { useSQLiteContext } from "expo-sqlite";
-import { getTransactionById, upsertTransaction } from "../../db/transactionsDb";
+import { getTransactionById, upsertTransaction } from "../../db/expensesDb.js";
 import { getTransactionTemplates } from "../../db/transactionsTempsDb";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import CategoriesPicker from "../common/CategoriesPicker";

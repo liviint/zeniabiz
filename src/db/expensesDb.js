@@ -2,9 +2,6 @@ import uuid from "react-native-uuid";
 
 const newUuid = () => uuid.v4();
 
-// ------------------------
-// Upsert a Transaction
-// ------------------------
 export async function upsertTransaction(
   db,
   {
@@ -77,9 +74,6 @@ export async function upsertTransaction(
   }
 }
 
-// ------------------------
-// Get Transactions by Month
-// ------------------------
 export async function getExpenses(db, date = new Date()) {
   const start = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
   const end = new Date(date.getFullYear(), date.getMonth() + 1, 1).toISOString();
@@ -97,9 +91,6 @@ export async function getExpenses(db, date = new Date()) {
   );
 }
 
-// ------------------------
-// Get Single Transaction
-// ------------------------
 export async function getTransactionById(db, id) {
   return await db.getFirstAsync(
     `
@@ -111,19 +102,10 @@ export async function getTransactionById(db, id) {
   );
 }
 
-// ------------------------
-// Delete Transaction
-// ------------------------
-export async function deleteTransaction(db, id) {
-  const now = new Date().toISOString();
-
+export async function deleteExpense(db, id) {
   await db.runAsync(
-    `
-    UPDATE expenses
-    SET deleted_at = ?, updated_at = ?, is_synced = 0
-    WHERE id = ? 
-    `,
-    [now, now, id]
+    `DELETE FROM expenses WHERE id = ?`,
+    [id]
   );
 }
 

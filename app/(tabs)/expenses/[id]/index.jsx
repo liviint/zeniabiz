@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import DeleteButton from "../../../../src/components/common/DeleteButton";
 import {
-    BodyText,
-    Card,
-    SecondaryText,
+  BodyText,
+  Card,
+  SecondaryText,
 } from "../../../../src/components/ThemeProvider/components";
 import {
-    deleteTransaction,
-    getTransactionById,
-} from "../../../../src/db/transactionsDb";
+  deleteExpense,
+  getTransactionById,
+} from "../../../../src/db/expensesDb";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import { dateFormat } from "../../../../utils/dateFormat";
 
@@ -25,7 +25,7 @@ export default function FinanceEntryViewPage() {
 
   const handleDelete = async () => {
     try {
-      await deleteTransaction(db, uuid);
+      await deleteExpense(db, uuid);
       Alert.alert("Removed", "This transaction has been deleted.");
       router.push("/expenses");
     } catch (error) {
@@ -37,7 +37,6 @@ export default function FinanceEntryViewPage() {
     if (!uuid) return;
     let getTransaction = async () => {
       let transaction = await getTransactionById(db, uuid);
-      console.log(transaction, "hello transa");
       setTransaction(transaction);
       setIsExpense(transaction.type === "expense");
     };
@@ -46,7 +45,7 @@ export default function FinanceEntryViewPage() {
 
   return (
     <View style={globalStyles.container}>
-      <BodyText style={globalStyles.title}>Transaction Details</BodyText>
+      <BodyText style={globalStyles.title}>Expense Details</BodyText>
 
       <Card style={styles.amountCard}>
         <SecondaryText style={styles.amountLabel}>
