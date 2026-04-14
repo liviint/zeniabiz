@@ -1,29 +1,32 @@
 import { Card, BodyText, SecondaryText } from "../ThemeProvider/components";
 
 export const StatCard = ({
-    label,
-    value,
-    subText,
-    color = "#2E8B8B",
-    style = {},
+  label,
+  value,
+  subText,
+  color = "#2E8B8B",
+  style = {},
+  labelStyle = {},
+  valueStyle = {},
+  subTextStyle = {},
 }) => {
-    return (
-        <Card style={[styles.card, style]}>
-        <BodyText style={styles.label}>
-            {label}
-        </BodyText>
+  return (
+    <Card style={[styles.card, style]}>
+      <BodyText style={[styles.label, labelStyle]}>
+        {label}
+      </BodyText>
 
-        <BodyText style={[styles.value, { color }]}>
-            {value}
-        </BodyText>
+      <BodyText style={[styles.value, { color }, valueStyle]}>
+        {value}
+      </BodyText>
 
-        {subText && (
-            <SecondaryText style={styles.subText}>
-            {subText}
-            </SecondaryText>
-        )}
-        </Card>
-    );
+      {subText && (
+        <SecondaryText style={[styles.subText, subTextStyle]}>
+          {subText}
+        </SecondaryText>
+      )}
+    </Card>
+  );
 };
 
 const styles = {
@@ -33,14 +36,6 @@ const styles = {
     borderRadius: 20,
     margin: 8,
     alignItems: "center",
-
-    // iOS shadow
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-
-    // Android
     elevation: 4,
   },
 

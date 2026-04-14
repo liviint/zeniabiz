@@ -1,16 +1,15 @@
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
 import { useIsFocused } from "@react-navigation/native";
 import { PieChart } from "react-native-chart-kit";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { Card,BodyText } from "../ThemeProvider/components";
-import { useThemeStyles } from "../../hooks/useThemeStyles";
+import { getExpensesBreakDown } from "../../db/dashboardDb";
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function ExpenseBreakdown() {
   const isFocused = useIsFocused()
-  const {globalStyles} = useThemeStyles()
   const db = useSQLiteContext();
   const [data, setData] = useState([]);
 
@@ -19,13 +18,8 @@ export default function ExpenseBreakdown() {
   }, [isFocused]);
 
   const loadData = async () => {
-    const result = await db.getAllAsync(`
-      SELECT category, SUM(amount) as total
-      FROM expenses
-      WHERE type='expense' AND deleted_at IS NULL
-      GROUP BY category
-    `);
-
+    const result = await getExpensesBreakDown(db) 
+    
     const colors = [
       "#FF6B6B",
       "#2E8B8B",

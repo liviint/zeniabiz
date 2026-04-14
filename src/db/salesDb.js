@@ -63,15 +63,6 @@ export async function createOrUpdateSale(
         [finalTitle, note ?? null, saleDate, total, now, id]
       );
 
-      // 4️⃣ Update transaction linked to this sale
-      await db.runAsync(
-        `
-        UPDATE expenses
-        SET amount = ?, title = ?, note = ?, date = ?, updated_at = ?
-        WHERE sale_id = ?
-        `,
-        [total, finalTitle, note ?? null, saleDate, now, id]
-      );
     } else {
       // ➕ CREATE MODE
       // 1️⃣ Insert new sale
@@ -83,16 +74,7 @@ export async function createOrUpdateSale(
         [id, finalTitle, note ?? null, saleDate, total, now, now]
       );
 
-      // 2️⃣ Insert new transaction
-      await db.runAsync(
-        `
-        INSERT INTO expenses (
-          id, type, amount, title, note, date, category, category_id,  sale_id, created_at, updated_at
-        )
-        VALUES (?, 'income', ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `,
-        [newUuid(), total, finalTitle, note ?? null, saleDate, category,category_id,id, now, now]
-      );
+      
     }
 
     // ➕ Insert items & reduce stock

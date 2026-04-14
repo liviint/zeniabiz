@@ -3,8 +3,9 @@ import { View, StyleSheet } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { StatCard } from "../common/StatCard";
-import { getExpenseStats } from "../../db/transactionsDb";
+import {getFinancialStats } from "../../db/dashboardDb";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
+import { SecondaryText } from "../ThemeProvider/components";
 
 export default function SummaryCards({ refreshKey }) {
   const { colors } = useThemeStyles()
@@ -21,7 +22,7 @@ export default function SummaryCards({ refreshKey }) {
   });
 
   const fetchStats = async () => {
-    const summary = await getExpenseStats(db);
+    const summary = await getFinancialStats(db);
     setStats(summary);
   };
 
@@ -37,6 +38,32 @@ export default function SummaryCards({ refreshKey }) {
   return (
     <View style={styles.container}>
       {/* ROW 1 */}
+      <StatCard
+        label="Net Profit"
+        value={formatNumber(stats.netProfit)}
+        subText={
+          isProfitPositive
+            ? "You're making money 📈"
+            : "You're losing money 📉"
+        }
+        color={isProfitPositive ? "#2E8B8B" : "#FF6B6B"}
+        style={heroStyles.card}
+        labelStyle={heroStyles.label}
+        valueStyle={heroStyles.value}
+        subTextStyle={heroStyles.subText}
+      />
+      <View style={{
+        marginVertical: 10,
+        borderTopWidth: 1,
+        borderColor:colors.text,
+        opacity: 0.08
+      }} 
+    />
+
+    <View style={styles.breakdown}>
+      <SecondaryText style={{ marginLeft: 8, marginBottom: 4, opacity: 0.6 }}>
+      Breakdown
+    </SecondaryText>
       <View style={styles.row}>
         <StatCard
           label="Revenue"
@@ -46,14 +73,14 @@ export default function SummaryCards({ refreshKey }) {
         />
 
         <StatCard
-          label="Expenses"
-          value={formatNumber(stats.expenses)}
-          subText="Operating costs"
+          label="Cost"
+          value={formatNumber(stats.cost)}
+          subText="Cost of Goods"
           color="#FF6B6B"
         />
+        
       </View>
 
-      {/* ROW 2 */}
       <View style={styles.row}>
         <StatCard
           label="Gross Profit"
@@ -61,20 +88,15 @@ export default function SummaryCards({ refreshKey }) {
           subText="Revenue - Cost of goods"
           color="#2E8B8B"
         />
-
         <StatCard
-          label="Net Profit"
-          value={formatNumber(stats.netProfit)}
-          subText={
-            isProfitPositive
-              ? "You're profitable 📈"
-              : "You're losing money 📉"
-          }
-          color={isProfitPositive ? "#2E8B8B" : "#FF6B6B"}
+          label="Expenses"
+          value={formatNumber(stats.expenses)}
+          subText="Business expenses"
+          color="#FF6B6B"
         />
       </View>
+    </View>
 
-      {/* ROW 3 (optional but powerful) */}
       <View style={styles.row}>
         <StatCard
           label="Stock Value"
@@ -93,8 +115,49 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 
+  heroCard: {
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
   },
 });
+
+const heroStyles = {
+  card: {
+    padding: 24,
+    borderRadius: 24,
+    margin: 12,
+    alignItems: "center",
+
+    // Softer, premium feel
+    elevation: 6,
+
+    // Add subtle emphasis
+    transform: [{ scale: 1.02 }],
+  },
+
+  label: {
+    fontSize: 14,
+    opacity: 0.7,
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+
+  value: {
+    fontSize: 34, // bigger than normal cards
+    fontWeight: "800",
+    marginBottom: 6,
+  },
+
+  subText: {
+    fontSize: 13,
+    marginTop: 6,
+    textAlign: "center",
+    opacity: 0.8,
+  },
+};

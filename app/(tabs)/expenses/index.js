@@ -131,8 +131,6 @@ export default function FinanceListPage() {
     </Pressable>
   );
 
-    
-
   return (
     <View style={globalStyles.container}>
       <View style={styles.headerRow}>
@@ -182,45 +180,13 @@ export default function FinanceListPage() {
 const ListHeader = ({ stats, selectedMonth, onMonthChange}) => {
   return <>
     <TimeFilters 
-          selectedMonth={selectedMonth}
-          onMonthChange={onMonthChange}
-        />
-    <Card style={styles.balanceCard}>
-      
-      <SecondaryText style={styles.balanceLabel}>
-        Net Profit
-      </SecondaryText>
-      <BodyText
-        style={[
-          styles.balanceAmount,
-          { color: stats.netProfit >= 0 ? "#2E8B8B" : "#FF6B6B" },
-        ]}
-      >
-        {stats?.netProfit?.toLocaleString()}
-      </BodyText>
-    </Card>
-
-    <View style={styles.statRow}>
-      <Card style={styles.statCard}>
-        <SecondaryText style={styles.statLabel}>Revenue</SecondaryText>
-        <BodyText style={[styles.statAmount, styles.income]}>
-          {stats.revenue.toLocaleString()}
-        </BodyText>
-      </Card>
-
-      <Card style={styles.statCard}>
-        <SecondaryText style={styles.statLabel}>Expenses</SecondaryText>
-        <BodyText style={[styles.statAmount, styles.expense]}>
-          {stats.expenses.toLocaleString()}
-        </BodyText>
-      </Card>
-      
-    </View>
+      selectedMonth={selectedMonth}
+      onMonthChange={onMonthChange}
+    />
 
     <ButtonLinks 
       links={[
         {name:"View Templates", route:"/expenses-templates"},
-       /*  {name:"View Statistics", route:"/expenses/stats"}, */
       ]}
     />
     

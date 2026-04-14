@@ -127,62 +127,6 @@ export async function deleteTransaction(db, id) {
   );
 }
 
-export async function getExpenseStats(db, date = new Date()) {
-  const start = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
-  const end = new Date(date.getFullYear(), date.getMonth() + 1, 1).toISOString();
-
-  // 1. Revenue and Cost from sales + sale_items
-  const revenueAndCost = await db.getFirstAsync(
-    `
-    SELECT 
-      SUM(si.price * si.quantity) AS revenue,
-      SUM(p.cost_price * si.quantity) AS cost
-    FROM sale_items si
-    JOIN sales s ON s.id = si.sale_id
-    JOIN products p ON p.id = si.product_id
-    WHERE s.deleted_at IS NULL
-      AND s.created_at >= ?
-      AND s.created_at < ?
-    `,
-    [start, end]
-  );
-
-  // 2. Expenses
-  const expenseResult = await db.getFirstAsync(
-    `
-    SELECT SUM(amount) AS expenses
-    FROM expenses
-    WHERE type = 'expense'
-      AND date >= ?
-      AND date < ?
-    `,
-    [start, end]
-  );
-
-  // 3. Stock Value (NEW)
-  const stockResult = await db.getFirstAsync(`
-    SELECT SUM(stock_quantity * cost_price) AS stock_value
-    FROM products
-    WHERE deleted_at IS NULL
-  `);
-
-  const revenue = revenueAndCost?.revenue || 0;
-  const cost = revenueAndCost?.cost || 0;
-  const expenses = expenseResult?.expenses || 0;
-  const stockValue = stockResult?.stock_value || 0;
-
-  const grossProfit = revenue - cost;
-  const netProfit = grossProfit - expenses;
-
-  return {
-    revenue,
-    cost,
-    expenses,
-    grossProfit,
-    netProfit,
-    stockValue,
-  };
-}
 
 
 
