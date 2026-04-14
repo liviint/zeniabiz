@@ -8,11 +8,9 @@ import {
 } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
-import { Picker } from "@react-native-picker/picker";
-import { BodyText, FormLabel, Input , Card, CustomPicker} from "../ThemeProvider/components";
+import { BodyText, FormLabel, Input , Card } from "../ThemeProvider/components";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getCategories, upsertCategory } from "../../db/categoriesDb";
-import uuid from 'react-native-uuid';
 import { COLORS } from "../../../utils/constants";
 
 export default function AddEdit() {

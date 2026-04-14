@@ -175,10 +175,11 @@ const ListHeader = ({ stats, selectedMonth, onMonthChange}) => {
 
     <ButtonLinks 
       links={[
-        {name:"View Templates", route:"/expenses-templates"},
+        {name:"View Templates", route:"/expenses/templates"},
+        {name:"View Categories", route:"/expenses/categories"},
       ]}
     />
-    
+
   </>
 }
 
