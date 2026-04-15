@@ -1,57 +1,129 @@
-export const getCashFlow = async (db) => {
-  const result = await db.getAllAsync(`
+import { normalizeStartDate, normalizeEndDate } from "./utils"
+
+export const getCashFlow = async (db, selectedMonth) => {
+  const startDate = normalizeStartDate(selectedMonth);
+  const endDate = normalizeEndDate(selectedMonth);
+
+  const result = await db.getAllAsync(
+    `
     SELECT 
       d.date,
       COALESCE(s.revenue, 0) - COALESCE(e.expenses, 0) as net
     FROM (
       SELECT DATE(date) as date FROM sales
+      WHERE DATE(date) >= DATE(?) AND DATE(date) < DATE(?)
+
       UNION
+
       SELECT DATE(date) as date FROM expenses
+      WHERE DATE(date) >= DATE(?) AND DATE(date) < DATE(?) 
+      AND deleted_at IS NULL
     ) d
 
     LEFT JOIN (
       SELECT DATE(date) as date, SUM(amount) as revenue
       FROM sales
+      WHERE DATE(date) >= DATE(?) AND DATE(date) < DATE(?)
       GROUP BY DATE(date)
     ) s ON s.date = d.date
 
     LEFT JOIN (
       SELECT DATE(date) as date, SUM(amount) as expenses
       FROM expenses
-      WHERE deleted_at IS NULL
+      WHERE DATE(date) >= DATE(?) AND DATE(date) < DATE(?) 
+      AND deleted_at IS NULL
       GROUP BY DATE(date)
     ) e ON e.date = d.date
 
     ORDER BY d.date ASC
-    LIMIT 7
-  `);
-
-  const labels = result.map((item) =>
-    new Date(item.date).getDate().toString()
+    `,
+    [
+      startDate, endDate,
+      startDate, endDate,
+      startDate, endDate,
+      startDate, endDate,
+    ]
   );
 
-  const data = result.map((item) => item.net || 0);
+const daysInMonth = new Date(
+  selectedMonth.getFullYear(),
+  selectedMonth.getMonth() + 1,
+  0
+).getDate();
+
+// Create O(1) lookup
+const dataMap = {};
+result.forEach((item) => {
+  const day = new Date(item.date).getDate();
+  dataMap[day] = item.net || 0;
+});
+
+const useWeekly = daysInMonth > 10;
+
+if (!useWeekly) {
+  // ✅ DAILY (for small ranges)
+  const labels = [];
+  const data = [];
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    labels.push(day.toString());
+    data.push(dataMap[day] ?? 0);
+  }
 
   return {
     labels,
     datasets: [{ data }],
   };
-};
-
-export const getExpensesBreakDown  = async(db) => {
-    return db.getAllAsync(`
-        SELECT category, SUM(amount) as total
-        FROM expenses
-        WHERE deleted_at IS NULL
-        GROUP BY category
-    `);
 }
 
-export async function getFinancialStats(db, date = new Date()) {
-  const start = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
-  const end = new Date(date.getFullYear(), date.getMonth() + 1, 1).toISOString();
+// ✅ WEEKLY (premium view)
+const labels = [];
+const data = [];
 
-  // 1. Revenue and Cost (from sales)
+for (let i = 1; i <= daysInMonth; i += 7) {
+  let sum = 0;
+  const start = i;
+  const end = Math.min(i + 6, daysInMonth);
+
+  for (let d = start; d <= end; d++) {
+    sum += dataMap[d] ?? 0;
+  }
+
+  labels.push(`${start}-${end}`);
+  data.push(sum);
+}
+
+return {
+  labels,
+  datasets: [{ data }],
+};
+};
+
+export const getExpensesBreakDown = async (db, selectedMonth) => {
+  const startDate = normalizeStartDate(selectedMonth);
+  const endDate = normalizeEndDate(selectedMonth);
+
+  const result = await db.getAllAsync(
+    `
+    SELECT category, SUM(amount) as total
+    FROM expenses
+    WHERE deleted_at IS NULL
+      AND DATE(date) >= DATE(?)
+      AND DATE(date) < DATE(?)
+    GROUP BY category
+    ORDER BY total DESC
+    `,
+    [startDate, endDate]
+  );
+
+  return result;
+};
+
+export async function getFinancialStats(db, selectedMonth) {
+  const startDate = normalizeStartDate(selectedMonth);
+  const endDate = normalizeEndDate(selectedMonth);
+
+  // 1. Revenue & Cost
   const revenueAndCost = await db.getFirstAsync(
     `
     SELECT 
@@ -61,25 +133,25 @@ export async function getFinancialStats(db, date = new Date()) {
     JOIN sales s ON s.id = si.sale_id
     JOIN products p ON p.id = si.product_id
     WHERE s.deleted_at IS NULL
-      AND s.date >= ?
-      AND s.date < ?
+      AND DATE(s.date) >= DATE(?)
+      AND DATE(s.date) < DATE(?)
     `,
-    [start, end]
+    [startDate, endDate]
   );
 
-  // 2. Expenses (pure expenses only)
+  // 2. Expenses
   const expenseResult = await db.getFirstAsync(
     `
     SELECT COALESCE(SUM(amount), 0) AS expenses
     FROM expenses
     WHERE deleted_at IS NULL
-      AND date >= ?
-      AND date < ?
+      AND DATE(date) >= DATE(?)
+      AND DATE(date) < DATE(?)
     `,
-    [start, end]
+    [startDate, endDate]
   );
 
-  // 3. Stock Value
+  // 3. Stock Value (not time-based)
   const stockResult = await db.getFirstAsync(
     `
     SELECT COALESCE(SUM(stock_quantity * cost_price), 0) AS stock_value
@@ -88,10 +160,10 @@ export async function getFinancialStats(db, date = new Date()) {
     `
   );
 
-  const revenue = revenueAndCost.revenue;
-  const cost = revenueAndCost.cost;
-  const expenses = expenseResult.expenses;
-  const stockValue = stockResult.stock_value;
+  const revenue = revenueAndCost?.revenue || 0;
+  const cost = revenueAndCost?.cost || 0;
+  const expenses = expenseResult?.expenses || 0;
+  const stockValue = stockResult?.stock_value || 0;
 
   const grossProfit = revenue - cost;
   const netProfit = grossProfit - expenses;

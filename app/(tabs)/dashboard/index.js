@@ -1,14 +1,16 @@
-import { View, ScrollView, StyleSheet, Text, RefreshControl } from "react-native";
+import { View, ScrollView, StyleSheet, RefreshControl } from "react-native";
 import { useState, useCallback } from "react";
 import SummaryCards from "../../../src/components/dashboard/SummaryCards"
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { BodyText, SecondaryText } from "../../../src/components/ThemeProvider/components";
 import CashflowChart from "../../../src/components/dashboard/CashflowChart";
 import ExpenseBreakdown from "../../../src/components/dashboard/ExpenseBreakdown";
+import TimeFilters from "../../../src/components/common/TimeFilters"
 
 export default function DashboardScreen() {
     const { globalStyles } = useThemeStyles()
     const [refreshing, setRefreshing] = useState(false);
+    const [selectedMonth, setSelectedMonth] = useState(new Date());
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
@@ -22,6 +24,11 @@ export default function DashboardScreen() {
         <View style={globalStyles.container}>
             <BodyText style={globalStyles.title}>Dashboard</BodyText>
             <SecondaryText style={globalStyles.subTitle}>Track your business performance</SecondaryText>
+            
+            <TimeFilters
+                selectedMonth={selectedMonth}
+                onMonthChange={setSelectedMonth}
+            />
 
             <ScrollView
                 showsVerticalScrollIndicator={false}
@@ -29,11 +36,17 @@ export default function DashboardScreen() {
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
             >
-                <SummaryCards />
+                <SummaryCards 
+                    selectedMonth={selectedMonth}
+                />
 
-                <CashflowChart />
+                <CashflowChart 
+                    selectedMonth={selectedMonth}
+                />
 
-                <ExpenseBreakdown />   
+                <ExpenseBreakdown 
+                    selectedMonth={selectedMonth}
+                /> 
 
                 <View style={{ height: 24 }} />
             </ScrollView>

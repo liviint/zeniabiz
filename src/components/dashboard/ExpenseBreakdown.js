@@ -8,17 +8,17 @@ import { getExpensesBreakDown } from "../../db/dashboardDb";
 
 const screenWidth = Dimensions.get("window").width;
 
-export default function ExpenseBreakdown() {
+export default function ExpenseBreakdown({selectedMonth}) {
   const isFocused = useIsFocused()
   const db = useSQLiteContext();
   const [data, setData] = useState([]);
 
   useEffect(() => {
     loadData();
-  }, [isFocused]);
+  }, [isFocused, selectedMonth]);
 
   const loadData = async () => {
-    const result = await getExpensesBreakDown(db) 
+    const result = await getExpensesBreakDown(db, selectedMonth) 
     
     const colors = [
       "#FF6B6B",
