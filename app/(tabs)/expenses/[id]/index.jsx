@@ -52,9 +52,9 @@ export default function FinanceEntryViewPage() {
           {isExpense ? "Expense" : "Income"}
         </SecondaryText>
         <BodyText
-          style={[styles.amount, isExpense ? styles.expense : styles.income]}
+          style={[styles.amount, styles.expense]}
         >
-          {isExpense ? "-" : "+"}KE{" "}
+          {"-"}KE{" "}
           {Math.abs(transaction.amount).toLocaleString()}
         </BodyText>
       </Card>
@@ -114,9 +114,6 @@ const styles = StyleSheet.create({
   amount: {
     fontSize: 28,
     fontWeight: "700",
-  },
-  income: {
-    color: "#2E8B8B",
   },
   expense: {
     color: "#FF6B6B",

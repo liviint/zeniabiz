@@ -36,7 +36,7 @@ export default function CategoriesPicker({
 
   const handleSelect = (value) => {
     if (value === ADD_CATEGORY_VALUE) {
-      router.push("/categories/add/modal");
+      router.push("/expenses/categories/add/modal");
       return;
     }
 

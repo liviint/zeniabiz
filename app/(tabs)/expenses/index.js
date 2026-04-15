@@ -158,8 +158,8 @@ export default function FinanceListPage() {
       <AddButton 
         primaryAction={{route:"/expenses/add",label:"Add Expense"}}
         secondaryActions={[
-          {route:"/categories/add/modal",label:"Add Category"},
-          {route:"/expenses-templates/add/",label:"Add Template"},
+          {route:"/expenses/categories/add/modal",label:"Add Category"},
+          {route:"/expenses/templates/add/",label:"Add Template"},
         ]}
       />
   </View>

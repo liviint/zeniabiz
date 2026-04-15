@@ -5,10 +5,12 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { Card,BodyText } from "../ThemeProvider/components";
 import { getExpensesBreakDown } from "../../db/dashboardDb";
+import { useThemeStyles } from "../../hooks/useThemeStyles";
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function ExpenseBreakdown({selectedMonth}) {
+  const { colors:themeColors } = useThemeStyles()
   const isFocused = useIsFocused()
   const db = useSQLiteContext();
   const [data, setData] = useState([]);
@@ -32,7 +34,7 @@ export default function ExpenseBreakdown({selectedMonth}) {
       name: item.category || "Other",
       amount: item.total,
       color: colors[index % colors.length],
-      legendFontColor: "#333",
+      legendFontColor: themeColors.text,
       legendFontSize: 12,
     }));
 

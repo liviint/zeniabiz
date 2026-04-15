@@ -43,7 +43,7 @@ export default function CategoriesListScreen({ navigation }) {
 
   const renderCategory = ({ item }) => (
     <TouchableOpacity
-      onPress={() => router.push(`/categories/${item.id}`, { categoryId: item.id })}
+      onPress={() => router.push(`/expenses/categories/${item.id}`, { categoryId: item.id })}
       style={{
         flexDirection: "row",
         alignItems: "center",
@@ -93,7 +93,7 @@ export default function CategoriesListScreen({ navigation }) {
 
       </ScrollView>
       <AddButton 
-          primaryAction={{route:`/categories/add`,label:"Add Category"}}
+          primaryAction={{route:`/expenses/categories/add`,label:"Add Category"}}
         />
     </>
   );

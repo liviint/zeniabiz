@@ -84,7 +84,7 @@ export default function CategoryDetailsScreen() {
         <View style={{ gap: 12 }}>
             
             <TouchableOpacity
-                onPress={() => router.push(`/categories/${id}/edit`)}
+                onPress={() => router.push(`/expenses/categories/${id}/edit`)}
                 style={globalStyles.editBtn}
             >
             <Text style={globalStyles.editBtnText}>
