@@ -149,7 +149,7 @@ const isFormValid = () => {
   return (
     <ScrollView style={globalStyles.container}>
       <BodyText style={globalStyles.title}>
-        {id ? "Edit Transaction" : "Add Transaction"}
+        {id ? "Edit Expense" : "Add Expense"}
       </BodyText>
 
       <Card >
@@ -165,7 +165,7 @@ const isFormValid = () => {
         <View style={globalStyles.formGroup}>
           <FormLabel style={styles.label}>Title</FormLabel>
           <Input
-            placeholder="e.g. Groceries, Salary"
+            placeholder="e.g. Rent, Marketing"
             value={form.title}
             onChangeText={(v) => handleChange("title", v)}
             style={styles.input}

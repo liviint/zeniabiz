@@ -7,21 +7,21 @@ export default function ExpensesStackLayout() {
         }}>
             <Stack.Screen 
                 name="index" 
-                options={{ title: 'Transactions Overview' }} 
+                options={{ title: 'Expenses Overview' }} 
             />
             <Stack.Screen 
                 name="[id]/index" 
-                options={{ title: 'View Transaction' }} 
+                options={{ title: 'View Expense' }} 
             />
 
             <Stack.Screen 
                 name="[id]/edit/index" 
-                options={{ title: 'Edit Transaction' }} 
+                options={{ title: 'Edit Expense' }} 
             />
             
             <Stack.Screen 
                 name="add/index" 
-                options={{ title: 'Add Transaction' }} 
+                options={{ title: 'Add Expense' }} 
             />
 
             <Stack.Screen 
