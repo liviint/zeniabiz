@@ -108,12 +108,9 @@ export default function FinanceListPage() {
             </SecondaryText>
           </View>
           <BodyText
-            style={[
-              styles.amount,
-              item.type === "expense" ? styles.expense : styles.income,
-            ]}
+            style={[styles.amount, styles.expense]}
           >
-            {item.type === "expense" ? "-" : "+"}
+            { "-"}
             {Math.abs(item?.amount || 0).toLocaleString()}
           </BodyText>
         </View>
@@ -281,9 +278,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     flexShrink: 0,
-  },
-  income: {
-    color: "#2E8B8B",
   },
   expense: {
     color: "#FF6B6B",
