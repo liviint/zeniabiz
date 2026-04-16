@@ -1,26 +1,49 @@
 import { useEffect, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
-import { View, StyleSheet, FlatList, Pressable, Alert } from "react-native";
-import { Card, BodyText, SecondaryText, Input } from "../../../src/components/ThemeProvider/components";
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  Pressable,
+  Alert,
+  Modal,
+} from "react-native";
+import {
+  Card,
+  BodyText,
+  SecondaryText,
+  Input,
+} from "../../../src/components/ThemeProvider/components";
 import { useSQLiteContext } from "expo-sqlite";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { getProducts } from "../../../src/db/inventoryDb";
-import { createOrUpdateSale, getSaleItems, getSaleById } from "../../../src/db/salesDb";
+import {
+  createOrUpdateSale,
+  getSaleItems,
+  getSaleById,
+} from "../../../src/db/salesDb";
 import { getCategories } from "../../../src/db/categoriesDb";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 
 export default function SellPage() {
   const db = useSQLiteContext();
-  const {id} = useLocalSearchParams()
-  const isFocused = useIsFocused()
+  const { id } = useLocalSearchParams();
+  const isFocused = useIsFocused();
   const router = useRouter();
   const { globalStyles } = useThemeStyles();
 
   const [products, setProducts] = useState([]);
+  const [search, setSearch] = useState("");
   const [cart, setCart] = useState([]);
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState([]);
+  const [category, setCategory] = useState(null);
 
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const [cartExpanded, setCartExpanded] = useState(true);
+
+  // Fetch products
   useEffect(() => {
     (async () => {
       const data = await getProducts(db);
@@ -28,62 +51,54 @@ export default function SellPage() {
     })();
   }, [isFocused]);
 
+  const filteredProducts = products.filter((p) =>
+    p.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // Load sale if editing
   useEffect(() => {
-      if(!id) return
-      (async () => {
-        const i = await getSaleItems(db, id);
-        setCart(i);
-      })();
-    }, [isFocused]);
-
-    useEffect(() => {
-      if(cart.length === 0) return
-      (async () => {
-        const t = await getSaleById(db, id);
-        setTitle(t?.title)
-      })();
-    }, [isFocused]);
-
-    useEffect(() => {
-      if (cart.length === 0 || id) return;
-
-      const topItem = cart.sort((a, b) => b.quantity - a.quantity)[0];
-
-      const finalTitle = `${topItem?.name || "Sale"} - ${total}`;
-
-      setTitle(finalTitle);
-    }, [isFocused,cart]);
-
-    
+    if (!id) return;
+    (async () => {
+      const items = await getSaleItems(db, id);
+      setCart(items);
+    })();
+  }, [isFocused]);
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const data = await getCategories(db);
-        let category = data.filter(cate => cate.name === "Product Sales")[0]
-        setCategory(category)
-      } catch (error) {
-        console.log("❌ Failed to fetch categories:", error);
-      }
-    };
+    if (!id) return;
+    (async () => {
+      const t = await getSaleById(db, id);
+      setTitle(t?.title);
+    })();
+  }, [isFocused]);
 
-    fetchCategories();
+  // Auto title
+  useEffect(() => {
+    if (cart.length === 0 || id) return;
+    const topItem = [...cart].sort((a, b) => b.quantity - a.quantity)[0];
+    setTitle(`${topItem?.name || "Sale"} - ${total}`);
+  }, [cart]);
+
+  // Fetch category
+  useEffect(() => {
+    (async () => {
+      const data = await getCategories(db);
+      const cat = data.find((c) => c.name === "Product Sales");
+      setCategory(cat);
+    })();
   }, []);
-  
 
   const addToCart = (product) => {
-    const exists = cart.find((c) => c.product_id === product.id);
-
-    if (exists) {
-      setCart((prev) =>
-        prev.map((c) =>
+    setCart((prev) => {
+      const exists = prev.find((c) => c.product_id === product.id);
+      if (exists) {
+        return prev.map((c) =>
           c.product_id === product.id
             ? { ...c, quantity: c.quantity + 1 }
             : c
-        )
-      );
-    } else {
-      setCart((prev) => [
+        );
+      }
+      return [
         ...prev,
         {
           product_id: product.id,
@@ -91,16 +106,27 @@ export default function SellPage() {
           price: product.selling_price,
           quantity: 1,
         },
-      ]);
-    }
+      ];
+    });
   };
 
-  const updateQuantity = (product_id, value) => {
-    const qty = parseFloat(value) || 0;
+  const updateQuantity = (product_id, quantity) => {
+    if (quantity <= 0) {
+      setCart((prev) => prev.filter((c) => c.product_id !== product_id));
+      return;
+    }
 
     setCart((prev) =>
       prev.map((c) =>
-        c.product_id === product_id ? { ...c, quantity: qty } : c
+        c.product_id === product_id ? { ...c, quantity } : c
+      )
+    );
+  };
+
+  const updateItem = (updatedItem) => {
+    setCart((prev) =>
+      prev.map((c) =>
+        c.product_id === updatedItem.product_id ? updatedItem : c
       )
     );
   };
@@ -112,108 +138,211 @@ export default function SellPage() {
 
   const handleSave = async () => {
     if (cart.length === 0) return Alert.alert("Add items first");
+
     await createOrUpdateSale(db, {
       items: cart,
-      sale_id: id,  
+      sale_id: id,
       title,
       category: category?.name,
       category_id: category?.id || null,
     });
+
     Alert.alert("Success", "Sale recorded");
     router.push("/sales");
   };
 
   return (
     <View style={globalStyles.container}>
-        <BodyText style={globalStyles.title}>
-            {id ? "Update" : "Record"} Sale
-        </BodyText>
+      <BodyText style={globalStyles.title}>
+        {id ? "Update" : "Record"} Sale
+      </BodyText>
 
-      <BodyText style={styles.sectionTitle}>Products</BodyText>
-      <FlatList
-        horizontal
-        data={products}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <Pressable onPress={() => addToCart(item)}>
-            <Card style={styles.productCard}>
-              <BodyText>{item?.name}</BodyText>
-              <SecondaryText>{item.selling_price}</SecondaryText>
-            </Card>
-          </Pressable>
-        )}
+      {/* SEARCH */}
+      <Input
+        placeholder="Search products..."
+        value={search}
+        onChangeText={setSearch}
+        style={{ marginBottom: 8 }}
       />
 
-      <BodyText style={styles.sectionTitle}>Title</BodyText>
-        <Input
-          value={title}
-          onChangeText={setTitle}
-          placeholder="Enter sale title"
+      {/* PRODUCTS */}
+      <View style={styles.productsContainer}>
+        <FlatList
+          data={filteredProducts}
+          numColumns={2}
+          keyExtractor={(item) => item.id}
+          columnWrapperStyle={{ justifyContent: "space-between" }}
+          renderItem={({ item }) => (
+            <Pressable
+              style={styles.gridItem}
+              onPress={() => addToCart(item)}
+            >
+              <Card style={styles.productCard}>
+                <BodyText>{item.name}</BodyText>
+                <SecondaryText>{item.selling_price}</SecondaryText>
+              </Card>
+            </Pressable>
+          )}
         />
-      <BodyText style={styles.sectionTitle}>Cart</BodyText>
+      </View>
 
-      {cart.map((item) => (
-        <Card key={item.product_id} style={styles.cartItem}>
-          <View style={styles.row}>
-            <View style={{ flex: 1 }}>
-              <BodyText>{item?.name}</BodyText>
-              <SecondaryText>{item.price}</SecondaryText>
-            </View>
-
-            <Input
-              style={styles.qtyInput}
-              keyboardType="numeric"
-              value={String(item.quantity)}
-              onChangeText={(v) => updateQuantity(item.product_id, v)}
-            />
-          </View>
-        </Card>
-      ))}
-
-      {/* TOTAL */}
-      <Card style={styles.totalCard}>
-        <BodyText>Total</BodyText>
-        <BodyText style={styles.total}>{total}</BodyText>
-      </Card>
-
-      {/* SAVE */}
-      <Pressable style={globalStyles.primaryBtn} onPress={handleSave}>
-        <BodyText style={globalStyles.primaryBtnText}>
-            {id ? "Update Sale" : "Save Sale"}
+      {/* CART HEADER */}
+      <Pressable
+        style={styles.cartHeader}
+        onPress={() => setCartExpanded((prev) => !prev)}
+      >
+        <BodyText style={{ fontWeight: "600" }}>
+          Cart ({cart.length}) {cartExpanded ? "▼" : "▲"}
         </BodyText>
+        <BodyText>Total: {total.toFixed(2)}</BodyText>
       </Pressable>
+
+      {/* CART LIST */}
+      {cartExpanded && (
+        <FlatList
+          data={cart}
+          keyExtractor={(item) => item.product_id}
+          style={styles.cartList}
+          renderItem={({ item }) => (
+            <Card style={styles.cartItem}>
+              <Pressable
+                onPress={() => {
+                  setSelectedItem(item);
+                  setModalVisible(true);
+                }}
+              >
+                <BodyText>{item.name}</BodyText>
+                <SecondaryText>
+                  {item.price} x {item.quantity} ={" "}
+                  {(item.price * item.quantity).toFixed(2)}
+                </SecondaryText>
+              </Pressable>
+
+              <View style={styles.qtyRow}>
+                <Pressable
+                  onPress={() =>
+                    updateQuantity(item.product_id, item.quantity - 1)
+                  }
+                >
+                  <BodyText>-</BodyText>
+                </Pressable>
+
+                <BodyText>{item.quantity}</BodyText>
+
+                <Pressable
+                  onPress={() =>
+                    updateQuantity(item.product_id, item.quantity + 1)
+                  }
+                >
+                  <BodyText>+</BodyText>
+                </Pressable>
+              </View>
+            </Card>
+          )}
+        />
+      )}
+
+      {/* FOOTER */}
+      <View style={styles.footer}>
+        <Pressable style={globalStyles.primaryBtn} onPress={handleSave}>
+          <BodyText style={globalStyles.primaryBtnText}>
+            Complete Sale
+          </BodyText>
+        </Pressable>
+      </View>
+
+      {/* MODAL */}
+      <Modal visible={modalVisible} transparent animationType="slide">
+        <View style={styles.modalContainer}>
+          <Card style={styles.modalCard}>
+            <BodyText>Edit Item</BodyText>
+
+            <SecondaryText>Price</SecondaryText>
+            <Input
+              keyboardType="numeric"
+              value={String(selectedItem?.price || "")}
+              onChangeText={(v) =>
+                setSelectedItem({
+                  ...selectedItem,
+                  price: parseFloat(v) || 0,
+                })
+              }
+            />
+
+            <SecondaryText>Quantity</SecondaryText>
+            <Input
+              keyboardType="numeric"
+              value={String(selectedItem?.quantity || "")}
+              onChangeText={(v) =>
+                setSelectedItem({
+                  ...selectedItem,
+                  quantity: parseFloat(v) || 0,
+                })
+              }
+            />
+
+            <Pressable
+              style={globalStyles.primaryBtn}
+              onPress={() => {
+                updateItem(selectedItem);
+                setModalVisible(false);
+              }}
+            >
+              <BodyText style={globalStyles.primaryBtnText}>
+                Save
+              </BodyText>
+            </Pressable>
+
+            <Pressable onPress={() => setModalVisible(false)}>
+              <BodyText>Cancel</BodyText>
+            </Pressable>
+          </Card>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  sectionTitle: {
-    marginTop: 16,
-    marginBottom: 8,
-    fontWeight: "600",
+  productsContainer: {
+    flex: 1,
   },
   productCard: {
-    marginRight: 8,
     padding: 12,
+  },
+  gridItem: {
+    flex: 1,
+    marginBottom: 8,
+    marginHorizontal: 4,
+  },
+  cartHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    borderTopWidth: 1,
+  },
+  cartList: {
+    maxHeight: 200,
   },
   cartItem: {
     marginBottom: 8,
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  qtyInput: {
-    width: 60,
-    textAlign: "center",
-  },
-  totalCard: {
-    marginTop: 16,
+  qtyRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginTop: 8,
+    width: 100,
   },
-  total: {
-    fontWeight: "700",
-    fontSize: 18,
+  footer: {
+    marginTop: 8,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 16,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalCard: {
+    padding: 16,
   },
 });
