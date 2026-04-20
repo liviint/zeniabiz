@@ -144,16 +144,26 @@ export async function deleteProduct(db, id) {
   );
 }
 
-export async function restockProduct(db, product_id, quantityChange) {
-  await db.runAsync(
-    `
-    UPDATE products
-    SET stock_quantity = stock_quantity + ?
-    WHERE id = ?
-    `,
-    [quantityChange, product_id]
-  );
-}
+export const restockProduct = async (db, productId, form) => {
+    const { stock_quantity, cost_price, selling_price } = form;
+
+    let id = newUuid();
+
+    await db.runAsync(
+        `INSERT INTO inventory_batches 
+        (product_id, quantity_remaining, cost_price, selling_price)
+        VALUES (?, ?, ?, ?, ?)`,
+        [id, productId, stock_quantity, cost_price, selling_price]
+    );
+
+    // Optional: update product total (fast reads)
+    await db.runAsync(
+        `UPDATE products 
+         SET total_quantity = total_quantity + ? 
+         WHERE id = ?`,
+        [stock_quantity, productId]
+    );
+};
 
 
 export async function getInventoryStats(db) {

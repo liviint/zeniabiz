@@ -75,20 +75,19 @@ const migrateDbIfNeeded = async (db) => {
       deleted_at TEXT
     );
 
-    CREATE TABLE IF NOT EXISTS stock_movements (
-      id TEXT PRIMARY KEY,
-      product_id TEXT NOT NULL,
+    CREATE TABLE IF NOT EXISTS inventory_batches (
+        id TEXT PRIMARY KEY,
+        product_id INTEGER NOT NULL,
+        quantity_remaining INTEGER NOT NULL,
+        cost_price REAL NOT NULL,
+        selling_price REAL NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 
-      type TEXT NOT NULL CHECK(type IN ('in', 'out', 'adjustment')),
-      quantity REAL NOT NULL,
-
-      note TEXT,
-
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      deleted_at TEXT,
-
-      FOREIGN KEY (product_id) REFERENCES products(id)
+        FOREIGN KEY (product_id) REFERENCES products(id)
     );
+
+    CREATE INDEX IF NOT EXISTS idx_batches_product 
+    ON inventory_batches(product_id, created_at);
 
 
     CREATE TABLE IF NOT EXISTS sales (
