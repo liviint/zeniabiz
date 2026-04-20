@@ -106,11 +106,11 @@ const migrateDbIfNeeded = async (db) => {
     CREATE TABLE IF NOT EXISTS sale_items (
       id TEXT PRIMARY KEY,
       sale_id TEXT,
+      batch_id TEXT, 
       product_id TEXT,
       quantity INTEGER,
       price REAL,
       cost_price REAL NOT NULL,
-      slling_price REAL NOT NULL,
       deleted_at TEXT,
       FOREIGN KEY (sale_id) REFERENCES sales(id)
     );
