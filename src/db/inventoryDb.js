@@ -158,22 +158,49 @@ export async function getProducts(
 export async function getProductById(db, id) {
   return await db.getFirstAsync(
     `
-    SELECT *
-    FROM products
-    WHERE id = ?
+    SELECT 
+      p.*,
+      COALESCE(SUM(b.quantity_remaining), 0) AS stock_quantity,
+      COALESCE(SUM(b.quantity_remaining * b.cost_price), 0) AS stock_value
+    FROM products p
+    LEFT JOIN inventory_batches b
+      ON p.id = b.product_id
+      AND b.quantity_remaining > 0
+    WHERE p.id = ?
+    GROUP BY p.id
     LIMIT 1
     `,
     [id]
   );
 }
 
-export async function deleteProduct(db, id) {
-  await db.runAsync(
+export async function getProductWithBatches(db, id) {
+  const product = await getProductById(db, id);
+
+  const batches = await db.getAllAsync(
     `
-    DELETE FROM products
-    WHERE id = ?
+    SELECT *
+    FROM inventory_batches
+    WHERE product_id = ?
+    AND quantity_remaining > 0
+    ORDER BY created_at ASC
     `,
     [id]
+  );
+
+  return { ...product, batches };
+}
+
+export async function deleteProduct(db, id) {
+  const now = new Date().toISOString();
+
+  await db.runAsync(
+    `
+    UPDATE products
+    SET deleted_at = ?
+    WHERE id = ?
+    `,
+    [now, id]
   );
 }
 
@@ -202,11 +229,14 @@ export const restockProduct = async (db, productId, form) => {
 export async function getInventoryStats(db) {
   const result = await db.getFirstAsync(`
     SELECT
-      COUNT(*) as total_products,
-      SUM(stock_quantity) as total_stock,
-      SUM(stock_quantity * cost_price) as stock_value
-    FROM products
-    WHERE deleted_at IS NULL
+      COUNT(DISTINCT p.id) as total_products,
+      COALESCE(SUM(b.quantity_remaining), 0) as total_stock,
+      COALESCE(SUM(b.quantity_remaining * b.cost_price), 0) as stock_value
+    FROM products p
+    LEFT JOIN inventory_batches b
+      ON p.id = b.product_id
+      AND b.quantity_remaining > 0
+    WHERE p.deleted_at IS NULL
   `);
 
   return {
