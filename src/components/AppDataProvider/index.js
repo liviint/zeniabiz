@@ -2,12 +2,14 @@ import { SQLiteProvider } from "expo-sqlite";
 import CategoriesProvider from "./CategoriesProvider";
 
 const migrateDbIfNeeded = async (db) => {
-
+  
   /* await db.execAsync(`DROP TABLE IF EXISTS expenses;`);
   await db.execAsync(`DROP TABLE IF EXISTS expense_categories;`);
   await db.execAsync(`DROP TABLE IF EXISTS expense_templates;`);
   await db.execAsync(`DROP TABLE IF EXISTS products;`);
-  await db.execAsync(`DROP TABLE IF EXISTS sales;`); */
+  await db.execAsync(`DROP TABLE IF EXISTS sales;`); 
+  await db.execAsync(`DROP TABLE IF EXISTS sale_items;`); */
+  
 
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
@@ -87,7 +89,7 @@ const migrateDbIfNeeded = async (db) => {
     );
 
     CREATE INDEX IF NOT EXISTS idx_batches_product 
-    ON inventory_batches(product_id, created_at);
+    ON inventory_batches(product_id, created_at, quantity_remaining);
 
 
     CREATE TABLE IF NOT EXISTS sales (
@@ -107,6 +109,8 @@ const migrateDbIfNeeded = async (db) => {
       product_id TEXT,
       quantity INTEGER,
       price REAL,
+      cost_price REAL NOT NULL,
+      slling_price REAL NOT NULL,
       deleted_at TEXT,
       FOREIGN KEY (sale_id) REFERENCES sales(id)
     );

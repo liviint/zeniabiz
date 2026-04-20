@@ -123,15 +123,14 @@ export async function getFinancialStats(db, selectedMonth) {
   const startDate = normalizeStartDate(selectedMonth);
   const endDate = normalizeEndDate(selectedMonth);
 
-  // 1. Revenue & Cost
+  // 1. Revenue & Cost (FIXED)
   const revenueAndCost = await db.getFirstAsync(
     `
     SELECT 
       COALESCE(SUM(si.price * si.quantity), 0) AS revenue,
-      COALESCE(SUM(p.cost_price * si.quantity), 0) AS cost
+      COALESCE(SUM(si.cost_price * si.quantity), 0) AS cost
     FROM sale_items si
     JOIN sales s ON s.id = si.sale_id
-    JOIN products p ON p.id = si.product_id
     WHERE s.deleted_at IS NULL
       AND DATE(s.date) >= DATE(?)
       AND DATE(s.date) < DATE(?)
@@ -139,7 +138,7 @@ export async function getFinancialStats(db, selectedMonth) {
     [startDate, endDate]
   );
 
-  // 2. Expenses
+  // 2. Expenses (unchanged)
   const expenseResult = await db.getFirstAsync(
     `
     SELECT COALESCE(SUM(amount), 0) AS expenses
@@ -151,12 +150,13 @@ export async function getFinancialStats(db, selectedMonth) {
     [startDate, endDate]
   );
 
-  // 3. Stock Value (not time-based)
+  // 3. Stock Value (FIXED)
   const stockResult = await db.getFirstAsync(
     `
-    SELECT COALESCE(SUM(stock_quantity * cost_price), 0) AS stock_value
-    FROM products
-    WHERE deleted_at IS NULL
+    SELECT 
+      COALESCE(SUM(quantity_remaining * cost_price), 0) AS stock_value
+    FROM inventory_batches
+    WHERE quantity_remaining > 0
     `
   );
 

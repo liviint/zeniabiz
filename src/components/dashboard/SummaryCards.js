@@ -40,7 +40,6 @@ export default function SummaryCards({ selectedMonth,refreshKey }) {
 
   return (
     <View style={styles.container}>
-      {/* ROW 1 */}
       <StatCard
         label="Net Profit"
         value={formatNumber(stats.netProfit)}
