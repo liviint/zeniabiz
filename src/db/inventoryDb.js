@@ -77,7 +77,6 @@ export async function upsertProduct(
   }
 }
 
-
 export async function getProducts(
   db,
   {
@@ -174,9 +173,7 @@ export async function getProductById(db, id) {
   );
 }
 
-export async function getProductWithBatches(db, id) {
-  const product = await getProductById(db, id);
-
+export async function getProductBatches(db, id) {
   const batches = await db.getAllAsync(
     `
     SELECT *
@@ -188,7 +185,7 @@ export async function getProductWithBatches(db, id) {
     [id]
   );
 
-  return { ...product, batches };
+  return batches
 }
 
 export async function deleteProduct(db, id) {

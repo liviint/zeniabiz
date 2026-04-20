@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
 import DeleteButton from "../../../../src/components/common/DeleteButton";
 import { BodyText, Card, SecondaryText } from "../../../../src/components/ThemeProvider/components";
-import { deleteProduct, getProductById } from "../../../../src/db/inventoryDb";
+import { deleteProduct, getProductById, getProductBatches } from "../../../../src/db/inventoryDb";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import RestockForm from "../../../../src/components/inventory/RestockForm";
 
@@ -15,15 +15,24 @@ export default function ProductViewPage() {
   const { id } = useLocalSearchParams();
 
   const [product, setProduct] = useState({});
+  const [stockBatches,setStockBatches] = useState([])
   const [restockVisible, setRestockVisible] = useState(false);
 
   useEffect(() => {
     if (!id) return;
-    (async () => {
+    const getProduct = async() => {
       const data = await getProductById(db, id);
-      console.log(data,"hello data")
       setProduct(data);
-    })();
+    }
+
+    const getBatches = async() => {
+      const data = await getProductBatches(db, id);
+      console.log(data,"hello data")
+      setStockBatches(data);
+    }
+
+    getProduct()
+    getBatches()
   }, []);
 
   const handleDelete = async () => {
@@ -42,6 +51,36 @@ export default function ProductViewPage() {
         <DetailRow label="Selling Price" value={` ${product.selling_price}`} />
       </Card>
 
+      {stockBatches.length > 0 && (
+  <View style={{ marginTop: 20 }}>
+    <BodyText style={globalStyles.title}>Stock Batches</BodyText>
+
+    {stockBatches.map((batch) => (
+      <Card key={batch.id} style={styles.batchCard}>
+        <DetailRow
+          label="Quantity"
+          value={batch.quantity_remaining}
+        />
+
+        <DetailRow
+          label="Cost Price"
+          value={batch.cost_price}
+        />
+
+        <DetailRow
+          label="Selling Price"
+          value={batch.selling_price}
+        />
+
+        <DetailRow
+          label="Added"
+          value={new Date(batch.created_at).toLocaleDateString()}
+        />
+      </Card>
+    ))}
+  </View>
+)}
+
       <View style={styles.actionsRow}>
         <Pressable
           style={globalStyles.primaryBtn}
@@ -59,6 +98,7 @@ export default function ProductViewPage() {
 
         <DeleteButton handleOk={handleDelete} item="product" />
       </View>
+
       <RestockForm 
         restockVisible={restockVisible}
         product={product}
@@ -85,4 +125,8 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 20,
   },
+  batchCard: {
+    padding: 14,
+    marginTop: 10,
+  }
 });
