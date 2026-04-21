@@ -123,7 +123,7 @@ export async function getFinancialStats(db, selectedMonth) {
   const startDate = normalizeStartDate(selectedMonth);
   const endDate = normalizeEndDate(selectedMonth);
 
-  // 1. Revenue & Cost (FIXED)
+  // 1. Revenue & Cost 
   const revenueAndCost = await db.getFirstAsync(
     `
     SELECT 
@@ -138,7 +138,7 @@ export async function getFinancialStats(db, selectedMonth) {
     [startDate, endDate]
   );
 
-  // 2. Expenses (unchanged)
+  // 2. Expenses 
   const expenseResult = await db.getFirstAsync(
     `
     SELECT COALESCE(SUM(amount), 0) AS expenses
@@ -150,7 +150,6 @@ export async function getFinancialStats(db, selectedMonth) {
     [startDate, endDate]
   );
 
-  // 3. Stock Value (FIXED)
   const stockResult = await db.getFirstAsync(
     `
     SELECT 

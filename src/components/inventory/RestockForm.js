@@ -1,12 +1,13 @@
 import { useLocalSearchParams } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Alert, Pressable, StyleSheet, View , Modal } from "react-native";
 import { BodyText, Card, Input } from "../../components/ThemeProvider/components";
 import { getProductById, restockProduct } from "../../db/inventoryDb";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 
-export default function RestockForm({product, restockVisible, setRestockVisible, setProduct }) {
+export default function RestockForm({
+    product, restockVisible, setRestockVisible, setProduct, setReoloadBatches }) {
     const db = useSQLiteContext();
     const { globalStyles } = useThemeStyles();
     const { id } = useLocalSearchParams();
@@ -56,7 +57,7 @@ export default function RestockForm({product, restockVisible, setRestockVisible,
 
         setRestockVisible(false);
         setForm(initialForm)
-
+        setReoloadBatches(prev => prev + 1)
         Alert.alert("Success", `Added ${form.stock_quantity} items to stock`);
     };
 

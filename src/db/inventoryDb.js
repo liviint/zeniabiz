@@ -49,25 +49,24 @@ export async function upsertProduct(
 
     // 2️⃣ ONLY create batch if new product
     if (isNew && stock_quantity > 0) {
-      await db.runAsync(
-        `
-        INSERT INTO inventory_batches
-        (product_id, quantity_remaining, cost_price, selling_price)
-        VALUES (?, ?, ?, ?)
-        `,
-        [id, stock_quantity, cost_price, selling_price]
-      );
+  await db.runAsync(
+    `
+    INSERT INTO inventory_batches
+    (id, product_id, quantity_remaining, cost_price, selling_price)
+    VALUES (?, ?, ?, ?, ?)
+    `,
+    [newUuid(), id, stock_quantity, cost_price, selling_price]
+  );
 
-      // optional cached total
-      await db.runAsync(
-        `
-        UPDATE products
-        SET stock_quantity = ?
-        WHERE id = ?
-        `,
-        [stock_quantity, id]
-      );
-    }
+  await db.runAsync(
+    `
+    UPDATE products
+    SET stock_quantity = ?
+    WHERE id = ?
+    `,
+    [stock_quantity, id]
+  );
+}
 
     await db.runAsync("COMMIT");
     return id;
@@ -202,24 +201,24 @@ export async function deleteProduct(db, id) {
 }
 
 export const restockProduct = async (db, productId, form) => {
-    const { stock_quantity, cost_price, selling_price } = form;
+  const { stock_quantity, cost_price, selling_price } = form;
 
-    let id = newUuid();
+  const id = newUuid();
 
-    await db.runAsync(
-        `INSERT INTO inventory_batches 
-        (product_id, quantity_remaining, cost_price, selling_price)
-        VALUES (?, ?, ?, ?, ?)`,
-        [id, productId, stock_quantity, cost_price, selling_price]
-    );
+  await db.runAsync(
+    `INSERT INTO inventory_batches 
+    (id, product_id, quantity_remaining, cost_price, selling_price)
+    VALUES (?, ?, ?, ?, ?)`,
+    [id, productId, stock_quantity, cost_price, selling_price]
+  );
 
-    // Optional: update product total (fast reads)
-    await db.runAsync(
-        `UPDATE products 
-         SET total_quantity = total_quantity + ? 
-         WHERE id = ?`,
-        [stock_quantity, productId]
-    );
+  // Optional cache
+  await db.runAsync(
+    `UPDATE products 
+     SET stock_quantity = COALESCE(stock_quantity, 0) + ? 
+     WHERE id = ?`,
+    [stock_quantity, productId]
+  );
 };
 
 

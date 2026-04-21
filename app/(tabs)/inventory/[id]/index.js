@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Alert, Pressable, StyleSheet, View, ScrollView } from "react-native";
 import DeleteButton from "../../../../src/components/common/DeleteButton";
 import { BodyText, Card, SecondaryText } from "../../../../src/components/ThemeProvider/components";
 import { deleteProduct, getProductById, getProductBatches } from "../../../../src/db/inventoryDb";
@@ -17,6 +17,7 @@ export default function ProductViewPage() {
   const [product, setProduct] = useState({});
   const [stockBatches,setStockBatches] = useState([])
   const [restockVisible, setRestockVisible] = useState(false);
+  const [reloadBatches,setReoloadBatches] = useState(0)
 
   useEffect(() => {
     if (!id) return;
@@ -27,13 +28,12 @@ export default function ProductViewPage() {
 
     const getBatches = async() => {
       const data = await getProductBatches(db, id);
-      console.log(data,"hello data")
       setStockBatches(data);
     }
 
     getProduct()
     getBatches()
-  }, []);
+  }, [reloadBatches]);
 
   const handleDelete = async () => {
     await deleteProduct(db, id);
@@ -42,13 +42,12 @@ export default function ProductViewPage() {
   };
 
   return (
-    <View style={globalStyles.container}>
+    <ScrollView style={globalStyles.container}>
       <BodyText style={globalStyles.title}>Product Details</BodyText>
 
       <Card style={styles.card}>
         <DetailRow label="Name" value={product.name} />
         <DetailRow label="Stock" value={product.stock_quantity} />
-        <DetailRow label="Selling Price" value={` ${product.selling_price}`} />
       </Card>
 
       {stockBatches.length > 0 && (
@@ -104,8 +103,9 @@ export default function ProductViewPage() {
         product={product}
         setRestockVisible={setRestockVisible}
         setProduct={setProduct}
+        setReoloadBatches={setReoloadBatches}
       />
-    </View>
+    </ScrollView>
   );
 }
 
@@ -124,6 +124,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     marginTop: 20,
+    paddingBottom:20,
   },
   batchCard: {
     padding: 14,

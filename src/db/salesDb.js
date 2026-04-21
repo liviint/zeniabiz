@@ -19,25 +19,14 @@ export async function createOrUpdateSale(
   const isEdit = !!sale_id;
   const id = sale_id || newUuid();
 
-  const total = items.reduce(
-    (sum, item) => sum + Number(item.price) * Number(item.quantity),
-    0
-  );
+  const total = items.reduce((sum, item) => sum + Number(item.price) * Number(item.quantity),0);
+  const totalItems = items.reduce((sum, item) => sum + Number(item.quantity),0);
 
-  const totalItems = items.reduce(
-    (sum, item) => sum + Number(item.quantity),
-    0
-  );
-
-  const finalTitle =
-    title?.trim()?.length > 0
-      ? title
-      : `Sold ${totalItems} item${totalItems > 1 ? "s" : ""} - ${total}`;
+  const finalTitle = title?.trim()?.length > 0 ? title: `Sold ${totalItems} item${totalItems > 1 ? "s" : ""} - ${total}`;
 
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
-    // 🔁 1. RESTORE OLD STOCK (BATCH LEVEL)
     if (isEdit) {
       const oldItems = await db.getAllAsync(
         `SELECT batch_id, quantity FROM sale_items WHERE sale_id = ?`,
@@ -64,6 +53,7 @@ export async function createOrUpdateSale(
         [finalTitle, note ?? null, saleDate, total, now, id]
       );
     } else {
+      //RECORDING A NEW SALE
       await db.runAsync(
         `
         INSERT INTO sales (id, title, note, date, amount, created_at, updated_at)
@@ -73,7 +63,7 @@ export async function createOrUpdateSale(
       );
     }
 
-    // 🔍 2. VALIDATE STOCK (BATCH LEVEL)
+    //VALIDATE STOCK (BATCH LEVEL)
     for (const item of items) {
       let remaining = item.quantity;
 
@@ -89,15 +79,12 @@ export async function createOrUpdateSale(
       } else {
         const batches = await db.getAllAsync(
           `SELECT quantity_remaining FROM inventory_batches
-           WHERE product_id = ? AND quantity_remaining > 0
-           ORDER BY created_at ASC`,
+            WHERE product_id = ? AND quantity_remaining > 0
+            ORDER BY created_at ASC`,
           [item.product_id]
         );
 
-        let totalAvailable = batches.reduce(
-          (sum, b) => sum + b.quantity_remaining,
-          0
-        );
+        let totalAvailable = batches.reduce((sum, b) => sum + b.quantity_remaining,0);
 
         if (totalAvailable < remaining) {
           throw new Error(`Not enough stock for ${item.name}`);
@@ -105,12 +92,12 @@ export async function createOrUpdateSale(
       }
     }
 
-    // ⚙️ 3. APPLY SALES
+    //APPLY SALES
     for (const item of items) {
       let remaining = item.quantity;
 
       if (item.batch_id) {
-        // 👉 Direct batch sale
+        //Direct batch sale
         const batch = await db.getFirstAsync(
           `SELECT cost_price FROM inventory_batches WHERE id = ?`,
           [item.batch_id]
@@ -138,7 +125,7 @@ export async function createOrUpdateSale(
           ]
         );
       } else {
-        // 👉 FIFO
+        //FIFO
         const batches = await db.getAllAsync(
           `SELECT * FROM inventory_batches
            WHERE product_id = ? AND quantity_remaining > 0
