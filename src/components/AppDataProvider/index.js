@@ -79,11 +79,14 @@ const migrateDbIfNeeded = async (db) => {
 
     CREATE TABLE IF NOT EXISTS inventory_batches (
         id TEXT PRIMARY KEY,
-        product_id INTEGER NOT NULL,
+        product_id TEXT NOT NULL,
         quantity_remaining INTEGER NOT NULL,
         cost_price REAL NOT NULL,
         selling_price REAL NOT NULL,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        deleted_at TEXT,
+        date TEXT,
 
         FOREIGN KEY (product_id) REFERENCES products(id)
     );
@@ -112,7 +115,8 @@ const migrateDbIfNeeded = async (db) => {
       price REAL,
       cost_price REAL NOT NULL,
       deleted_at TEXT,
-      FOREIGN KEY (sale_id) REFERENCES sales(id)
+      FOREIGN KEY (sale_id) REFERENCES sales(id),
+      FOREIGN KEY (batch_id) REFERENCES inventory_batches(id)
     );
 
     CREATE TABLE IF NOT EXISTS app_settings (
