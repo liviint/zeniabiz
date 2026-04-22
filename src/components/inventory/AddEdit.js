@@ -2,7 +2,7 @@ import { useRouter, useLocalSearchParams  } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useState , useEffect} from "react";
 import { Alert, ScrollView, TouchableOpacity, Text, View} from "react-native";
-import { BodyText, Card, FormLabel, Input } from "../../../src/components/ThemeProvider/components";
+import { BodyText, Card, FormLabel, Input , SecondaryText} from "../../../src/components/ThemeProvider/components";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { upsertProduct , getProductById} from "../../db/inventoryDb";
 
@@ -56,20 +56,33 @@ export default function AddProduct() {
         <Input value={form.name} onChangeText={(v) => handleChange("name", v)} />
       </View>
 
-        <View style={globalStyles.formGroup}>
-          <FormLabel>Cost Price</FormLabel>
-          <Input value={String(form.cost_price)} keyboardType="numeric" onChangeText={(v) => handleChange("cost_price", v)} />
-        </View>
+        {
+            id ? "" 
+            :
+            <View style={globalStyles.formGroup}>
+              <FormLabel>Cost Price</FormLabel>
+            < Input value={String(form.cost_price)} keyboardType="numeric" onChangeText={(v) => handleChange("cost_price", v)} />
+          </View>
+        }
 
         <View style={globalStyles.formGroup}>
           <FormLabel>Selling Price</FormLabel>
           <Input value={String(form.selling_price)} keyboardType="numeric" onChangeText={(v) => handleChange("selling_price", v)} />
         </View>
 
-        <View style={globalStyles.formGroup}>
-          <FormLabel>Stock Quantity</FormLabel>
-          <Input value={String(form.stock_quantity)} keyboardType="numeric" onChangeText={(v) => handleChange("stock_quantity", v)} />
-        </View>
+        {
+          id ? "" 
+          :
+          <View style={globalStyles.formGroup}>
+            <FormLabel>Stock Quantity</FormLabel>
+            <Input value={String(form.stock_quantity)} keyboardType="numeric" onChangeText={(v) => handleChange("stock_quantity", v)} />
+          </View>
+        }
+        {id && (
+          <SecondaryText style={{marginTop:5, marginBottom:10,fontSize:14}}>
+            Stock and cost are managed through restocking.
+          </SecondaryText>
+        )}
 
         <TouchableOpacity style={globalStyles.primaryBtn} onPress={handleSave}>
           <Text style={globalStyles.primaryBtnText}>
