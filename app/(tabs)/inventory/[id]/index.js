@@ -48,6 +48,7 @@ export default function ProductViewPage() {
       <Card style={styles.card}>
         <DetailRow label="Name" value={product.name} />
         <DetailRow label="Stock" value={product.stock_quantity} />
+        <DetailRow label="Selling Price" value={product.selling_price} />
       </Card>
 
       {stockBatches.length > 0 && (
