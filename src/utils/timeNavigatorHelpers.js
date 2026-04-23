@@ -25,15 +25,16 @@ export const startOfMonth = (d) =>
 export const endOfMonth = (d) =>
     new Date(d.getFullYear(), d.getMonth() + 1, 0);
 
+
 const startOfRange3Months = (d) =>
         new Date(d.getFullYear(), d.getMonth() - 2, 1);
 
-    const endOfRange3Months = (d) =>
-        new Date(d.getFullYear(), d.getMonth() + 1, 1);
+const endOfRange3Months = (d) =>
+    new Date(d.getFullYear(), d.getMonth() + 1, 1);
 
-    const startOfAllTime = () => new Date(0);
+const startOfAllTime = () => new Date(0);
 
-    const endOfAllTime = () => new Date(8640000000000000); 
+const endOfAllTime = () => new Date(8640000000000000); 
 
 export const createRange = (type, baseDate = new Date()) => {
     switch (type) {
@@ -58,7 +59,7 @@ export const createRange = (type, baseDate = new Date()) => {
                 endDate: endOfMonth(baseDate),
             };
 
-        case "range": // last 3 months
+        case "range": 
             return {
                 type,
                 startDate: startOfRange3Months(baseDate),
@@ -269,6 +270,10 @@ export const formatLabel = (state) => {
             month: "short",
             year: "numeric",
         })}`;
+    }
+
+    if (state.type === "all") {
+        return "All time"
     }
 
     return `${start.toLocaleDateString(undefined, {
