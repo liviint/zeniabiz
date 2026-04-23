@@ -11,6 +11,7 @@ import TimeFilters from "../../../src/components/common/TimeFilters";
 import { getExpenses } from "../../../src/db/expensesDb"
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { dateFormat } from "../../../utils/dateFormat";
+import { groupDataIntoSections } from "../../../src/helpers";
 
 export default function FinanceListPage() {
     const db = useSQLiteContext()
@@ -34,56 +35,15 @@ export default function FinanceListPage() {
     setIsLoading(false)
     },[isFocused, selectedMonth])
 
-    const groupTransactions = (expenses) => {
-      const today = new Date();
-      const todayStr = today.toISOString().slice(0, 10);
+  let grouped = groupDataIntoSections(expenses)
 
-      const yesterday = new Date();
-      yesterday.setDate(today.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().slice(0, 10);
-
-      const startOfWeek = new Date(today);
-      const day = today.getDay();
-      const diff = today.getDate() - day + (day === 0 ? -6 : 1);
-      startOfWeek.setDate(diff);
-
-      const startOfLastWeek = new Date(startOfWeek);
-      startOfLastWeek.setDate(startOfWeek.getDate() - 7);
-
-      const groups = {
-        Today: [],
-        Yesterday: [],
-        "This Week": [],
-        "Last Week": [],
-        Older: [],
-  };
-
-  expenses.forEach((transaction) => {
-    const date = new Date(transaction.date);
-    const dateStr = date.toISOString().slice(0, 10);
-
-    if (dateStr === todayStr) {
-      groups.Today.push(transaction);
-    } else if (dateStr === yesterdayStr) {
-      groups.Yesterday.push(transaction);
-    } else if (date >= startOfWeek) {
-      groups["This Week"].push(transaction);
-    } else if (date >= startOfLastWeek && date < startOfWeek) {
-      groups["Last Week"].push(transaction);
-    } else {
-      groups.Older.push(transaction);
-    }
-  });
-
-  return Object.keys(groups)
-    .map((key) => ({
-      title: key,
-      data: groups[key],
-    }))
-    .filter((section) => section.data.length > 0);
-};
-
-  const sections = groupTransactions(expenses);
+  const sections = [
+    { title: "Today", data: grouped.today },
+    { title: "Yesterday", data: grouped.yesterday },
+    { title: "Earlier This Week", data: grouped.thisWeek },
+    { title: "Earlier This Month", data: grouped.thisMonth },
+    { title: "Older", data: grouped.older },
+  ].filter(section => section.data.length > 0);
 
   const renderItem = ({ item }) => (
     <Pressable onPress={() => router.push(`/expenses/${item.id}`)}>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, FlatList, Pressable } from "react-native";
+import { View, SectionList, Pressable } from "react-native";
 import { useIsFocused } from "@react-navigation/native";
 import {
   Card,
@@ -13,6 +13,7 @@ import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { AddButton } from "../../../src/components/common/AddButton";
 import EmptyState from "../../../src/components/common/EmptyState";
 import TimeFilters from "../../../src/components/common/TimeFilters";
+import { groupDataIntoSections } from "../../../src/helpers";
 
 export default function SalesList() {
   const { globalStyles } = useThemeStyles();
@@ -44,6 +45,17 @@ export default function SalesList() {
     });
   };
 
+  const grouped = groupDataIntoSections(sales);
+
+  const sections = [
+    { title: "Today", data: grouped.today },
+    { title: "Yesterday", data: grouped.yesterday },
+    { title: "Earlier This Week", data: grouped.thisWeek },
+    { title: "Earlier This Month", data: grouped.thisMonth },
+    { title: "Older", data: grouped.older },
+  ].filter(section => section.data.length > 0);
+
+
   return (
     <View style={globalStyles.container}>
       <BodyText style={globalStyles.title}>My Sales</BodyText>
@@ -53,42 +65,50 @@ export default function SalesList() {
         onMonthChange={setSelectedMonth}
       />
 
-      <FlatList
-        data={sales}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => {
-          const fallbackTitle = `Sale -  ${item.amount}`;
+      
+    <SectionList
+      sections={sections}
+      keyExtractor={(item) => item.id}
+      renderSectionHeader={({ section }) => (
+        <BodyText style={{ fontWeight: "700", marginVertical: 6 }}>
+          {section.title}
+        </BodyText>
+      )}
+      renderItem={({ item }) => {
+        const fallbackTitle = `Sale - ${item.amount}`;
 
-          return (
-            <Pressable onPress={() => router.push(`/sales/${item.id}`)}>
-              <Card style={{ marginBottom: 10 }}>
-                <BodyText style={{ fontWeight: "600" }}>
-                  {item.title || fallbackTitle}
+        return (
+          <Pressable onPress={() => router.push(`/sales/${item.id}`)}>
+            <Card style={{ marginBottom: 10 }}>
+              <BodyText style={{ fontWeight: "600" }}>
+                {item.title || fallbackTitle}
+              </BodyText>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  marginTop: 4,
+                }}
+              >
+                <SecondaryText>{formatDate(item.date)}</SecondaryText>
+                <BodyText style={{ fontWeight: "700" }}>
+                  {item.amount}
                 </BodyText>
+              </View>
+            </Card>
+          </Pressable>
+        );
+      }}
 
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    marginTop: 4,
-                  }}
-                >
-                  <SecondaryText>{formatDate(item.date)}</SecondaryText>
-                  <BodyText style={{ fontWeight: "700" }}>
-                    {item.amount}
-                  </BodyText>
-                </View>
-              </Card>
-            </Pressable>
-          );
-        }}
-        ListEmptyComponent={
-          <EmptyState 
+      ListEmptyComponent={
+        <EmptyState 
             title="No sales yet"
             description="Start by recording your first sale to track your business."
           />
-        }
-      />
+      }
+  />
+
 
       <AddButton
         primaryAction={{ route: "/sales/add", label: "Add a Sale" }}

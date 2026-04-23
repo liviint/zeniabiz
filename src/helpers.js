@@ -46,3 +46,44 @@ export const chartConfig = (primaryColor, colors) => {
     labelColor: () => colors.text || "#333",
   };
 };
+
+export const groupDataIntoSections = (allData) => {
+  const now = new Date();
+
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfYesterday = new Date(startOfToday);
+  startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+
+  const startOfWeek = new Date(startOfToday);
+  const day = startOfWeek.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  startOfWeek.setDate(startOfWeek.getDate() + diff);
+
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const sections = {
+    today: [],
+    yesterday: [],
+    thisWeek: [],
+    thisMonth: [],
+    older: [],
+  };
+
+  allData.forEach((data) => {
+    const d = new Date(data.date);
+
+    if (d >= startOfToday) {
+      sections.today.push(data);
+    } else if (d >= startOfYesterday) {
+      sections.yesterday.push(data);
+    } else if (d >= startOfWeek) {
+      sections.thisWeek.push(data);
+    } else if (d >= startOfMonth) {
+      sections.thisMonth.push(data);
+    } else {
+      sections.older.push(data);
+    }
+  });
+
+  return sections;
+};
