@@ -155,26 +155,94 @@ export const shiftRange = (state, direction) => {
 };
 
 export const formatLabel = (state) => {
-    if (state.type === "all") return "All Time";
+    if (!state) return "";
 
-    const opts = { month: "short", day: "numeric" };
+    const start = new Date(state.startDate);
+    const end = new Date(state.endDate);
 
+    const now = new Date();
+
+    const isSameDay =
+        start.toDateString() === now.toDateString();
+
+    const diffDays = Math.round(
+        (now - start) / (1000 * 60 * 60 * 24)
+    );
+
+    // -------------------------
+    // DAY LABELS
+    // -------------------------
     if (state.type === "day") {
-        return state.startDate.toLocaleDateString(undefined, {
+        if (diffDays === 1) return "Today";
+        if (diffDays === 2) return "Yesterday";
+
+        return start.toLocaleDateString(undefined, {
             weekday: "short",
-            ...opts,
+            month: "short",
+            day: "numeric",
         });
     }
 
+    
+    if (state.type === "week") {
+        if (diffDays === 0 || diffDays < 7) return "This Week";
+        if (diffDays < 14) return "Last Week";
+
+        return `${start.toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+        })} – ${end.toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+        })}`;
+    }
+
+
     if (state.type === "month") {
-        return state.startDate.toLocaleString(undefined, {
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        const isCurrentMonth =
+            start.getMonth() === currentMonth &&
+            start.getFullYear() === currentYear;
+
+        const isLastMonth =
+            start.getMonth() === currentMonth - 1 &&
+            start.getFullYear() === currentYear;
+
+        if (isCurrentMonth) return "This Month";
+        if (isLastMonth) return "Last Month";
+
+        return start.toLocaleString(undefined, {
             month: "long",
             year: "numeric",
         });
     }
 
-    return `${state.startDate.toLocaleDateString(
-        undefined,
-        opts
-    )} – ${state.endDate.toLocaleDateString(undefined, opts)}`;
+    if (state.type === "range") {
+        const current = createRange("range", now);
+
+        const sameRange =
+            new Date(state.startDate).getTime() === current.startDate.getTime() &&
+            new Date(state.endDate).getTime() === current.endDate.getTime();
+
+        if (sameRange) return "Last 3 Months";
+
+        // fallback → show actual dates
+        return `${new Date(state.startDate).toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+        })} – ${new Date(state.endDate).toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+        })}`;
+    }
+
+    return `${start.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+    })} – ${end.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+    })}`;
 };
