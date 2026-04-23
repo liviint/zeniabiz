@@ -97,7 +97,7 @@ export default function SummaryCards({ timeState,refreshKey }) {
 
       <View style={styles.row}>
         <StatCard
-          label="Stock Value"
+          label="Stock Value (Current)"
           value={formatNumber(stats.stockValue)}
           subText="Inventory worth"
           color={colors.text}
