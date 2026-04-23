@@ -1,8 +1,8 @@
 import { normalizeStartDate, normalizeEndDate } from "./utils"
 
-export const getCashFlow = async (db, selectedMonth) => {
-  const startDate = normalizeStartDate(selectedMonth);
-  const endDate = normalizeEndDate(selectedMonth);
+export const getCashFlow = async (db, timeState) => {
+  const startDate = normalizeStartDate(timeState.startDate)
+  const endDate = normalizeEndDate(timeState.endDate);
 
   const result = await db.getAllAsync(
     `
@@ -30,7 +30,7 @@ export const getCashFlow = async (db, selectedMonth) => {
     LEFT JOIN (
       SELECT DATE(date) as date, SUM(amount) as expenses
       FROM expenses
-      WHERE DATE(date) >= DATE(?) AND DATE(date) < DATE(?) 
+      WHERE DATE(date) >= DATE(?) AND DATE(date) < DATE(?)
       AND deleted_at IS NULL
       GROUP BY DATE(date)
     ) e ON e.date = d.date
@@ -45,71 +45,135 @@ export const getCashFlow = async (db, selectedMonth) => {
     ]
   );
 
-const daysInMonth = new Date(
-  selectedMonth.getFullYear(),
-  selectedMonth.getMonth() + 1,
-  0
-).getDate();
+  // -------------------------------
+  // 🔥 NORMALIZE DATA (IMPORTANT)
+  // -------------------------------
 
-// Create O(1) lookup
-const dataMap = {};
-result.forEach((item) => {
-  const day = new Date(item.date).getDate();
-  dataMap[day] = item.net || 0;
-});
+  const dataMap = {};
 
-const useWeekly = daysInMonth > 10;
+  result.forEach((item) => {
+    // Use FULL DATE as key (not day number)
+    const key = item.date; // YYYY-MM-DD from SQLite
 
-if (!useWeekly) {
-  // ✅ DAILY (for small ranges)
-  const labels = [];
-  const data = [];
+    dataMap[key] = item.net || 0;
+  });
 
-  for (let day = 1; day <= daysInMonth; day++) {
-    labels.push(day.toString());
-    data.push(dataMap[day] ?? 0);
+  // -------------------------------
+  // RANGE SETUP
+  // -------------------------------
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const totalDays = Math.max(
+    1,
+    Math.ceil((end - start) / msPerDay)
+  );
+
+  const isSmallRange = totalDays <= 10;
+  const isMediumRange = totalDays <= 60;
+
+  // -------------------------------
+  // HELPERS
+  // -------------------------------
+
+  const formatKey = (d) =>
+    d.toISOString().split("T")[0];
+
+  // -------------------------------
+  // 📊 CASE 1: DAILY VIEW
+  // -------------------------------
+
+  if (isSmallRange) {
+    const labels = [];
+    const data = [];
+
+    for (let i = 0; i < totalDays; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+
+      const key = formatKey(d);
+
+      labels.push(d.getDate().toString());
+      data.push(dataMap[key] ?? 0);
+    }
+
+    return {
+      labels,
+      datasets: [{ data }],
+    };
   }
+
+  // -------------------------------
+  // 📊 CASE 2: WEEKLY VIEW
+  // -------------------------------
+
+  if (isMediumRange) {
+    const labels = [];
+    const data = [];
+
+    let current = new Date(start);
+
+    while (current <= end) {
+      let sum = 0;
+
+      const weekStart = new Date(current);
+
+      for (let i = 0; i < 7 && current <= end; i++) {
+        const key = formatKey(current);
+        sum += dataMap[key] ?? 0;
+
+        current.setDate(current.getDate() + 1);
+      }
+
+      const weekEnd = new Date(current);
+      weekEnd.setDate(weekEnd.getDate() - 1);
+
+      labels.push(
+        `${weekStart.getDate()}-${weekEnd.getDate()}`
+      );
+      data.push(sum);
+    }
+
+    return {
+      labels,
+      datasets: [{ data }],
+    };
+  }
+
+  // -------------------------------
+  // 📊 CASE 3: LARGE RANGE (SIMPLE)
+  // -------------------------------
+
+  const total = Object.values(dataMap).reduce(
+    (a, b) => a + b,
+    0
+  );
 
   return {
-    labels,
-    datasets: [{ data }],
+    labels: ["Total"],
+    datasets: [{ data: [total] }],
   };
-}
+};
 
-// ✅ WEEKLY (premium view)
-const labels = [];
-const data = [];
+export const getExpensesBreakDown = async (db, timeState) => {
+  const startDate = normalizeStartDate(timeState.startDate)
+  const endDate = normalizeEndDate(timeState.endDate);
 
-for (let i = 1; i <= daysInMonth; i += 7) {
-  let sum = 0;
-  const start = i;
-  const end = Math.min(i + 6, daysInMonth);
-
-  for (let d = start; d <= end; d++) {
-    sum += dataMap[d] ?? 0;
+  if (!startDate || !endDate) {
+    throw new Error("Invalid time range");
   }
-
-  labels.push(`${start}-${end}`);
-  data.push(sum);
-}
-
-return {
-  labels,
-  datasets: [{ data }],
-};
-};
-
-export const getExpensesBreakDown = async (db, selectedMonth) => {
-  const startDate = normalizeStartDate(selectedMonth);
-  const endDate = normalizeEndDate(selectedMonth);
 
   const result = await db.getAllAsync(
     `
-    SELECT category, SUM(amount) as total
+    SELECT 
+      category, 
+      SUM(amount) as total
     FROM expenses
     WHERE deleted_at IS NULL
-      AND DATE(date) >= DATE(?)
-      AND DATE(date) < DATE(?)
+      AND date >= ?
+      AND date < ?
     GROUP BY category
     ORDER BY total DESC
     `,
@@ -119,11 +183,17 @@ export const getExpensesBreakDown = async (db, selectedMonth) => {
   return result;
 };
 
-export async function getFinancialStats(db, selectedMonth) {
-  const startDate = normalizeStartDate(selectedMonth);
-  const endDate = normalizeEndDate(selectedMonth);
+export async function getFinancialStats(db, timeState) {
+  const startDate = normalizeStartDate(timeState.startDate)
+  const endDate = normalizeEndDate(timeState.endDate);
 
-  // 1. Revenue & Cost 
+  if (!startDate || !endDate) {
+    throw new Error("Invalid time range");
+  }
+
+  // -------------------------
+  // 1. Revenue & Cost
+  // -------------------------
   const revenueAndCost = await db.getFirstAsync(
     `
     SELECT 
@@ -132,24 +202,29 @@ export async function getFinancialStats(db, selectedMonth) {
     FROM sale_items si
     JOIN sales s ON s.id = si.sale_id
     WHERE s.deleted_at IS NULL
-      AND DATE(s.date) >= DATE(?)
-      AND DATE(s.date) < DATE(?)
+      AND s.date >= ?
+      AND s.date < ?
     `,
     [startDate, endDate]
   );
 
-  // 2. Expenses 
+  // -------------------------
+  // 2. Expenses
+  // -------------------------
   const expenseResult = await db.getFirstAsync(
     `
     SELECT COALESCE(SUM(amount), 0) AS expenses
     FROM expenses
     WHERE deleted_at IS NULL
-      AND DATE(date) >= DATE(?)
-      AND DATE(date) < DATE(?)
+      AND date >= ?
+      AND date < ?
     `,
     [startDate, endDate]
   );
 
+  // -------------------------
+  // 3. Stock (NOT time-based)
+  // -------------------------
   const stockResult = await db.getFirstAsync(
     `
     SELECT 
@@ -159,6 +234,9 @@ export async function getFinancialStats(db, selectedMonth) {
     `
   );
 
+  // -------------------------
+  // 4. Safe extraction
+  // -------------------------
   const revenue = revenueAndCost?.revenue || 0;
   const cost = revenueAndCost?.cost || 0;
   const expenses = expenseResult?.expenses || 0;
@@ -166,6 +244,13 @@ export async function getFinancialStats(db, selectedMonth) {
 
   const grossProfit = revenue - cost;
   const netProfit = grossProfit - expenses;
+
+  console.log(revenue,
+    cost,
+    expenses,
+    grossProfit,
+    netProfit,
+    stockValue,"hello revenu expe")
 
   return {
     revenue,

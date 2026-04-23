@@ -9,7 +9,7 @@ import { useThemeStyles } from "../../hooks/useThemeStyles";
 
 const screenWidth = Dimensions.get("window").width;
 
-export default function ExpenseBreakdown({selectedMonth}) {
+export default function ExpenseBreakdown({timeState}) {
   const { colors:themeColors } = useThemeStyles()
   const isFocused = useIsFocused()
   const db = useSQLiteContext();
@@ -17,10 +17,10 @@ export default function ExpenseBreakdown({selectedMonth}) {
 
   useEffect(() => {
     loadData();
-  }, [isFocused, selectedMonth]);
+  }, [isFocused, timeState]);
 
   const loadData = async () => {
-    const result = await getExpensesBreakDown(db, selectedMonth) 
+    const result = await getExpensesBreakDown(db, timeState) 
     
     const colors = [
       "#FF6B6B",

@@ -7,7 +7,7 @@ import {getFinancialStats } from "../../db/dashboardDb";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { SecondaryText } from "../ThemeProvider/components";
 
-export default function SummaryCards({ selectedMonth,refreshKey }) {
+export default function SummaryCards({ timeState,refreshKey }) {
   const { colors } = useThemeStyles()
   const isFocused = useIsFocused();
   const db = useSQLiteContext();
@@ -22,13 +22,13 @@ export default function SummaryCards({ selectedMonth,refreshKey }) {
   });
 
   const fetchStats = async () => {
-    const summary = await getFinancialStats(db,selectedMonth);
+    const summary = await getFinancialStats(db,timeState);
     setStats(summary);
   };
 
   useEffect(() => {
     fetchStats();
-  }, [refreshKey, isFocused, selectedMonth]);
+  }, [refreshKey, isFocused, timeState]);
 
   const formatNumber = (num) =>
     Number(num || 0).toLocaleString();

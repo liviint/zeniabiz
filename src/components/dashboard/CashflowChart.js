@@ -9,7 +9,7 @@ import { Card, BodyText } from "../ThemeProvider/components";
 import { getCashFlow } from "../../db/dashboardDb";
 
 const screenWidth = Dimensions.get("window").width;
-export default function CashflowChart({selectedMonth}) {
+export default function CashflowChart({timeState}) {
   const isFocused = useIsFocused()
   const {colors} = useThemeStyles()
   const db = useSQLiteContext();
@@ -20,10 +20,10 @@ export default function CashflowChart({selectedMonth}) {
 
   useEffect(() => {
     loadChart();
-  }, [isFocused, selectedMonth]);
+  }, [isFocused, timeState]);
 
   const loadChart = async () => {
-    let res = await getCashFlow(db, selectedMonth)
+    let res = await getCashFlow(db, timeState)
     setChartData(res);
   };
 
