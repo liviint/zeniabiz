@@ -1,36 +1,8 @@
-export const createRange = (type, baseDate = new Date()) => {
-    const startOfMonth = (d) =>
-        new Date(d.getFullYear(), d.getMonth(), 1);
-
-    const endOfMonth = (d) =>
-        new Date(d.getFullYear(), d.getMonth() + 1, 0);
-
-    switch (type) {
-        case "month":
-            console.log(baseDate,startOfMonth(baseDate),endOfMonth(baseDate),"hello base date start end")
-            return {
-                type: "month",
-                startDate: startOfMonth(baseDate),
-                endDate: endOfMonth(baseDate),
-            };
-
-        case "day":
-            return {
-                type: "day",
-                startDate: baseDate,
-                endDate: baseDate,
-            };
-
-        default:
-            return createRange("month", baseDate);
-    }
-};
-
 export const startOfDay = (d) =>
     new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
 export const endOfDay = (d) =>
-    new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
 
 export const startOfWeek = (d) => {
     const day = d.getDay(); // 0 = Sunday
@@ -52,6 +24,46 @@ export const startOfMonth = (d) =>
 
 export const endOfMonth = (d) =>
     new Date(d.getFullYear(), d.getMonth() + 1, 0);
+
+export const createRange = (type, baseDate = new Date()) => {
+    switch (type) {
+        case "month":
+            return {
+                type: "month",
+                startDate: startOfMonth(baseDate),
+                endDate: endOfMonth(baseDate),
+            };
+
+        case "day":
+            return {
+                type: "day",
+                startDate: startOfDay(baseDate),
+                endDate: endOfDay(baseDate),
+            };
+
+        default:
+            return createRange("month", baseDate);
+    }
+};
+
+export const normalizeRange = (state) => {
+    const format = (d) => {
+        const date = new Date(d);
+
+        return (
+            date.getFullYear() +
+            "-" +
+            String(date.getMonth() + 1).padStart(2, "0") +
+            "-" +
+            String(date.getDate()).padStart(2, "0")
+        );
+    };
+
+    return {
+        startDate: format(state.startDate),
+        endDate: format(state.endDate),
+    };
+};
 
 
 export const shiftRange = (state, direction) => {

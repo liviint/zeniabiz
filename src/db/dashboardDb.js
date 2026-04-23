@@ -1,8 +1,7 @@
-import { normalizeStartDate, normalizeEndDate } from "./utils"
+import { normalizeRange } from "../utils/timeNavigatorHelpers";
 
 export const getCashFlow = async (db, timeState) => {
-  const startDate = normalizeStartDate(timeState.startDate)
-  const endDate = normalizeEndDate(timeState.endDate);
+  const { startDate, endDate } = normalizeRange(timeState)
 
   const result = await db.getAllAsync(
     `
@@ -158,9 +157,8 @@ export const getCashFlow = async (db, timeState) => {
 };
 
 export const getExpensesBreakDown = async (db, timeState) => {
-  const startDate = normalizeStartDate(timeState.startDate)
-  const endDate = normalizeEndDate(timeState.endDate);
-
+  const { startDate, endDate } = normalizeRange(timeState)
+  console.log(timeState,startDate,endDate,"hello dates")
   if (!startDate || !endDate) {
     throw new Error("Invalid time range");
   }
@@ -184,8 +182,7 @@ export const getExpensesBreakDown = async (db, timeState) => {
 };
 
 export async function getFinancialStats(db, timeState) {
-  const startDate = normalizeStartDate(timeState.startDate)
-  const endDate = normalizeEndDate(timeState.endDate);
+  const { startDate, endDate } = normalizeRange(timeState)
 
   if (!startDate || !endDate) {
     throw new Error("Invalid time range");
@@ -244,13 +241,6 @@ export async function getFinancialStats(db, timeState) {
 
   const grossProfit = revenue - cost;
   const netProfit = grossProfit - expenses;
-
-  console.log(revenue,
-    cost,
-    expenses,
-    grossProfit,
-    netProfit,
-    stockValue,"hello revenu expe")
 
   return {
     revenue,
