@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { Alert, Pressable, StyleSheet, View, ScrollView } from "react-native";
+import { useIsFocused } from "@react-navigation/native";
 import DeleteButton from "../../../../src/components/common/DeleteButton";
 import { BodyText, Card, SecondaryText } from "../../../../src/components/ThemeProvider/components";
 import { deleteProduct, getProductById, getProductBatches } from "../../../../src/db/inventoryDb";
@@ -10,6 +11,7 @@ import RestockForm from "../../../../src/components/inventory/RestockForm";
 
 export default function ProductViewPage() {
   const db = useSQLiteContext();
+  const isFocused = useIsFocused()
   const router = useRouter();
   const { globalStyles } = useThemeStyles();
   const { id } = useLocalSearchParams();
@@ -33,7 +35,7 @@ export default function ProductViewPage() {
 
     getProduct()
     getBatches()
-  }, [reloadBatches]);
+  }, [reloadBatches, isFocused]);
 
   const handleDelete = async () => {
     await deleteProduct(db, id);

@@ -16,7 +16,7 @@ import {
 } from "../../../src/components/ThemeProvider/components";
 import { useSQLiteContext } from "expo-sqlite";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { getProducts } from "../../../src/db/inventoryDb";
+import { getProducts, getProductBatches } from "../../../src/db/inventoryDb";
 import {
   createOrUpdateSale,
   getSaleItems,
@@ -37,7 +37,7 @@ export default function SellPage() {
   const [cart, setCart] = useState([]);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(null);
-
+  const [batches, setBatches] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -88,6 +88,15 @@ export default function SellPage() {
     })();
   }, []);
 
+  useEffect(() => {
+    if (!selectedItem) return;
+
+    (async () => {
+      const data = await getProductBatches(db, selectedItem.product_id);
+      setBatches(data);
+    })();
+  }, [selectedItem]);
+
   const addToCart = (product) => {
     setCart((prev) => {
       const exists = prev.find((c) => c.product_id === product.id);
@@ -105,6 +114,7 @@ export default function SellPage() {
           name: product.name,
           price: product.selling_price,
           quantity: 1,
+          batch_id: null
         },
       ];
     });
@@ -251,7 +261,6 @@ export default function SellPage() {
         </Pressable>
       </View>
 
-      {/* MODAL */}
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalContainer}>
           <Card style={styles.modalCard}>
@@ -279,6 +288,40 @@ export default function SellPage() {
                   quantity: parseFloat(v) || 0,
                 })
               }
+            />
+
+            <SecondaryText>Select Batch (optional)</SecondaryText>
+
+            <FlatList
+              data={batches}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={{
+                    padding: 10,
+                    borderWidth: 1,
+                    borderColor:
+                      selectedItem?.batch_id === item.id ? "green" : "#ccc",
+                    borderRadius: 8,
+                    marginBottom: 6,
+                  }}
+                  onPress={() =>{
+                    if (item.quantity_remaining <= 0) return null;
+                    setSelectedItem({
+                      ...selectedItem,
+                      batch_id: item.id,
+                      price: item.selling_price,
+                    })}
+                  }
+                >
+                  <BodyText>
+                    {item.quantity_remaining} left @ {item.selling_price}
+                  </BodyText>
+                  <SecondaryText>
+                    Cost: {item.cost_price}
+                  </SecondaryText>
+                </Pressable>
+              )}
             />
 
             <Pressable
