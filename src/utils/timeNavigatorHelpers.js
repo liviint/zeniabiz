@@ -64,6 +64,20 @@ export const createRange = (type, baseDate = new Date()) => {
                 startDate: startOfRange3Months(baseDate),
                 endDate: endOfRange3Months(baseDate),
             };
+        case "year":
+            return {
+                type,
+                startDate: new Date(
+                    baseDate.getFullYear(),
+                    baseDate.getMonth() - 11,
+                    1
+                ),
+                endDate: new Date(
+                    baseDate.getFullYear(),
+                    baseDate.getMonth() + 1,
+                    1
+                ),
+            };
 
         case "all":
             return {
@@ -214,7 +228,7 @@ export const formatLabel = (state) => {
         if (isLastMonth) return "Last Month";
 
         return start.toLocaleString(undefined, {
-            month: "long",
+            month: "short",
             year: "numeric",
         });
     }
@@ -235,6 +249,25 @@ export const formatLabel = (state) => {
         })} – ${new Date(state.endDate).toLocaleDateString(undefined, {
             month: "short",
             day: "numeric",
+        })}`;
+    }
+
+    if (state.type === "year") {
+        const current = createRange("year", now);
+
+        const sameRange =
+            new Date(state.startDate).getTime() === current.startDate.getTime() &&
+            new Date(state.endDate).getTime() === current.endDate.getTime();
+
+        if (sameRange) return "Last 12 Months";
+
+        // fallback → show actual range
+        return `${new Date(state.startDate).toLocaleDateString(undefined, {
+            month: "short",
+            year: "numeric",
+        })} – ${new Date(state.endDate).toLocaleDateString(undefined, {
+            month: "short",
+            year: "numeric",
         })}`;
     }
 

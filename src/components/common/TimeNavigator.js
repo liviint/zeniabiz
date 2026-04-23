@@ -21,6 +21,7 @@ const OPTIONS = [
     { key: "week", label: "This Week" },
     { key: "month", label: "This Month" },
     { key: "range", label: "Last 3 Months" },
+    { key: "year", label: "Last 12 Months" },
     { key: "all", label: "All Time" },
 ];
 

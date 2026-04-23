@@ -12,7 +12,7 @@ export default function DashboardScreen() {
     const { globalStyles } = useThemeStyles()
     const [refreshing, setRefreshing] = useState(false);
 
-    const [timeState, setTimeState] = useState(createRange("day"));
+    const [timeState, setTimeState] = useState(createRange("month"));
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
