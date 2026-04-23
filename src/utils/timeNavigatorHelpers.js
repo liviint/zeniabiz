@@ -25,24 +25,55 @@ export const startOfMonth = (d) =>
 export const endOfMonth = (d) =>
     new Date(d.getFullYear(), d.getMonth() + 1, 0);
 
+const startOfRange3Months = (d) =>
+        new Date(d.getFullYear(), d.getMonth() - 2, 1);
+
+    const endOfRange3Months = (d) =>
+        new Date(d.getFullYear(), d.getMonth() + 1, 1);
+
+    const startOfAllTime = () => new Date(0);
+
+    const endOfAllTime = () => new Date(8640000000000000); 
+
 export const createRange = (type, baseDate = new Date()) => {
     switch (type) {
-        case "month":
-            return {
-                type: "month",
-                startDate: startOfMonth(baseDate),
-                endDate: endOfMonth(baseDate),
-            };
-
         case "day":
             return {
-                type: "day",
+                type,
                 startDate: startOfDay(baseDate),
                 endDate: endOfDay(baseDate),
             };
 
+        case "week":
+            return {
+                type,
+                startDate: startOfWeek(baseDate),
+                endDate: endOfWeek(baseDate),
+            };
+
+        case "month":
+            return {
+                type,
+                startDate: startOfMonth(baseDate),
+                endDate: endOfMonth(baseDate),
+            };
+
+        case "range": // last 3 months
+            return {
+                type,
+                startDate: startOfRange3Months(baseDate),
+                endDate: endOfRange3Months(baseDate),
+            };
+
+        case "all":
+            return {
+                type,
+                startDate: startOfAllTime(),
+                endDate: endOfAllTime(),
+            };
+
         default:
-            return createRange("month", baseDate);
+            return createRange("day", baseDate);
     }
 };
 

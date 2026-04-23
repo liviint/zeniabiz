@@ -78,7 +78,6 @@ const TimeNavigator = ({ state, onChange }) => {
                     </BodyText>
                 </TouchableOpacity>
 
-                {/* 🔥 CLICKABLE LABEL */}
                 <TouchableOpacity
                     onPress={() => setOpen(true)}
                 >
@@ -102,7 +101,6 @@ const TimeNavigator = ({ state, onChange }) => {
                 </TouchableOpacity>
             </View>
 
-            {/* ---------------- DROPDOWN ---------------- */}
             <Modal
                 visible={open}
                 transparent
