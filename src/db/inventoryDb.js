@@ -27,7 +27,7 @@ export async function upsertProduct(
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
-    // 1️⃣ Upsert product (keep minimal responsibility)
+    // 1️⃣ Upsert product (NO stock logic here)
     await db.runAsync(
       `
       INSERT INTO products (
@@ -47,26 +47,46 @@ export async function upsertProduct(
       [id, name, selling_price, created_at, now]
     );
 
-    // 2️⃣ ONLY create batch if new product
+    // 2️⃣ If new product with stock → create batch + movement
     if (isNew && stock_quantity > 0) {
-  await db.runAsync(
-    `
-    INSERT INTO inventory_batches
-    (id, product_id, quantity_remaining, cost_price, selling_price)
-    VALUES (?, ?, ?, ?, ?)
-    `,
-    [newUuid(), id, stock_quantity, cost_price, selling_price]
-  );
+      const batchId = newUuid();
 
-  await db.runAsync(
-    `
-    UPDATE products
-    SET stock_quantity = ?
-    WHERE id = ?
-    `,
-    [stock_quantity, id]
-  );
-}
+      // ➤ Create batch (state)
+      await db.runAsync(
+        `
+        INSERT INTO inventory_batches
+        (id, product_id, quantity_remaining, cost_price, selling_price, date)
+        VALUES (?, ?, ?, ?, ?, ?)
+        `,
+        [batchId, id, stock_quantity, cost_price, selling_price, now]
+      );
+
+      // ➤ Log movement (history)
+      await db.runAsync(
+        `
+        INSERT INTO inventory_movements
+        (id, product_id, batch_id, unit_cost, quantity, type, date)
+        VALUES (?, ?, ?, ?, ?, 'purchase', ?)
+        `,
+        [
+          newUuid(),
+          id,
+          batchId,
+          cost_price,
+          stock_quantity, // positive
+          now,
+        ]
+      );
+
+      await db.runAsync(
+        `
+        UPDATE products
+        SET stock_quantity = ?
+        WHERE id = ?
+        `,
+        [stock_quantity, id]
+      );
+    }
 
     await db.runAsync("COMMIT");
     return id;
@@ -203,22 +223,60 @@ export async function deleteProduct(db, id) {
 export const restockProduct = async (db, productId, form) => {
   const { stock_quantity, cost_price, selling_price } = form;
 
-  const id = newUuid();
+  const now = new Date().toISOString();
 
-  await db.runAsync(
-    `INSERT INTO inventory_batches 
-    (id, product_id, quantity_remaining, cost_price, selling_price)
-    VALUES (?, ?, ?, ?, ?)`,
-    [id, productId, stock_quantity, cost_price, selling_price]
-  );
+  const quantity = parseFloat(stock_quantity) || 0;
+  const unitCost = parseFloat(cost_price) || 0;
+  const sellPrice = parseFloat(selling_price) || 0;
 
-  // Optional cache
-  await db.runAsync(
-    `UPDATE products 
-     SET stock_quantity = COALESCE(stock_quantity, 0) + ? 
-     WHERE id = ?`,
+  if (quantity <= 0) {
+    throw new Error("Stock quantity must be greater than 0");
+  }
+
+  const batchId = newUuid();
+
+  await db.runAsync("BEGIN TRANSACTION");
+
+  try {
+    // 1️⃣ Create batch (state)
+    await db.runAsync(
+      `
+      INSERT INTO inventory_batches 
+      (id, product_id, quantity_remaining, cost_price, selling_price, date)
+      VALUES (?, ?, ?, ?, ?, ?)
+      `,
+      [batchId, productId, quantity, unitCost, sellPrice, now]
+    );
+
+    // 2️⃣ Log movement (history)
+    await db.runAsync(
+      `
+      INSERT INTO inventory_movements
+      (id, product_id, batch_id, unit_cost, quantity, type, date)
+      VALUES (?, ?, ?, ?, ?, 'purchase', ?)
+      `,
+      [
+        newUuid(),
+        productId,
+        batchId,
+        unitCost,
+        quantity, // positive
+        now,
+      ]
+    );
+
+    await db.runAsync(
+      `UPDATE products 
+      SET stock_quantity = COALESCE(stock_quantity, 0) + ? 
+      WHERE id = ?`,
     [stock_quantity, productId]
   );
+
+    await db.runAsync("COMMIT");
+  } catch (error) {
+    await db.runAsync("ROLLBACK");
+    throw error;
+  }
 };
 
 
@@ -241,3 +299,27 @@ export async function getInventoryStats(db) {
     stockValue: result?.stock_value || 0,
   };
 }
+
+export const getStockMovements = async (db, limit = 100) => {
+  const result = await db.getAllAsync(
+    `
+    SELECT 
+      m.id,
+      m.product_id,
+      p.name AS product_name,
+      m.batch_id,
+      m.quantity,
+      m.unit_cost,
+      m.type,
+      m.reference_id,
+      m.date
+    FROM inventory_movements m
+    LEFT JOIN products p ON p.id = m.product_id
+    ORDER BY m.date DESC
+    LIMIT ?
+    `,
+    [limit]
+  );
+
+  return result;
+};
