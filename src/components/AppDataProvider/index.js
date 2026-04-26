@@ -28,7 +28,10 @@ const migrateDbIfNeeded = async (db) => {
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       date TEXT NOT NULL,
       deleted_at TEXT
+
+      FOREIGN KEY (category_id) REFERENCES expense_categories(id)
     );
+    CREATE INDEX IF NOT EXISTS idx_expenses_category ON expenses(category_id);
 
     CREATE TABLE IF NOT EXISTS expense_categories (
       id TEXT PRIMARY KEY,
@@ -110,6 +113,7 @@ const migrateDbIfNeeded = async (db) => {
         FOREIGN KEY (product_id) REFERENCES products(id),
         FOREIGN KEY (batch_id) REFERENCES inventory_batches(id)
     );
+    CREATE INDEX IF NOT EXISTS idx_movements_product ON inventory_movements(product_id);
 
 
     CREATE TABLE IF NOT EXISTS sales (
@@ -117,7 +121,7 @@ const migrateDbIfNeeded = async (db) => {
       title TEXT,
       note TEXT,
       amount REAL, 
-      date TEXT,
+      date TEXT NOT NULL,
       created_at TEXT,
       updated_at TEXT,
       deleted_at TEXT
@@ -135,6 +139,9 @@ const migrateDbIfNeeded = async (db) => {
       FOREIGN KEY (sale_id) REFERENCES sales(id),
       FOREIGN KEY (batch_id) REFERENCES inventory_batches(id)
     );
+
+    CREATE INDEX IF NOT EXISTS idx_sale_items_sale ON sale_items(sale_id);
+    CREATE INDEX IF NOT EXISTS idx_sale_items_product ON sale_items(product_id);
 
     CREATE TABLE IF NOT EXISTS app_settings (
       key TEXT PRIMARY KEY,
