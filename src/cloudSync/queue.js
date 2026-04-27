@@ -18,8 +18,6 @@ export async function addToQueue(db, item) {
   )
 }
 
-// sync/queue.js
-
 export async function getPendingItems(db) {
   const rows = await db.getAllAsync(`
     SELECT * FROM sync_queue 
@@ -40,13 +38,11 @@ export async function getPendingItems(db) {
 export async function markAsSynced(db, client_request_id) {
   await db.runAsync(
     `UPDATE sync_queue 
-     SET status = 'synced', updated_at = datetime('now') 
-     WHERE client_request_id = ?`,
+      SET status = 'synced', updated_at = datetime('now') 
+      WHERE client_request_id = ?`,
     [client_request_id]
   )
 }
-
-
 
 export async function markAsFailed(db, item) {
   const nextRetry = getNextRetryTime(item.retry_count || 0)
