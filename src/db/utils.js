@@ -58,6 +58,33 @@ export const getPeriodRange = (startDate, period) => {
   };
 };
 
+let cachedContext = null;
+
+export async function loadActiveContext(db) {
+  const user = await db.getFirstAsync(
+    `SELECT * FROM local_user LIMIT 1`
+  );
+
+  const setting = await db.getFirstAsync(
+    `SELECT value FROM app_settings WHERE key = ?`,
+    ["active_company_id"]
+  );
+
+  cachedContext = {
+    user_id: user?.id,
+    company_id: setting?.value
+  };
+
+  return cachedContext;
+}
+
+export function getActiveContextSync() {
+  if (!cachedContext) {
+    throw new Error("Context not loaded");
+  }
+  return cachedContext;
+}
+
 
 
 

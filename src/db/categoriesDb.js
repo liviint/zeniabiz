@@ -1,6 +1,7 @@
 import uuid from "react-native-uuid";
 import { DEFAULT_CATEGORIES } from "../../utils/categoriesSeeder";
 import {syncEvent} from "../cloudSync/syncEvent"
+import { getActiveContextSync } from "./utils";
 
 const newUuid = () => uuid.v4();
 
@@ -74,12 +75,20 @@ export const getUnsyncedCategories = (db) => {
   );
 }
 
-
 export const upsertCategory = async (db, { id, name, color, icon }) => {
+  const { company_id, user_id } = getActiveContextSync();
+
+  if (!company_id || !user_id) {
+    throw new Error("Missing active company or user context");
+  }
+
   const now = new Date().toISOString();
   const categoryId = id || newUuid();
 
+  await db.runAsync("BEGIN TRANSACTION");
+
   try {
+    // 1️⃣ Local write
     await db.runAsync(
       `
       INSERT INTO expense_categories (
@@ -107,28 +116,35 @@ export const upsertCategory = async (db, { id, name, color, icon }) => {
       ]
     );
 
-    // 🔥 SYNC EVENT (after local success)
+    await db.runAsync("COMMIT");
+
+    // 2️⃣ Sync event (after commit only)
     await syncEvent(db, {
       model: "expense_categories",
       operation: "upsert",
       payload: {
         id: categoryId,
+
+        company_id,
+        user_id,
+
         name: name?.trim(),
         color,
         icon,
-        updated_at: now
+
+        created_at: now,
+        updated_at: now,
+        deleted_at: null
       }
     });
 
-    console.log("✅ Category upserted locally + queued for sync");
     return categoryId;
 
   } catch (error) {
-    console.error("❌ Failed to upsert category:", error);
+    await db.runAsync("ROLLBACK");
     throw error;
   }
 };
-
 
 export const deleteCategory = async (db, id) => {
   const now = new Date().toISOString();

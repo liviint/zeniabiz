@@ -1,5 +1,5 @@
 import uuid from "react-native-uuid";
-import { getMonthRange } from "./utils";
+import { getMonthRange, getActiveContextSync } from "./utils";
 import { syncEvent } from "../cloudSync/enqueue";
 
 const newUuid = () => uuid.v4();
@@ -14,6 +14,8 @@ export async function createOrUpdateSale(
     title,
   }
 ) {
+  const { company_id, user_id } = getActiveContextSync();
+
   const now = new Date().toISOString();
   const saleDate = date ? date.toISOString() : now;
 
@@ -56,11 +58,7 @@ export async function createOrUpdateSale(
         );
       }
 
-      await db.runAsync(
-        `DELETE FROM sale_items WHERE sale_id = ?`,
-        [id]
-      );
-
+      await db.runAsync(`DELETE FROM sale_items WHERE sale_id = ?`, [id]);
       await db.runAsync(
         `DELETE FROM inventory_movements WHERE reference_id = ?`,
         [id]
@@ -76,7 +74,7 @@ export async function createOrUpdateSale(
       );
     } else {
       // -------------------------
-      // 🟢 CREATE NEW SALE
+      // 🟢 CREATE FLOW
       // -------------------------
       await db.runAsync(
         `
@@ -91,7 +89,7 @@ export async function createOrUpdateSale(
     // 🔵 VALIDATION + STOCK CHECK
     // -------------------------
     for (const item of items) {
-      let required = Number(item.quantity);
+      const required = Number(item.quantity);
 
       if (item.batch_id) {
         const batch = await db.getFirstAsync(
@@ -122,7 +120,7 @@ export async function createOrUpdateSale(
     }
 
     // -------------------------
-    // 🔴 APPLY SALE
+    // 🔴 APPLY SALE LOGIC
     // -------------------------
     for (const item of items) {
       let remaining = Number(item.quantity);
@@ -237,21 +235,81 @@ export async function createOrUpdateSale(
 
     await db.runAsync("COMMIT");
 
-    // 🔥 SINGLE SYNC EVENT (CRITICAL FIX)
+    // -------------------------
+    // 🔥 SYNC (FULL CONSISTENCY)
+    // -------------------------
+
+    // 1. Sale header
     await syncEvent(db, {
       model: "sales",
       operation: "upsert",
       payload: {
         id,
+        company_id,
+        created_by: user_id,
+        updated_by: user_id,
+
         title: finalTitle,
         note,
         date: saleDate,
         amount: total,
-        items,
+
+        created_at: now,
         updated_at: now,
-        deleted_at: null
-      }
+        deleted_at: null,
+      },
     });
+
+    // 2. Sale items
+    for (const item of items) {
+      await syncEvent(db, {
+        model: "sale_items",
+        operation: "upsert",
+        payload: {
+          id: newUuid(),
+          sale_id: id,
+          product_id: item.product_id,
+          batch_id: item.batch_id || null,
+          quantity: item.quantity,
+          price: item.price,
+          cost_price: item.cost_price || 0,
+
+          company_id,
+          created_by: user_id,
+          updated_by: user_id,
+
+          created_at: now,
+          updated_at: now,
+          deleted_at: null,
+        },
+      });
+    }
+
+    // 3. Inventory movements
+    for (const item of items) {
+      await syncEvent(db, {
+        model: "inventory_movements",
+        operation: "insert",
+        payload: {
+          id: newUuid(),
+          product_id: item.product_id,
+          batch_id: item.batch_id || null,
+          unit_cost: item.cost_price || 0,
+          quantity: -Number(item.quantity),
+          type: "sale",
+          reference_id: id,
+          date: saleDate,
+
+          company_id,
+          created_by: user_id,
+          updated_by: user_id,
+
+          created_at: now,
+          updated_at: now,
+          deleted_at: null,
+        },
+      });
+    }
 
     return id;
 
@@ -305,7 +363,6 @@ export async function getSaleById(db, sale_id) {
     [sale_id]
   );
 }
-
 
 export async function deleteSale(db, sale_id) {
   const now = new Date().toISOString();

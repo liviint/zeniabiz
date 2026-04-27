@@ -11,9 +11,14 @@ export const getSetting = async (db, key) => {
 export const setSetting = async (db, key, value) => {
   const now = new Date().toISOString();
 
+  if (!key) {
+    throw new Error("Setting key is required");
+  }
+
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
+    // 1️⃣ Local persistence (source of truth offline)
     await db.runAsync(
       `
       INSERT INTO app_settings (key, value)
@@ -26,15 +31,16 @@ export const setSetting = async (db, key, value) => {
 
     await db.runAsync("COMMIT");
 
-    // 🔥 SYNC EVENT (AFTER COMMIT)
+    // 2️⃣ SYNC EVENT (AFTER COMMIT ONLY)
     await syncEvent(db, {
-        model: "app_settings",
-        operation: "upsert",
-        payload: {
-            key,
-            value: String(value),
-            updated_at: now
-        }
+      model: "app_settings",
+      operation: "upsert",
+      payload: {
+        key,
+        value: String(value),
+        updated_at: now,
+        deleted_at: null
+      }
     });
 
   } catch (error) {

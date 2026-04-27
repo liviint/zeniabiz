@@ -1,5 +1,6 @@
 import uuid from "react-native-uuid";
 import { syncEvent } from "../cloudSync/enqueue";
+import { getActiveContextSync } from "./utils";
 
 const newUuid = () => uuid.v4();
 
@@ -17,6 +18,8 @@ export async function upsertExpense(
     date,
   }
 ) {
+  const { company_id, user_id } = getActiveContextSync();
+
   const now = new Date().toISOString();
   const transactionDate = date ? date.toISOString() : now;
 
@@ -26,11 +29,14 @@ export async function upsertExpense(
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
-    // 1️⃣ Upsert expense
+    // 1️⃣ Upsert expense (LOCAL DB)
     await db.runAsync(
       `
       INSERT INTO expenses (
         id,
+        company_id,
+        created_by,
+        updated_by,
         title,
         amount,
         category,
@@ -41,7 +47,7 @@ export async function upsertExpense(
         updated_at,
         date
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
         amount = excluded.amount,
@@ -50,10 +56,14 @@ export async function upsertExpense(
         note = excluded.note,
         payee = excluded.payee,
         updated_at = excluded.updated_at,
-        date = excluded.date
+        date = excluded.date,
+        updated_by = excluded.updated_by
       `,
       [
         expenseId,
+        company_id,
+        user_id,
+        user_id,
         title,
         cleanAmount,
         category,
@@ -68,12 +78,17 @@ export async function upsertExpense(
 
     await db.runAsync("COMMIT");
 
-    // 🔥 2️⃣ SYNC EVENT (AFTER COMMIT ONLY)
+    // 2️⃣ SYNC EVENT (AFTER COMMIT ONLY)
     await syncEvent(db, {
       model: "expenses",
       operation: "upsert",
       payload: {
         id: expenseId,
+
+        company_id,
+        created_by: user_id,
+        updated_by: user_id,
+
         title,
         amount: cleanAmount,
         category,
@@ -81,6 +96,7 @@ export async function upsertExpense(
         note,
         payee,
         date: transactionDate,
+
         created_at: now,
         updated_at: now,
         deleted_at: null

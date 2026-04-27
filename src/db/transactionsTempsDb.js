@@ -1,5 +1,6 @@
 import uuid from "react-native-uuid";
 import { syncEvent } from "../cloudSync/syncEvent";
+import { getActiveContextSync } from "./utils";
 
 const newUuid = () => uuid.v4();
 
@@ -14,63 +15,87 @@ export const upsertExpenseTemplate = async (db, template) => {
     note = null,
   } = template;
 
+  const { company_id, user_id } = getActiveContextSync();
+
+  if (!company_id || !user_id) {
+    throw new Error("Missing active company or user context");
+  }
+
   const templateId = id || newUuid();
   const now = new Date().toISOString();
 
-  await db.runAsync(
-    `
-    INSERT INTO expense_templates (
-      id,
-      title,
-      amount,
-      category,
-      category_id,
-      payee,
-      note,
-      created_at,
-      updated_at
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  await db.runAsync("BEGIN TRANSACTION");
 
-    ON CONFLICT(id) DO UPDATE SET
-      title = excluded.title,
-      amount = excluded.amount,
-      category = excluded.category,
-      category_id = excluded.category_id,
-      payee = excluded.payee,
-      note = excluded.note,
-      updated_at = excluded.updated_at
-    `,
-    [
-      templateId,
-      title,
-      amount,
-      category,
-      category_id,
-      payee,
-      note,
-      now,
-      now,
-    ]
-  );
+  try {
+    // 1️⃣ Local write
+    await db.runAsync(
+      `
+      INSERT INTO expense_templates (
+        id,
+        title,
+        amount,
+        category,
+        category_id,
+        payee,
+        note,
+        created_at,
+        updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 
-  // 🔥 SYNC EVENT (after local success)
-  await syncEvent(db, {
-    model: "expense_templates",
-    operation: "upsert",
-    payload: {
-      id: templateId,
-      title,
-      amount,
-      category,
-      category_id,
-      payee,
-      note,
-      updated_at: now
-    }
-  });
+      ON CONFLICT(id) DO UPDATE SET
+        title = excluded.title,
+        amount = excluded.amount,
+        category = excluded.category,
+        category_id = excluded.category_id,
+        payee = excluded.payee,
+        note = excluded.note,
+        updated_at = excluded.updated_at
+      `,
+      [
+        templateId,
+        title,
+        amount,
+        category,
+        category_id,
+        payee,
+        note,
+        now,
+        now,
+      ]
+    );
 
-  return templateId;
+    await db.runAsync("COMMIT");
+
+    // 2️⃣ Sync event (with ownership context)
+    await syncEvent(db, {
+      model: "expense_templates",
+      operation: "upsert",
+      payload: {
+        id: templateId,
+
+        company_id,
+        user_id,
+
+        title,
+        amount,
+        category,
+        category_id,
+        payee,
+        note,
+
+        created_at: now,
+        updated_at: now,
+        deleted_at: null,
+      }
+    });
+
+    return templateId;
+
+  } catch (error) {
+    await db.runAsync("ROLLBACK");
+    throw error;
+  }
 };
 
 export const getTransactionTemplates = async (db) => {
