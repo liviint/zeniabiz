@@ -1,5 +1,6 @@
 import uuid from "react-native-uuid";
 import { DEFAULT_CATEGORIES } from "../../utils/categoriesSeeder";
+import {syncEvent} from "../cloudSync/syncEvent"
 
 const newUuid = () => uuid.v4();
 
@@ -74,10 +75,7 @@ export const getUnsyncedCategories = (db) => {
 }
 
 
-export const upsertCategory = async (
-  db,
-  { id, name, color, icon }
-) => {
+export const upsertCategory = async (db, { id, name, color, icon }) => {
   const now = new Date().toISOString();
   const categoryId = id || newUuid();
 
@@ -109,8 +107,22 @@ export const upsertCategory = async (
       ]
     );
 
-    console.log("✅ Category upserted locally");
+    // 🔥 SYNC EVENT (after local success)
+    await syncEvent(db, {
+      model: "expense_categories",
+      operation: "upsert",
+      payload: {
+        id: categoryId,
+        name: name?.trim(),
+        color,
+        icon,
+        updated_at: now
+      }
+    });
+
+    console.log("✅ Category upserted locally + queued for sync");
     return categoryId;
+
   } catch (error) {
     console.error("❌ Failed to upsert category:", error);
     throw error;
@@ -119,6 +131,8 @@ export const upsertCategory = async (
 
 
 export const deleteCategory = async (db, id) => {
+  const now = new Date().toISOString();
+
   const usage = await db.getFirstAsync(
     `SELECT COUNT(*) as count FROM expenses WHERE category_id = ?`,
     [id]
@@ -128,9 +142,34 @@ export const deleteCategory = async (db, id) => {
     throw new Error("Cannot delete category in use");
   }
 
-  await db.runAsync(
-    `DELETE FROM expense_categories WHERE id = ?`,
-    [id]
-  );
+  await db.runAsync("BEGIN TRANSACTION");
+
+  try {
+    // 🗑 Soft delete
+    await db.runAsync(
+      `
+      UPDATE expense_categories
+      SET deleted_at = ?, updated_at = ?
+      WHERE id = ?
+      `,
+      [now, now, id]
+    );
+
+    await db.runAsync("COMMIT");
+
+    // 🔥 SYNC EVENT (after commit)
+    await syncEvent(db, {
+      model: "expense_categories",
+      operation: "delete",
+      payload: {
+        id,
+        deleted_at: now
+      }
+    });
+
+  } catch (error) {
+    await db.runAsync("ROLLBACK");
+    throw error;
+  }
 };
 

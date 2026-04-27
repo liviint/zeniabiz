@@ -1,5 +1,6 @@
 import uuid from "react-native-uuid";
 import { getMonthRange } from "./utils";
+import { syncEvent } from "../cloudSync/enqueue";
 
 const newUuid = () => uuid.v4();
 
@@ -46,7 +47,6 @@ export async function createOrUpdateSale(
         [id]
       );
 
-      // Restore batch quantities
       for (const item of oldItems) {
         await db.runAsync(
           `UPDATE inventory_batches
@@ -56,19 +56,16 @@ export async function createOrUpdateSale(
         );
       }
 
-      // Remove old sale_items
       await db.runAsync(
         `DELETE FROM sale_items WHERE sale_id = ?`,
         [id]
       );
 
-      // 🔥 Remove old movements
       await db.runAsync(
         `DELETE FROM inventory_movements WHERE reference_id = ?`,
         [id]
       );
 
-      // Update sale
       await db.runAsync(
         `
         UPDATE sales
@@ -91,7 +88,7 @@ export async function createOrUpdateSale(
     }
 
     // -------------------------
-    // 🔵 VALIDATE STOCK
+    // 🔵 VALIDATION + STOCK CHECK
     // -------------------------
     for (const item of items) {
       let required = Number(item.quantity);
@@ -125,21 +122,17 @@ export async function createOrUpdateSale(
     }
 
     // -------------------------
-    // 🔴 APPLY SALE (FIFO / DIRECT)
+    // 🔴 APPLY SALE
     // -------------------------
     for (const item of items) {
       let remaining = Number(item.quantity);
 
-      // -------------------------
-      // 🔹 DIRECT BATCH SALE
-      // -------------------------
       if (item.batch_id) {
         const batch = await db.getFirstAsync(
           `SELECT cost_price FROM inventory_batches WHERE id = ?`,
           [item.batch_id]
         );
 
-        // Deduct batch
         await db.runAsync(
           `UPDATE inventory_batches
            SET quantity_remaining = quantity_remaining - ?
@@ -147,7 +140,6 @@ export async function createOrUpdateSale(
           [remaining, item.batch_id]
         );
 
-        // Insert sale item
         await db.runAsync(
           `INSERT INTO sale_items 
           (id, sale_id, product_id, batch_id, quantity, price, cost_price)
@@ -163,7 +155,6 @@ export async function createOrUpdateSale(
           ]
         );
 
-        // 🔥 Log movement
         await db.runAsync(
           `
           INSERT INTO inventory_movements
@@ -180,12 +171,7 @@ export async function createOrUpdateSale(
             saleDate,
           ]
         );
-      }
-
-      // -------------------------
-      // 🔹 FIFO SALE
-      // -------------------------
-      else {
+      } else {
         const batches = await db.getAllAsync(
           `SELECT * FROM inventory_batches
            WHERE product_id = ? AND quantity_remaining > 0
@@ -198,7 +184,6 @@ export async function createOrUpdateSale(
 
           const take = Math.min(batch.quantity_remaining, remaining);
 
-          // Deduct batch
           await db.runAsync(
             `UPDATE inventory_batches
              SET quantity_remaining = quantity_remaining - ?
@@ -206,7 +191,6 @@ export async function createOrUpdateSale(
             [take, batch.id]
           );
 
-          // Insert sale item
           await db.runAsync(
             `INSERT INTO sale_items 
             (id, sale_id, product_id, batch_id, quantity, price, cost_price)
@@ -222,7 +206,6 @@ export async function createOrUpdateSale(
             ]
           );
 
-          // 🔥 Log movement
           await db.runAsync(
             `
             INSERT INTO inventory_movements
@@ -243,16 +226,35 @@ export async function createOrUpdateSale(
           remaining -= take;
         }
       }
+
       await db.runAsync(
         `UPDATE products 
-         SET stock_quantity = stock_quantity - ? 
+         SET stock_quantity = stock_quantity - ?, updated_at = ?
          WHERE id = ?`,
-        [item.quantity, item.product_id]
+        [item.quantity, now, item.product_id]
       );
     }
 
     await db.runAsync("COMMIT");
+
+    // 🔥 SINGLE SYNC EVENT (CRITICAL FIX)
+    await syncEvent(db, {
+      model: "sales",
+      operation: "upsert",
+      payload: {
+        id,
+        title: finalTitle,
+        note,
+        date: saleDate,
+        amount: total,
+        items,
+        updated_at: now,
+        deleted_at: null
+      }
+    });
+
     return id;
+
   } catch (error) {
     await db.runAsync("ROLLBACK");
     console.error("SALE ERROR:", error);
@@ -304,38 +306,49 @@ export async function getSaleById(db, sale_id) {
   );
 }
 
+
 export async function deleteSale(db, sale_id) {
+  const now = new Date().toISOString();
+
+  if (!sale_id) {
+    throw new Error("sale_id is required");
+  }
+
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
-    // 1. Restore stock
-    const items = await db.getAllAsync(
-      `SELECT product_id, quantity FROM sale_items WHERE sale_id = ?`,
-      [sale_id]
+    // 1️⃣ Soft delete sale (NOT hard delete)
+    await db.runAsync(
+      `
+      UPDATE sales
+      SET deleted_at = ?, updated_at = ?
+      WHERE id = ?
+      `,
+      [now, now, sale_id]
     );
 
-    for (const item of items) {
-      await db.runAsync(
-        `UPDATE products 
-         SET stock_quantity = stock_quantity + ? 
-         WHERE id = ?`,
-        [item.quantity, item.product_id]
-      );
-    }
-
-    // 2. Delete sale items
+    // 2️⃣ Soft delete sale items
     await db.runAsync(
-      `DELETE FROM sale_items WHERE sale_id = ?`,
-      [sale_id]
-    );
-
-    // 3. Delete sale itself
-    await db.runAsync(
-      `DELETE FROM sales WHERE id = ?`,
-      [sale_id]
+      `
+      UPDATE sale_items
+      SET deleted_at = ?
+      WHERE sale_id = ?
+      `,
+      [now, sale_id]
     );
 
     await db.runAsync("COMMIT");
+
+    // 🔥 3️⃣ SYNC EVENT (single source of truth)
+    await syncEvent(db, {
+      model: "sales",
+      operation: "delete",
+      payload: {
+        id: sale_id,
+        deleted_at: now
+      }
+    });
+
   } catch (err) {
     await db.runAsync("ROLLBACK");
     throw err;

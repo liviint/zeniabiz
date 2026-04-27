@@ -1,21 +1,21 @@
 import {getNextRetryTime} from "./utils"
 
-export async function addToQueue(db, item) {
+export async function addToQueue(db, event) {
   await db.runAsync(
     `INSERT INTO sync_queue 
     (id, model, operation, payload, client_request_id, status, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
-      item.id,
-      item.model,
-      item.operation,
-      JSON.stringify(item.payload),
-      item.client_request_id,
-      "pending",
-      item.created_at,
-      item.created_at
+      event.id,
+      event.model,
+      event.operation,
+      JSON.stringify(event.payload),
+      event.client_request_id,
+      event.status,
+      event.created_at,
+      event.created_at
     ]
-  )
+  );
 }
 
 export async function getPendingItems(db) {

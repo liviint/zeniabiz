@@ -1,4 +1,5 @@
 import uuid from "react-native-uuid";
+import { syncEvent } from "../cloudSync/syncEvent";
 import { getMonthRange } from "./utils";
 
 const newUuid = () => uuid.v4();
@@ -27,7 +28,7 @@ export async function upsertProduct(
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
-    // 1️⃣ Upsert product (NO stock logic here)
+    // 1️⃣ Upsert product
     await db.runAsync(
       `
       INSERT INTO products (
@@ -47,11 +48,10 @@ export async function upsertProduct(
       [id, name, selling_price, created_at, now]
     );
 
-    // 2️⃣ If new product with stock → create batch + movement
+    // 2️⃣ Initial stock logic
     if (isNew && stock_quantity > 0) {
       const batchId = newUuid();
 
-      // ➤ Create batch (state)
       await db.runAsync(
         `
         INSERT INTO inventory_batches
@@ -61,7 +61,6 @@ export async function upsertProduct(
         [batchId, id, stock_quantity, cost_price, selling_price, now]
       );
 
-      // ➤ Log movement (history)
       await db.runAsync(
         `
         INSERT INTO inventory_movements
@@ -73,7 +72,7 @@ export async function upsertProduct(
           id,
           batchId,
           cost_price,
-          stock_quantity, // positive
+          stock_quantity,
           now,
         ]
       );
@@ -89,7 +88,25 @@ export async function upsertProduct(
     }
 
     await db.runAsync("COMMIT");
+
+    // 🔥 3️⃣ SYNC EVENT (AFTER COMMIT)
+    await syncEvent(db, {
+      model: "products",
+      operation: "upsert",
+      payload: {
+        id,
+        name,
+        selling_price,
+        cost_price,
+        stock_quantity,
+        created_at,
+        updated_at: now,
+        deleted_at: null
+      }
+    });
+
     return id;
+
   } catch (error) {
     await db.runAsync("ROLLBACK");
     throw error;
@@ -210,14 +227,39 @@ export async function getProductBatches(db, id) {
 export async function deleteProduct(db, id) {
   const now = new Date().toISOString();
 
-  await db.runAsync(
-    `
-    UPDATE products
-    SET deleted_at = ?
-    WHERE id = ?
-    `,
-    [now, id]
-  );
+  if (!id) {
+    throw new Error("Product id is required");
+  }
+
+  await db.runAsync("BEGIN TRANSACTION");
+
+  try {
+    // 🗑 Soft delete product
+    await db.runAsync(
+      `
+      UPDATE products
+      SET deleted_at = ?, updated_at = ?
+      WHERE id = ?
+      `,
+      [now, now, id]
+    );
+
+    await db.runAsync("COMMIT");
+
+    // 🔥 SYNC EVENT (AFTER COMMIT)
+    await syncEvent(db, {
+      model: "products",
+      operation: "delete",
+      payload: {
+        id,
+        deleted_at: now
+      }
+    });
+
+  } catch (error) {
+    await db.runAsync("ROLLBACK");
+    throw error;
+  }
 }
 
 export const restockProduct = async (db, productId, form) => {
@@ -234,11 +276,12 @@ export const restockProduct = async (db, productId, form) => {
   }
 
   const batchId = newUuid();
+  const movementId = newUuid();
 
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
-    // 1️⃣ Create batch (state)
+    // 1️⃣ Create batch (local state)
     await db.runAsync(
       `
       INSERT INTO inventory_batches 
@@ -248,7 +291,7 @@ export const restockProduct = async (db, productId, form) => {
       [batchId, productId, quantity, unitCost, sellPrice, now]
     );
 
-    // 2️⃣ Log movement (history)
+    // 2️⃣ Log movement (local history)
     await db.runAsync(
       `
       INSERT INTO inventory_movements
@@ -256,23 +299,41 @@ export const restockProduct = async (db, productId, form) => {
       VALUES (?, ?, ?, ?, ?, 'purchase', ?)
       `,
       [
-        newUuid(),
+        movementId,
         productId,
         batchId,
         unitCost,
-        quantity, // positive
+        quantity,
         now,
       ]
     );
 
+    // 3️⃣ Update stock (local projection)
     await db.runAsync(
-      `UPDATE products 
-      SET stock_quantity = COALESCE(stock_quantity, 0) + ? 
-      WHERE id = ?`,
-    [stock_quantity, productId]
-  );
+      `
+      UPDATE products 
+      SET stock_quantity = COALESCE(stock_quantity, 0) + ?,
+          updated_at = ?
+      WHERE id = ?
+      `,
+      [quantity, now, productId]
+    );
 
     await db.runAsync("COMMIT");
+
+    // 🔥 4️⃣ SYNC BUSINESS EVENT (NOT MOVEMENT)
+    await syncEvent(db, {
+      model: "inventory",
+      operation: "purchase",
+      payload: {
+        product_id: productId,
+        quantity,
+        unit_cost: unitCost,
+        selling_price: sellPrice,
+        date: now
+      }
+    });
+
   } catch (error) {
     await db.runAsync("ROLLBACK");
     throw error;

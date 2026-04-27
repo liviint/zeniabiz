@@ -1,4 +1,5 @@
 import uuid from "react-native-uuid";
+import { syncEvent } from "../cloudSync/syncEvent";
 
 const newUuid = () => uuid.v4();
 
@@ -53,6 +54,22 @@ export const upsertExpenseTemplate = async (db, template) => {
     ]
   );
 
+  // 🔥 SYNC EVENT (after local success)
+  await syncEvent(db, {
+    model: "expense_templates",
+    operation: "upsert",
+    payload: {
+      id: templateId,
+      title,
+      amount,
+      category,
+      category_id,
+      payee,
+      note,
+      updated_at: now
+    }
+  });
+
   return templateId;
 };
 
@@ -76,17 +93,28 @@ export const getTransactionTemplateByid = async (db, id) => {
   );
 };
 
-export const deleteTransactionTemplate = async (db, uuid) => {
+export const deleteTransactionTemplate = async (db, id) => {
+  const now = new Date().toISOString();
+
   await db.runAsync(
     `
     UPDATE expense_templates
-    SET deleted_at = datetime('now'),
-        updated_at = datetime('now'),
-        is_synced = 0
-    WHERE uuid = ?
+    SET deleted_at = ?,
+        updated_at = ?
+    WHERE id = ?
     `,
-    [uuid]
+    [now, now, id]
   );
+
+  // 🔥 SYNC EVENT
+  await syncEvent(db, {
+    model: "expense_templates",
+    operation: "delete",
+    payload: {
+      id,
+      deleted_at: now
+    }
+  });
 };
 
 export const restoreTransactionTemplate = async (db, uuid) => {
