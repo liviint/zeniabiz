@@ -15,7 +15,7 @@ export async function upsertProduct(
     created_at,
   }
 ) {
-  const { company_id, user_id } = getActiveContextSync();
+  const { company_id, user_id } = getActiveContextSync(db);
 
   const now = new Date().toISOString();
 
@@ -113,7 +113,6 @@ export async function upsertProduct(
     }
 
     await db.runAsync("COMMIT");
-
     // 🔥 3️⃣ SYNC EVENT (PRODUCT ONLY)
     await syncEvent(db, {
       model: "products",

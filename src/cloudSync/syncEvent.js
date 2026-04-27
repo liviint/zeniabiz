@@ -1,5 +1,5 @@
 import { addToQueue } from "./queue";
-import { newUuid } from "./utils";
+import { generateUUID } from "./utils";
 
 export async function syncEvent(db, {
   model,
@@ -9,16 +9,16 @@ export async function syncEvent(db, {
   const now = new Date().toISOString();
 
   const event = {
-    id: newUuid(),
+    id: generateUUID(),
     model,
     operation,
     payload,
-    client_request_id: newUuid(),
+    client_request_id: generateUUID(),
     created_at: now,
     status: "pending"
   };
 
-  await addToQueue(db, event);
+  // await addToQueue(db, event);
 
-  return event.id;
+  // return event.id;
 }

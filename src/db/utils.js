@@ -70,6 +70,8 @@ export async function loadActiveContext(db) {
     ["active_company_id"]
   );
 
+  console.log(user,setting,"hello user setting")
+
   cachedContext = {
     user_id: user?.id,
     company_id: setting?.value
@@ -77,11 +79,11 @@ export async function loadActiveContext(db) {
 
   return cachedContext;
 }
-
 export function getActiveContextSync() {
   if (!cachedContext) {
-    throw new Error("Context not loaded");
+    throw new Error("Context not loaded. Call loadActiveContext first.");
   }
+  console.log(cachedContext,"hello cached co")
   return cachedContext;
 }
 
