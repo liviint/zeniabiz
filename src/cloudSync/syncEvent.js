@@ -1,5 +1,6 @@
 import { addToQueue } from "./queue";
 import { generateUUID } from "./utils";
+import { triggerSync } from "./triggerSync";
 
 export async function syncEvent(db, {
   model,
@@ -18,7 +19,8 @@ export async function syncEvent(db, {
     status: "pending"
   };
 
-  // await addToQueue(db, event);
+  await addToQueue(db, event);
+  triggerSync(db);
 
-  // return event.id;
+  return event.id;
 }

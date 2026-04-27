@@ -23,8 +23,8 @@
       "predictiveBackGestureEnabled": false,
       "googleServicesFile": "./google-services.json",
       "permissions": [
-          "com.google.android.gms.permission.AD_ID"
-        ]
+        "com.google.android.gms.permission.AD_ID"
+      ]
     },
     "web": {
       "output": "static",
@@ -47,7 +47,8 @@
       "expo-sqlite",
       "@react-native-community/datetimepicker",
       "@react-native-firebase/app",
-      "@react-native-firebase/crashlytics"
+      "@react-native-firebase/crashlytics",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -59,7 +60,6 @@
         "projectId": "758ebee6-7784-4acb-aac9-5b5a861204c8"
       }
     },
-    
     "owner": "zeniabiz"
   }
 }

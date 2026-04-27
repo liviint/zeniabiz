@@ -1,63 +1,42 @@
-import axios from 'axios'
+import axios from "axios";
 
 export async function sendBulkSync(model, items) {
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 15000) // 15s timeout
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
 
   try {
-    const res = await axios(`http://localhost:8000/api/${model}/bulk_sync/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        // "Authorization": `Bearer ${token}` // add later if needed
-      },
-      body: JSON.stringify({ items }),
-      signal: controller.signal
-    })
-
-    clearTimeout(timeout)
-
-    // 🔴 Server responded but with error status
-    if (!res.ok) {
-      let errorData = null
-
-      try {
-        errorData = await res.json()
-      } catch {
-        errorData = { detail: "Unknown server error" }
+    const res = await axios.post(
+      `http://localhost:8000/api/${model}/bulk_sync/`,
+      { items },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        signal: controller.signal,
       }
+    );
 
-      return {
-        ok: false,
-        type: "server",
-        status: res.status,
-        error: errorData
-      }
-    }
-
-    // ✅ Success
-    const data = await res.json()
+    clearTimeout(timeout);
 
     return {
       ok: true,
-      data
-    }
-
+      data: res.data,
+    };
   } catch (err) {
-    clearTimeout(timeout)
+    clearTimeout(timeout);
 
-    if (err.name === "AbortError") {
+    if (err.name === "CanceledError" || err.name === "AbortError") {
       return {
         ok: false,
         type: "timeout",
-        error: "Request timed out"
-      }
+        error: "Request timed out",
+      };
     }
 
     return {
       ok: false,
       type: "network",
-      error: err.message
-    }
+      error: err.message,
+    };
   }
 }
