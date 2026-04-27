@@ -3,14 +3,21 @@ import CategoriesProvider from "./CategoriesProvider";
 import CompanyProvider from "./CompanyProvider"
 
 const migrateDbIfNeeded = async (db) => {
-
   
-  /* await db.execAsync(`DROP TABLE IF EXISTS expenses;`);
+  /* 
+  await db.execAsync(`DROP TABLE IF EXISTS companies;`);
+  await db.execAsync(`DROP TABLE IF EXISTS company_members;`);
+  await db.execAsync(`DROP TABLE IF EXISTS local_user;`);
+
+  await db.execAsync(`DROP TABLE IF EXISTS expenses;`);
   await db.execAsync(`DROP TABLE IF EXISTS expense_categories;`);
   await db.execAsync(`DROP TABLE IF EXISTS expense_templates;`);
+
   await db.execAsync(`DROP TABLE IF EXISTS products;`);
+  await db.execAsync(`DROP TABLE IF EXISTS inventory_batches;`);
+  await db.execAsync(`DROP TABLE IF EXISTS inventory_movements;`);
+
   await db.execAsync(`DROP TABLE IF EXISTS sales;`); 
-  await db.execAsync(`DROP TABLE IF EXISTS inventory_batches;`); 
   await db.execAsync(`DROP TABLE IF EXISTS sale_items;`); */
   
 
