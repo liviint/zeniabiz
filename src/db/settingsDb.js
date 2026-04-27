@@ -1,4 +1,4 @@
-import { syncEvent } from "../cloudSync/enqueue";
+import { syncEvent } from "../cloudSync/syncEvent";
 
 export const getSetting = async (db, key) => {
     const row = await db.getFirstAsync(

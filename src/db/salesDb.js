@@ -1,6 +1,6 @@
 import uuid from "react-native-uuid";
 import { getMonthRange, getActiveContextSync } from "./utils";
-import { syncEvent } from "../cloudSync/enqueue";
+import { syncEvent } from "../cloudSync/syncEvent";
 
 const newUuid = () => uuid.v4();
 
