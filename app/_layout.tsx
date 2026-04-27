@@ -50,7 +50,6 @@ export default function RootLayout() {
                   }}
                 />
               </Stack>
-              
            {/*  </DonateProvider> */}
           </AppLockProvider>
         </AppDataProvider>
