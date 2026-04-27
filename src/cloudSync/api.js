@@ -1,11 +1,11 @@
-// sync/api.js
+import axios from 'axios'
 
 export async function sendBulkSync(model, items) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 15000) // 15s timeout
 
   try {
-    const res = await fetch(`/api/${model}/bulk_sync/`, {
+    const res = await axios(`http://localhost:8000/api/${model}/bulk_sync/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
