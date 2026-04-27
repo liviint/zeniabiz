@@ -114,7 +114,7 @@ export async function upsertProduct(
 
     await db.runAsync("COMMIT");
     // 🔥 3️⃣ SYNC EVENT (PRODUCT ONLY)
-    await syncEvent(db, {
+    syncEvent(db, {
       model: "products",
       operation: "upsert",
       payload: {
@@ -133,12 +133,15 @@ export async function upsertProduct(
         updated_at: now,
         deleted_at: null
       }
-    });
+    })
+    .catch(err => {
+  console.error("Sync failed:", err);
+});
 
     // 🔥 4️⃣ OPTIONAL (IMPORTANT IMPROVEMENT)
     // You SHOULD also sync inventory events separately:
     if (isNew && stock_quantity > 0) {
-      await syncEvent(db, {
+      syncEvent(db, {
         model: "inventory_batches",
         operation: "insert",
         payload: {
@@ -156,9 +159,12 @@ export async function upsertProduct(
           created_by: user_id,
           updated_by: user_id
         }
-      });
+      })
+      .catch(err => {
+  console.error("Sync failed:", err);
+});
 
-      await syncEvent(db, {
+      syncEvent(db, {
         model: "inventory_movements",
         operation: "insert",
         payload: {
@@ -177,6 +183,9 @@ export async function upsertProduct(
           created_by: user_id,
           updated_by: user_id
         }
+      })
+      .catch(err => {
+        console.error("Sync failed:", err);
       });
     }
 
@@ -322,14 +331,17 @@ export async function deleteProduct(db, id) {
     await db.runAsync("COMMIT");
 
     // 🔥 SYNC EVENT (AFTER COMMIT)
-    await syncEvent(db, {
+    syncEvent(db, {
       model: "products",
       operation: "delete",
       payload: {
         id,
         deleted_at: now
       }
-    });
+    })
+    .catch(err => {
+  console.error("Sync failed:", err);
+});
 
   } catch (error) {
     await db.runAsync("ROLLBACK");
@@ -400,7 +412,7 @@ export const restockProduct = async (db, productId, form) => {
 
     // 🔥 4️⃣ SYNC REAL ENTITIES (NOT BUSINESS EVENT)
 
-    await syncEvent(db, {
+    syncEvent(db, {
       model: "inventory_batches",
       operation: "insert",
       payload: {
@@ -418,9 +430,12 @@ export const restockProduct = async (db, productId, form) => {
         updated_at: now,
         deleted_at: null
       }
-    });
+    })
+    .catch(err => {
+  console.error("Sync failed:", err);
+});
 
-    await syncEvent(db, {
+    syncEvent(db, {
       model: "inventory_movements",
       operation: "insert",
       payload: {
@@ -439,7 +454,10 @@ export const restockProduct = async (db, productId, form) => {
         updated_at: now,
         deleted_at: null
       }
-    });
+    })
+    .catch(err => {
+  console.error("Sync failed:", err);
+});
 
     return batchId;
 

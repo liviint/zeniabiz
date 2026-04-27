@@ -119,7 +119,7 @@ export const upsertCategory = async (db, { id, name, color, icon }) => {
     await db.runAsync("COMMIT");
 
     // 2️⃣ Sync event (after commit only)
-    await syncEvent(db, {
+    syncEvent(db, {
       model: "expense_categories",
       operation: "upsert",
       payload: {
@@ -136,7 +136,10 @@ export const upsertCategory = async (db, { id, name, color, icon }) => {
         updated_at: now,
         deleted_at: null
       }
-    });
+    })
+    .catch(err => {
+  console.error("Sync failed:", err);
+});
 
     return categoryId;
 
@@ -174,14 +177,17 @@ export const deleteCategory = async (db, id) => {
     await db.runAsync("COMMIT");
 
     // 🔥 SYNC EVENT (after commit)
-    await syncEvent(db, {
+    syncEvent(db, {
       model: "expense_categories",
       operation: "delete",
       payload: {
         id,
         deleted_at: now
       }
-    });
+    })
+    .catch(err => {
+  console.error("Sync failed:", err);
+});
 
   } catch (error) {
     await db.runAsync("ROLLBACK");

@@ -26,7 +26,6 @@ export default function ProductsListPage() {
   const fetchProducts = async () => {
     setIsLoading(true);
     const data = await getProducts(db, { search: debouncedSearch, filter });
-    console.log(data,"hello data")
     setProducts(data);
     setIsLoading(false);
   };

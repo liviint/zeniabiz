@@ -1,9 +1,8 @@
 import uuid from "react-native-uuid";
-import { syncEvent } from "../cloudSync/enqueue";
+import { syncEvent } from "../cloudSync/syncEvent";
 import { getActiveContextSync } from "./utils";
 
 const newUuid = () => uuid.v4();
-
 
 export async function upsertExpense(
   db,
@@ -78,8 +77,10 @@ export async function upsertExpense(
 
     await db.runAsync("COMMIT");
 
+    console.log("hello here122")
+
     // 2️⃣ SYNC EVENT (AFTER COMMIT ONLY)
-    await syncEvent(db, {
+    syncEvent(db, {
       model: "expenses",
       operation: "upsert",
       payload: {
@@ -101,6 +102,9 @@ export async function upsertExpense(
         updated_at: now,
         deleted_at: null
       }
+    })
+    .catch(err => {
+      console.error("Sync enqueue failed:", err);
     });
 
     return expenseId;
@@ -163,7 +167,7 @@ export async function deleteExpense(db, id) {
     await db.runAsync("COMMIT");
 
     // 🔥 2️⃣ SYNC EVENT (AFTER COMMIT)
-    await syncEvent(db, {
+    syncEvent(db, {
       model: "expenses",
       operation: "delete",
       payload: {
@@ -171,7 +175,10 @@ export async function deleteExpense(db, id) {
         deleted_at: now,
         updated_at: now
       }
-    });
+    })
+    .catch(err => {
+  console.error("Sync failed:", err);
+});
 
   } catch (error) {
     await db.runAsync("ROLLBACK");

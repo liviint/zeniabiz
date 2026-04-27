@@ -68,7 +68,6 @@ export default function AddEdit() {
   } 
 
 const isFormValid = () => {
-  console.log(form,"hello form")
   if (!form.title.trim()) {
     Alert.alert("Missing title", "Please enter a title for the transaction.");
     return false;
@@ -95,7 +94,6 @@ const isFormValid = () => {
 };
 
   const handleUseTemplate = (template) => {
-    console.log(template,"hello template")
     setForm((prev) => ({
       ...prev,
       title: template.title || "",
@@ -108,8 +106,6 @@ const isFormValid = () => {
     }));
     setShowTemplates(false);
   };
-
-
 
   const handleSave = async () => {
     if(!isFormValid()) return
@@ -125,7 +121,6 @@ const isFormValid = () => {
     if(!id) return
     let getTransaction = async() => {
       let transaction = await getTransactionById(db,id)
-      console.log(transaction,"hello trans")
       let date = transaction.date ? new Date(transaction.date) : new Date()
       setForm({...transaction,date})
     }
@@ -266,7 +261,7 @@ const isFormValid = () => {
 
         <TouchableOpacity style={globalStyles.primaryBtn} onPress={handleSave}>
           <Text style={globalStyles.primaryBtnText}>
-            {id ? "Update Transaction" : "Save Transaction"}
+            {id ? "Update Expense" : "Save Expense"}
           </Text>
         </TouchableOpacity>
 
