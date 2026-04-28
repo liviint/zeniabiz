@@ -14,14 +14,11 @@ export const testSetUp = async(db) => {
         `SELECT * FROM companies LIMIT 1`
       );
 
-      const settings = await db.getAllAsync(
-        `SELECT * FROM app_settings`
-      );
+      
 
       console.log("📦 SESSION:", session);
       console.log("👤 USER:", user);
       console.log("🏢 COMPANY:", company);
-      console.log("⚙️ SETTINGS:", settings);
 
       if (!session) {
         console.warn("⚠️ No active session found");

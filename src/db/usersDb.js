@@ -21,39 +21,55 @@ export async function ensureLocalUser(db) {
 export async function upsertLocalUser(db, user) {
   const now = new Date().toISOString();
 
-  const session = await db.getFirstAsync(
-    `SELECT user_uuid FROM app_session LIMIT 1`
-  );
+  try {
+    console.log("🔄 upsertLocalUser START");
+    console.log("👤 Incoming user:", user);
 
-  if (!session) {
-    throw new Error("No active session");
+    const session = await db.getFirstAsync(
+      `SELECT user_uuid FROM app_session LIMIT 1`
+    );
+
+    console.log("📦 Session found:", session);
+
+    if (!session) {
+      throw new Error("No active session found in app_session");
+    }
+
+    const result = await db.runAsync(
+      `
+      UPDATE local_user
+      SET 
+        name = ?,
+        email = ?,
+        is_synced = 1,
+        last_synced_at = ?,
+        updated_at = ?
+      WHERE uuid = ?
+      `,
+      [
+        user.username || "",
+        user.email || "",
+        now,
+        now,
+        session.user_uuid
+      ]
+    );
+
+    console.log("✅ Local user updated successfully:", result);
+
+    return session.user_uuid;
+
+  } catch (error) {
+    console.error("❌ upsertLocalUser FAILED");
+    console.error("Error message:", error.message);
+    console.error("Stack trace:", error.stack);
+
+    // optional: rethrow so UI can handle it
+    throw error;
+  } finally {
+    console.log("🏁 upsertLocalUser END");
   }
-
-  await db.runAsync(
-    `
-    UPDATE local_user
-    SET 
-      server_user_id = ?,
-      name = ?,
-      email = ?,
-      is_synced = 1,
-      last_synced_at = ?,
-      updated_at = ?
-    WHERE uuid = ?
-    `,
-    [
-      user.id,
-      user.username || "",
-      user.email || "",
-      now,
-      now,
-      session.user_uuid
-    ]
-  );
-
-  return session.user_uuid;
 }
-
 export const getLocalUser = async (db) => {
   return await db.getFirstAsync(
     `SELECT * FROM local_user WHERE deleted_at IS NULL LIMIT 1`
@@ -69,35 +85,70 @@ export async function getCurrentSession(db) {
 export async function createSession(db, { user, access, refresh }) {
   const now = new Date().toISOString();
 
-  const localUser = await db.getFirstAsync(
-    `SELECT uuid FROM local_user LIMIT 1`
-  );
+  try {
+    console.log("🔐 createSession START");
+    console.log("👤 User payload:", user);
+    console.log("🔑 Access token exists:", !!access);
 
-  if (!localUser) {
-    throw new Error("Local user missing");
-  }
+    const localUser = await db.getFirstAsync(
+      `SELECT uuid FROM local_user LIMIT 1`
+    );
 
-  await db.runAsync(`DELETE FROM app_session`);
+    const session = await db.getFirstAsync(
+    `SELECT company_uuid FROM app_session LIMIT 1`
+    );
 
-  await db.runAsync(
-    `
-    INSERT INTO app_session (
-      user_uuid,
-      company_uuid,
-      access_token,
-      refresh_token,
-      created_at,
-      updated_at
-    )
-    VALUES (?, ?, ?, ?, ?, ?)
-    `,
-    [
-      localUser.uuid,   // 🔥 THIS MUST NEVER BE NULL
-      null,
+    const companyUuid = session?.company_uuid || null;
+
+    console.log("📦 Local user from DB:", localUser);
+
+    if (!localUser) {
+      throw new Error("Local user missing in local_user table");
+    }
+
+    console.log("🧹 Clearing old session...");
+    await db.runAsync(`DELETE FROM app_session`);
+
+    console.log("💾 Inserting new session...");
+
+    const result = await db.runAsync(
+      `
+      INSERT INTO app_session (
+        user_uuid,
+        company_uuid,
+        access_token,
+        refresh_token,
+        created_at,
+        updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?)
+      `,
+      [
+        localUser.uuid,   // MUST NEVER BE NULL
+        companyUuid,
+        access,
+        refresh,
+        now,
+        now
+      ]
+    );
+
+    console.log("✅ Session created successfully:", result);
+
+    return {
+      user_uuid: localUser.uuid,
       access,
-      refresh,
-      now,
-      now
-    ]
-  );
+      refresh
+    };
+
+  } catch (error) {
+    console.error("❌ createSession FAILED");
+    console.error("Message:", error.message);
+    console.error("Stack:", error.stack);
+
+    throw error;
+
+  } finally {
+    console.log("🏁 createSession END");
+  }
 }
