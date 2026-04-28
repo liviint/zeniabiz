@@ -16,8 +16,11 @@ import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import { Card, BodyText } from "../../../../src/components/ThemeProvider/components";
 import PageLoader from "../../../../src/components/common/PageLoader";
 import { useIsFocused } from "@react-navigation/native";
+import { useSQLiteContext } from "expo-sqlite";
+import { testSetUp } from "../../../../src/db/testingDb";
 
 const ProfileView = () => {
+  const db = useSQLiteContext()
   const {globalStyles} = useThemeStyles()
   const router = useRouter();
   const isFocused = useIsFocused()
@@ -79,6 +82,11 @@ const handleTriggerLogout = () => {
       }
       else setUserData(null)
   },[user, refresh, isFocused])
+useEffect(() => {
+  (async () => {
+    testSetUp(db)
+  })();
+}, []);
 
   if (loading) return <PageLoader />
 

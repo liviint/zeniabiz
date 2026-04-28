@@ -9,7 +9,7 @@ export async function ensureLocalCompany(db, userUuid) {
 
   const now = new Date().toISOString();
 
-  // If company exists, just sync into session
+  // 1. If company exists → just update session
   if (existing) {
     await db.runAsync(
       `
@@ -28,7 +28,7 @@ export async function ensureLocalCompany(db, userUuid) {
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
-    // 1. Create company
+    // 2. Create company (use userUuid directly)
     await db.runAsync(
       `
       INSERT INTO companies (
@@ -43,7 +43,7 @@ export async function ensureLocalCompany(db, userUuid) {
       [companyUuid, companyName, userUuid, now, now]
     );
 
-    // 2. Add owner as member
+    // 3. Add owner as member
     await db.runAsync(
       `
       INSERT INTO company_members (
@@ -59,7 +59,7 @@ export async function ensureLocalCompany(db, userUuid) {
       [newUuid(), companyUuid, userUuid, now, now]
     );
 
-    // 3. Set active company in session (SOURCE OF TRUTH)
+    // 4. FIXED: update session cleanly using passed userUuid
     await db.runAsync(
       `
       INSERT INTO app_session (
@@ -68,16 +68,9 @@ export async function ensureLocalCompany(db, userUuid) {
         created_at,
         updated_at
       )
-      VALUES (
-        (SELECT user_uuid FROM app_session LIMIT 1),
-        ?,
-        ?,
-        ?
-      )
-      ON CONFLICT(user_uuid)
-      DO UPDATE SET company_uuid = excluded.company_uuid
+      VALUES (?, ?, ?, ?)
       `,
-      [companyUuid, now, now]
+      [userUuid, companyUuid, now, now]
     );
 
     await db.runAsync("COMMIT");

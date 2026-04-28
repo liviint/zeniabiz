@@ -80,25 +80,24 @@ export async function createSession(db, { user, access, refresh }) {
   await db.runAsync(`DELETE FROM app_session`);
 
   await db.runAsync(
-  `
-  INSERT INTO app_session (
-    user_uuid,
-    company_uuid,
-    access_token,
-    refresh_token,
-    created_at,
-    updated_at
-  )
-  VALUES (?, ?, ?, ?, ?, ?)
-  `,
-  [
-    localUser.uuid,
-    null, // or active company later
-    access,
-    refresh,
-    now,
-    now,
-  ]
-);
-
+    `
+    INSERT INTO app_session (
+      user_uuid,
+      company_uuid,
+      access_token,
+      refresh_token,
+      created_at,
+      updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?)
+    `,
+    [
+      localUser.uuid,   // 🔥 THIS MUST NEVER BE NULL
+      null,
+      access,
+      refresh,
+      now,
+      now
+    ]
+  );
 }

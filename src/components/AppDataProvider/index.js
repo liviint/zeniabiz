@@ -22,6 +22,8 @@ const migrateDbIfNeeded = async (db) => {
 
   await db.execAsync(`DROP TABLE IF EXISTS sales;`); 
   await db.execAsync(`DROP TABLE IF EXISTS sale_items;`);
+  
+  await db.execAsync(`DROP TABLE IF EXISTS app_settings;`);
    */
   
 
