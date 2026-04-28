@@ -3,7 +3,7 @@ import CategoriesProvider from "./CategoriesProvider";
 import CompanyProvider from "./CompanyProvider"
 
 const migrateDbIfNeeded = async (db) => {
-  
+
   /* 
   await db.execAsync(`DROP TABLE IF EXISTS companies;`);
   await db.execAsync(`DROP TABLE IF EXISTS company_members;`);
@@ -25,7 +25,7 @@ const migrateDbIfNeeded = async (db) => {
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
     CREATE TABLE IF NOT EXISTS companies (
-      id TEXT PRIMARY KEY,
+      uuid TEXT PRIMARY KEY,
 
       name TEXT NOT NULL,
       owner_id TEXT NOT NULL,
@@ -40,7 +40,7 @@ const migrateDbIfNeeded = async (db) => {
     );
 
   CREATE TABLE IF NOT EXISTS company_members (
-    id TEXT PRIMARY KEY,
+    uuid TEXT PRIMARY KEY,
 
     company_id TEXT NOT NULL,
     user_id TEXT NOT NULL,
@@ -54,13 +54,13 @@ const migrateDbIfNeeded = async (db) => {
   );
 
   CREATE TABLE IF NOT EXISTS local_user (
-    id TEXT PRIMARY KEY,
-    server_user_id TEXT,
+    uuid TEXT PRIMARY KEY,
 
     device_id TEXT,
 
     name TEXT,
     email TEXT,
+    active INTEGER DEFAULT 1,
 
     is_synced INTEGER DEFAULT 0,
     last_synced_at TEXT,
@@ -68,6 +68,19 @@ const migrateDbIfNeeded = async (db) => {
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
     deleted_at TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS app_session (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    user_uuid TEXT,
+    company_uuid TEXT,
+
+    access_token TEXT,
+    refresh_token TEXT,
+
+    created_at TEXT,
+    updated_at TEXT
   );
 
   CREATE INDEX IF NOT EXISTS idx_company_members_company 

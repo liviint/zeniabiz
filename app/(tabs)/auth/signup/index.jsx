@@ -13,14 +13,19 @@ import { validateEmail } from "../../../../src/helpers";
 import { Card, FormLabel, Input, BodyText } from "../../../../src/components/ThemeProvider/components";
 import { useRouter } from "expo-router";
 import { safeLocalStorage } from "../../../../utils/storage";
+import { getLocalUser } from "../../../../src/db/usersDb";
+import { useSQLiteContext } from "expo-sqlite";
 
 const Signup = () => {
   const router = useRouter()
+  const db = useSQLiteContext()
   const { globalStyles } = useThemeStyles();
+  let localUser = getLocalUser(db)
   let initialForm = {
     email: "",
     password: "",
     source:"app",
+    uuid:localUser.uuid,
   }
   const [formData, setFormData] = useState(initialForm);
   const [errors, setErrors] = useState({});

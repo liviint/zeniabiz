@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useDispatch } from "react-redux";
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { setUserDetails } from "@/store/features/userSlice";
 import { api } from "../../../../api";
 import { safeLocalStorage } from "../../../../utils/storage";
@@ -15,10 +15,12 @@ import * as WebBrowser from "expo-web-browser";
 import { validateEmail } from "../../../../src/helpers";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import { Card, BodyText, FormLabel, Input } from "../../../../src/components/ThemeProvider/components";
-
+import { upsertLocalUser, createSession, syncLocalUserWithServer } from "../../../../src/db/usersDb";
+import { useSQLiteContext } from "expo-sqlite";
 WebBrowser.maybeCompleteAuthSession();
 
 export default function Index() {
+  const db = useSQLiteContext();
   const { globalStyles } = useThemeStyles();
   const router = useRouter();
   const dispatch = useDispatch();
@@ -49,30 +51,45 @@ export default function Index() {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) return;
-    setLoading(true);
-    setServerError("");
-    setSuccess(false);
+  if (!validateForm()) return;
 
-    try {
-      safeLocalStorage.removeItem("token")
-      const response = await api.post("accounts/login/", {...formData,email: formData.email.trim().toLowerCase()});
-      dispatch(setUserDetails(response.data));
-      console.log(response.data,"hello res")
-      safeLocalStorage.setItem("token", response.data.access);
-      setSuccess(true);
-      router.push("/auth/profile");
-      setFormData({ email: "", password: "" });
-    } catch (error) {
-      console.error("Login failed:", error?.response);
-      setServerError(
-        error.response?.data?.message || error?.response?.data?.non_field_errors ||
-          "Invalid credentials. Please try again."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  setServerError("");
+  setSuccess(false);
+
+  try {
+    safeLocalStorage.removeItem("token");
+
+    const response = await api.post("accounts/login/", {
+      ...formData,
+      email: formData.email.trim().toLowerCase(),
+    });
+
+
+    const { access, refresh, user } = response.data;
+    await safeLocalStorage.setItem("token", access);
+    await upsertLocalUser(db, user);
+    await createSession(db, { user, access, refresh });
+
+    dispatch(setUserDetails(response.data));
+
+    setSuccess(true);
+    router.push("/auth/profile");
+
+    setFormData({ email: "", password: "" });
+
+  } catch (error) {
+    console.error("Login failed:", error?.response);
+
+    setServerError(
+      error.response?.data?.message ||
+      error?.response?.data?.non_field_errors ||
+      "Invalid credentials. Please try again."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <View style={{...globalStyles.container,...styles.container}}>
@@ -119,11 +136,11 @@ export default function Index() {
           </View>
         </View>
 
-        <View style={styles.forgotPass}>
-          <Link style={styles.forgotPassText} href="/reset-password">
+        {/* <View style={styles.forgotPass}>
+          <Link disabled style={styles.forgotPassText} href="/auth/reset-password">
             Forgot password?
           </Link>
-        </View>
+        </View> */}
 
         <TouchableOpacity
           onPress={handleSubmit}

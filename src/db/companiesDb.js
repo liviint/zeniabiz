@@ -4,15 +4,15 @@ const newUuid = () => uuid.v4();
 
 export async function ensureLocalUser(db) {
   const existing = await db.getFirstAsync(
-    `SELECT * FROM local_user LIMIT 1`
-  );
+  `SELECT * FROM local_user WHERE deleted_at IS NULL LIMIT 1`
+);
 
-  if (existing) return existing.id;
+  if (existing) return existing.uuid;
 
   const userId = newUuid();
 
   await db.runAsync(
-    `INSERT INTO local_user (id, created_at) VALUES (?, datetime('now'))`,
+    `INSERT INTO local_user (uuid, created_at) VALUES (?, datetime('now'))`,
     [userId]
   );
 
@@ -49,7 +49,7 @@ export async function ensureLocalCompany(db, userId) {
     await db.runAsync(
       `
       INSERT INTO companies (
-        id,
+        uuid,
         name,
         owner_id,
         created_at,
@@ -63,7 +63,7 @@ export async function ensureLocalCompany(db, userId) {
     await db.runAsync(
       `
       INSERT INTO company_members (
-        id,
+        uuid,
         company_id,
         user_id,
         role,

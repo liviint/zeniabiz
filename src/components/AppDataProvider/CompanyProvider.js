@@ -9,10 +9,20 @@ export default function AppDataProvider({ children }) {
 
  useEffect(() => {
   (async () => {
-    const userId = await ensureLocalUser(db);
-    await ensureLocalCompany(db, userId);
+    const session = await db.getFirstAsync(
+      `SELECT * FROM app_session LIMIT 1`
+    );
 
-    await loadActiveContext(db);
+    if (session) {
+      // ✅ Logged in → load context
+      await loadActiveContext(db);
+    } else {
+      // ✅ First time / not logged in → create local identity
+      const userUuid = await ensureLocalUser(db);
+      await ensureLocalCompany(db, userUuid);
+
+      await loadActiveContext(db);
+    }
   })();
 }, []);
 
