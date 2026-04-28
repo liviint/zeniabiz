@@ -9,11 +9,11 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter , useFocusEffect, useLocalSearchParams} from "expo-router";
 import { clearUserDetails } from "@/store/features/userSlice";
-import { api } from "../../../api";
-import AccountInfoPage from "../../../src/components/common/AccountInfoPage";
-import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
-import { Card, BodyText } from "../../../src/components/ThemeProvider/components";
-import PageLoader from "../../../src/components/common/PageLoader";
+import { api } from "../../../../api";
+import AccountInfoPage from "../../../../src/components/common/AccountInfoPage";
+import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
+import { Card, BodyText } from "../../../../src/components/ThemeProvider/components";
+import PageLoader from "../../../../src/components/common/PageLoader";
 
 const ProfileView = () => {
   const {globalStyles} = useThemeStyles()

@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useDispatch } from "react-redux";
-import { setUserDetails } from "../../../store/features/userSlice";
-import { api } from "../../../api";
-import { safeLocalStorage } from "../../../utils/storage";
-import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import { setUserDetails } from "../../../../store/features/userSlice";
+import { api } from "../../../../api";
+import { safeLocalStorage } from "../../../../utils/storage";
+import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 
 export default function VerifyEmail() {
   const {globalStyles} = useThemeStyles()

@@ -74,6 +74,13 @@ export default function TabLayout() {
         />
 
         <Tabs.Screen
+          name="auth"
+          options={{
+            href: null,
+          }}
+      />
+
+        <Tabs.Screen
           name="settings/index"
           options={{
             href: null,
@@ -86,54 +93,6 @@ export default function TabLayout() {
             href: null,
           }}
         />
-
-        <Tabs.Screen
-          name="profile/index"
-          options={{
-            href: null,
-          }}
-        />
-
-        <Tabs.Screen
-          name="profile/edit/index"
-          options={{
-            href: null,
-          }}
-        />
-        
-        <Tabs.Screen
-          name="login/index"
-          options={{
-            href: null,
-          }}
-      />
-      <Tabs.Screen
-        name="reset-password/index"
-        options={{
-          href: null,
-        }}
-      />
-
-      <Tabs.Screen
-        name="signup/index"
-        options={{
-          href: null,
-        }}
-      />
-
-      <Tabs.Screen
-        name="verify-email/index"
-        options={{
-          href: null,
-        }}
-      />
-
-      <Tabs.Screen
-        name="reset-password-confirm/index"
-        options={{
-          href: null,
-        }}
-      /> 
 
         <Tabs.Screen
           name="[...notfound]"

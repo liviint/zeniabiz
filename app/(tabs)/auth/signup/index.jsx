@@ -7,10 +7,10 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
-import { api } from "../../../api";
-import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
-import { validateEmail } from "../../../src/helpers";
-import { Card, FormLabel, Input, BodyText } from "../../../src/components/ThemeProvider/components";
+import { api } from "../../../../api";
+import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
+import { validateEmail } from "../../../../src/helpers";
+import { Card, FormLabel, Input, BodyText } from "../../../../src/components/ThemeProvider/components";
 import { useRouter } from "expo-router";
 
 const Signup = () => {

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { View } from 'react-native';
-import ResetPassword from '../../../src/components/ResetPassword/ResetPasswordConfirm';
-import PageLoader from '../../../src/components/common/PageLoader';
-import { useThemeStyles } from '../../../src/hooks/useThemeStyles';
+import ResetPassword from '../../../../src/components/ResetPassword/ResetPasswordConfirm';
+import PageLoader from '../../../../src/components/common/PageLoader';
+import { useThemeStyles } from '../../../../src/hooks/useThemeStyles';
 
 const ResetPasswordScreen = () => {
   const [loading, setLoading] = useState(true);

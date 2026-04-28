@@ -9,10 +9,10 @@ import {
 } from "react-native";
 import { useSelector } from "react-redux";
 import { useRouter } from "expo-router";
-import { api } from "../../../../api";
-import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
-import { Card, BodyText, Input, TextArea } from "../../../../src/components/ThemeProvider/components";
-import PageLoader from "../../../../src/components/common/PageLoader";
+import { api } from "../../../../../api";
+import { useThemeStyles } from "../../../../../src/hooks/useThemeStyles";
+import { Card, BodyText, Input, TextArea } from "../../../../../src/components/ThemeProvider/components";
+import PageLoader from "../../../../../src/components/common/PageLoader";
 
 const ProfilePage = () => {
   const {globalStyles} = useThemeStyles()
