@@ -1,12 +1,14 @@
 import axios from "axios";
+let BASE_URL = "http://192.168.8.95:8000/api"
 
 export async function sendBulkSync(model, items) {
+  console.log(model,items,"hello model items sync")
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
 
   try {
     const res = await axios.post(
-      `http://localhost:8000/api/${model}/bulk_sync/`,
+      `${BASE_URL}/core/${model}/bulk_sync/`,
       { items },
       {
         headers: {
