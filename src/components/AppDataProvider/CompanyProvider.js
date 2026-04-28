@@ -14,13 +14,10 @@ export default function AppDataProvider({ children }) {
     );
 
     if (session) {
-      // ✅ Logged in → load context
       await loadActiveContext(db);
     } else {
-      // ✅ First time / not logged in → create local identity
       const userUuid = await ensureLocalUser(db);
       await ensureLocalCompany(db, userUuid);
-
       await loadActiveContext(db);
     }
   })();

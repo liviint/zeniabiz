@@ -61,29 +61,23 @@ export const getPeriodRange = (startDate, period) => {
 let cachedContext = null;
 
 export async function loadActiveContext(db) {
-  const user = await db.getFirstAsync(
-    `SELECT * FROM local_user LIMIT 1`
+  const session = await db.getFirstAsync(
+    `SELECT user_uuid, company_uuid FROM app_session LIMIT 1`
   );
 
-  const setting = await db.getFirstAsync(
-    `SELECT value FROM app_settings WHERE key = ?`,
-    ["active_company_id"]
-  );
-
-  console.log(user,setting,"hello user setting")
-
-  cachedContext = {
-    user_id: user?.id,
-    company_id: setting?.value
+  const context = {
+    user_id: session?.user_uuid ?? null,
+    company_id: session?.company_uuid ?? null,
   };
 
-  return cachedContext;
+  cachedContext = context;
+  return context;
 }
+
 export function getActiveContextSync() {
   if (!cachedContext) {
     throw new Error("Context not loaded. Call loadActiveContext first.");
   }
-  console.log(cachedContext,"hello cached co")
   return cachedContext;
 }
 

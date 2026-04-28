@@ -18,48 +18,49 @@ export async function ensureLocalUser(db) {
 
   return userId;
 }
-export async function ensureLocalCompany(db, userId) {
+
+export async function ensureLocalCompany(db, userUuid) {
   const existing = await db.getFirstAsync(
     `SELECT * FROM companies LIMIT 1`
   );
 
   const now = new Date().toISOString();
 
-  // ✅ If company exists → ensure it's active
+  // If company exists, just sync into session
   if (existing) {
     await db.runAsync(
       `
-      INSERT INTO app_settings (key, value)
-      VALUES ('active_company_id', ?)
-      ON CONFLICT(key) DO UPDATE SET value = excluded.value
+      UPDATE app_session
+      SET company_uuid = ?, updated_at = ?
       `,
-      [existing.id]
+      [existing.uuid, now]
     );
 
     return existing;
   }
 
-  // 🆕 Create new company
-  const companyId = newUuid();
+  const companyUuid = newUuid();
   const companyName = "My Business";
 
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
+    // 1. Create company
     await db.runAsync(
       `
       INSERT INTO companies (
         uuid,
         name,
-        owner_id,
+        owner,
         created_at,
         updated_at
       )
       VALUES (?, ?, ?, ?, ?)
       `,
-      [companyId, companyName, userId, now, now]
+      [companyUuid, companyName, userUuid, now, now]
     );
 
+    // 2. Add owner as member
     await db.runAsync(
       `
       INSERT INTO company_members (
@@ -72,25 +73,36 @@ export async function ensureLocalCompany(db, userId) {
       )
       VALUES (?, ?, ?, 'owner', ?, ?)
       `,
-      [newUuid(), companyId, userId, now, now]
+      [newUuid(), companyUuid, userUuid, now, now]
     );
 
-    // 🔥 SET ACTIVE COMPANY HERE
+    // 3. Set active company in session (SOURCE OF TRUTH)
     await db.runAsync(
       `
-      INSERT INTO app_settings (key, value)
-      VALUES ('active_company_id', ?)
-      ON CONFLICT(key) DO UPDATE SET value = excluded.value
+      INSERT INTO app_session (
+        user_uuid,
+        company_uuid,
+        created_at,
+        updated_at
+      )
+      VALUES (
+        (SELECT user_uuid FROM app_session LIMIT 1),
+        ?,
+        ?,
+        ?
+      )
+      ON CONFLICT(user_uuid)
+      DO UPDATE SET company_uuid = excluded.company_uuid
       `,
-      [companyId]
+      [companyUuid, now, now]
     );
 
     await db.runAsync("COMMIT");
 
     return {
-      id: companyId,
+      uuid: companyUuid,
       name: companyName,
-      owner_id: userId
+      owner: userUuid,
     };
 
   } catch (error) {
@@ -98,4 +110,3 @@ export async function ensureLocalCompany(db, userId) {
     throw error;
   }
 }
-
