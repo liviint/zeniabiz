@@ -20,12 +20,10 @@ const Signup = () => {
   const router = useRouter()
   const db = useSQLiteContext()
   const { globalStyles } = useThemeStyles();
-  let localUser = getLocalUser(db)
   let initialForm = {
     email: "",
     password: "",
     source:"app",
-    uuid:localUser.uuid,
   }
   const [formData, setFormData] = useState(initialForm);
   const [errors, setErrors] = useState({});
@@ -59,8 +57,9 @@ const Signup = () => {
     setSuccess(false);
 
     try {
-      safeLocalStorage.removeItem("token")
-      await api.post("/accounts/register/", {...formData,email: formData.email.trim().toLowerCase()});
+      const localUser = await getLocalUser(db);
+      console.log(localUser,"hello local user")
+      await api.post("/accounts/register/", {...formData,email: formData.email.trim().toLowerCase(), uuid:localUser.uuid,});
       setSuccess(true);
       setFormData(initialForm);
       Alert.alert("Success", "A verification link has been sent to your email.");

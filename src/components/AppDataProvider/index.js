@@ -4,10 +4,13 @@ import CompanyProvider from "./CompanyProvider"
 
 const migrateDbIfNeeded = async (db) => {
 
+  
+
   /* 
   await db.execAsync(`DROP TABLE IF EXISTS companies;`);
   await db.execAsync(`DROP TABLE IF EXISTS company_members;`);
   await db.execAsync(`DROP TABLE IF EXISTS local_user;`);
+  await db.execAsync(`DROP TABLE IF EXISTS app_session;`);
 
   await db.execAsync(`DROP TABLE IF EXISTS expenses;`);
   await db.execAsync(`DROP TABLE IF EXISTS expense_categories;`);
@@ -73,7 +76,7 @@ const migrateDbIfNeeded = async (db) => {
   CREATE TABLE IF NOT EXISTS app_session (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
-    user_uuid TEXT,
+    user_uuid TEXT UNIQUE,
     company_uuid TEXT,
 
     access_token TEXT,
