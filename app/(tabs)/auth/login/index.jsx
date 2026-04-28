@@ -15,7 +15,7 @@ import * as WebBrowser from "expo-web-browser";
 import { validateEmail } from "../../../../src/helpers";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import { Card, BodyText, FormLabel, Input } from "../../../../src/components/ThemeProvider/components";
-import { upsertLocalUser, createSession, syncLocalUserWithServer } from "../../../../src/db/usersDb";
+import { upsertLocalUser, createSession } from "../../../../src/db/usersDb";
 import { useSQLiteContext } from "expo-sqlite";
 WebBrowser.maybeCompleteAuthSession();
 
@@ -135,12 +135,6 @@ export default function Index() {
             ) : null}
           </View>
         </View>
-
-        {/* <View style={styles.forgotPass}>
-          <Link disabled style={styles.forgotPassText} href="/auth/reset-password">
-            Forgot password?
-          </Link>
-        </View> */}
 
         <TouchableOpacity
           onPress={handleSubmit}
