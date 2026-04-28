@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useSQLiteContext } from "expo-sqlite";
-import { ensureLocalCompany, ensureLocalUser } from "../../db/companiesDb";
+import { ensureLocalCompany } from "../../db/companiesDb";
+import { ensureLocalUser } from "../../db/usersDb";
 import { loadActiveContext } from "../../db/utils";
 
 

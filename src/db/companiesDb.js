@@ -2,23 +2,6 @@ import uuid from "react-native-uuid";
 
 const newUuid = () => uuid.v4();
 
-export async function ensureLocalUser(db) {
-  const existing = await db.getFirstAsync(
-  `SELECT * FROM local_user WHERE deleted_at IS NULL LIMIT 1`
-);
-
-  if (existing) return existing.uuid;
-
-  const userId = newUuid();
-
-  await db.runAsync(
-    `INSERT INTO local_user (uuid, created_at) VALUES (?, datetime('now'))`,
-    [userId]
-  );
-
-  return userId;
-}
-
 export async function ensureLocalCompany(db, userUuid) {
   const existing = await db.getFirstAsync(
     `SELECT * FROM companies LIMIT 1`

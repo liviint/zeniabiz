@@ -1,3 +1,23 @@
+import uuid from "react-native-uuid";
+const newUuid = () => uuid.v4();
+
+export async function ensureLocalUser(db) {
+  const existing = await db.getFirstAsync(
+  `SELECT * FROM local_user WHERE deleted_at IS NULL LIMIT 1`
+);
+
+  if (existing) return existing.uuid;
+
+  const userId = newUuid();
+
+  await db.runAsync(
+    `INSERT INTO local_user (uuid, created_at) VALUES (?, datetime('now'))`,
+    [userId]
+  );
+
+  return userId;
+}
+
 export async function upsertLocalUser(db, user) {
   const now = new Date().toISOString();
 
@@ -34,12 +54,11 @@ export async function upsertLocalUser(db, user) {
   return session.user_uuid;
 }
 
-export const getLocalUser = async(db) => {
-    const currentUser = await db.getFirstAsync(
-        `SELECT * FROM local_user WHERE active = 1 LIMIT 1`
-        );
-    return currentUser
-}
+export const getLocalUser = async (db) => {
+  return await db.getFirstAsync(
+    `SELECT * FROM local_user WHERE deleted_at IS NULL LIMIT 1`
+  );
+};
 
 export async function getCurrentSession(db) {
     return await db.getFirstAsync(
