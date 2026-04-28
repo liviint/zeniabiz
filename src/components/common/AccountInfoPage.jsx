@@ -33,7 +33,7 @@ const AccountInfoPage = () => {
 
         <TouchableOpacity
           style={styles.secondaryButton}
-          onPress={() => router.push('/login')}
+          onPress={() => router.push('/auth/login')}
         >
           <Text style={styles.secondaryButtonText}>
             Sign in to sync

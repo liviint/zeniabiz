@@ -137,7 +137,7 @@ export default function Index() {
 
         <BodyText style={styles.hint}>
           Don’t have an account?{" "}
-          <Text style={styles.link} onPress={() => router.push("/signup")}>
+          <Text style={styles.link} onPress={() => router.push("/auth/signup")}>
             Sign up
           </Text>
         </BodyText>

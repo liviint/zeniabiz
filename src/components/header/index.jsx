@@ -40,7 +40,7 @@ export default function Header() {
 
           <NavLink 
             label="Profile" 
-            path="/profile" 
+            path="/auth/profile" 
             isActive={isActive("/(tabs)/profile")} 
           />
 

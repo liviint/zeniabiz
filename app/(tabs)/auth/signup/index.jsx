@@ -128,7 +128,7 @@ const Signup = () => {
           Already have an account?{" "}
           <Text
             style={styles.link}
-            onPress={() => router.push("/login")}
+            onPress={() => router.push("/auth/login")}
           >
             Log in
         </Text>
