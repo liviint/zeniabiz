@@ -55,11 +55,13 @@ export default function Index() {
     setSuccess(false);
 
     try {
+      safeLocalStorage.removeItem("token")
       const response = await api.post("accounts/login/", {...formData,email: formData.email.trim().toLowerCase()});
       dispatch(setUserDetails(response.data));
+      console.log(response.data,"hello res")
       safeLocalStorage.setItem("token", response.data.access);
       setSuccess(true);
-      router.push("/profile");
+      router.push("/auth/profile");
       setFormData({ email: "", password: "" });
     } catch (error) {
       console.error("Login failed:", error?.response);

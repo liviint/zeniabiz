@@ -53,6 +53,7 @@ const ProfileView = () => {
 
   useFocusEffect(
     useCallback(() => {
+      console.log(user,"hello user 123")
       if (user) {
         getUserData();
       }

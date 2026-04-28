@@ -24,7 +24,7 @@ const AccountInfoPage = () => {
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.primaryButton}
-          onPress={() => router.push('/signup')}
+          onPress={() => router.push('/auth/signup')}
         >
           <Text style={styles.primaryButtonText}>
             Create account (optional)
