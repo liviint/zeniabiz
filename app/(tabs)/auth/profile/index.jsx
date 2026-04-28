@@ -1,23 +1,26 @@
-import { useCallback, useState} from "react";
+import { useEffect, useState} from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
-import { useRouter , useFocusEffect, useLocalSearchParams} from "expo-router";
+import { useRouter ,  useLocalSearchParams} from "expo-router";
 import { clearUserDetails } from "@/store/features/userSlice";
 import { api } from "../../../../api";
 import AccountInfoPage from "../../../../src/components/common/AccountInfoPage";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import { Card, BodyText } from "../../../../src/components/ThemeProvider/components";
 import PageLoader from "../../../../src/components/common/PageLoader";
+import { useIsFocused } from "@react-navigation/native";
 
 const ProfileView = () => {
   const {globalStyles} = useThemeStyles()
   const router = useRouter();
+  const isFocused = useIsFocused()
   const {refresh} = useLocalSearchParams()
   const dispatch = useDispatch();
   const user = useSelector((state) => state?.user?.userDetails);
@@ -26,19 +29,38 @@ const ProfileView = () => {
   const refereshToken = useSelector(
           (state) => state?.user?.userDetails?.refresh
       );
+  
 
-  const handleLogout = () => {
-      api({
-            url:"accounts/logout/",
-            method:"POST",
-            data:{refresh: refereshToken}
-        }).then(res => {
-        }).catch(error => console.log(error))
-        .finally(() => {
-          dispatch(clearUserDetails())
-          router.push("/habits")
-        })
-    }
+const handleLogoutOk = () => {
+  api({
+      url: "accounts/logout/",
+      method: "POST",
+      data: { refresh: refereshToken },
+    })
+      .catch(error => console.log(error))
+      .finally(() => {
+        dispatch(clearUserDetails());
+        router.push("/auth/profile");
+      });
+}
+const handleTriggerLogout = () => {
+  Alert.alert(
+    "Confirm Logout",
+    "Are you sure you want to log out?",
+    [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: () => handleLogoutOk(),
+      },
+    ],
+    { cancelable: true }
+  );
+};
 
   const getUserData = async () => {
     setLoading(true)
@@ -51,15 +73,12 @@ const ProfileView = () => {
     .finally(() =>  setLoading(false))
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      console.log(user,"hello user 123")
+  useEffect(() => {
       if (user) {
         getUserData();
       }
       else setUserData(null)
-    }, [user, refresh])
-  );
+  },[user, refresh, isFocused])
 
   if (loading) return <PageLoader />
 
@@ -69,15 +88,15 @@ const ProfileView = () => {
     <ScrollView contentContainerStyle={{...globalStyles.container,...styles.container}}>
       <Card style={styles.card}>
 
-        <BodyText style={styles.username}>Username: {userData.username}</BodyText>
-        <Text style={styles.email}>{userData.email}</Text>
-        {userData.bio ? <BodyText style={styles.bio}>{userData.bio}</BodyText> : null}
+        <BodyText style={styles.username}>Email: {userData.email}</BodyText>
+
+        {userData.username ? <BodyText style={styles.bio}>UserName: {userData.username}</BodyText> : ""}
 
         <View style={styles.btnGroup}>
           <TouchableOpacity
             style={styles.button}
             onPress={() => {
-              router.push("/profile/edit")
+              router.push("/auth/profile/edit")
             }}
           >
             <Text style={styles.btnText}>Update Profile</Text>
@@ -85,7 +104,7 @@ const ProfileView = () => {
 
           <TouchableOpacity
             style={[styles.button, styles.logoutButton]}
-            onPress={handleLogout}
+            onPress={handleTriggerLogout}
           >
             <Text style={styles.btnText}>Log Out</Text>
           </TouchableOpacity>

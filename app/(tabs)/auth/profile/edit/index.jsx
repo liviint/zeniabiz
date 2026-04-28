@@ -29,7 +29,6 @@ const ProfilePage = () => {
     interests:1,
   });
 
-  const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState("");
@@ -41,7 +40,6 @@ const ProfilePage = () => {
         method:"GET",
     }).then(res => {
         setFormData(res.data)
-        setPreview(res.data.profilePic);
     }).catch(error => console.log(error))
     .finally(() => setLoading(false))
 
@@ -83,7 +81,7 @@ const ProfilePage = () => {
             Alert.alert("Success", "Profile updated successfully.");
             setRefresh(prev => prev + 1)
             router.push({
-              pathname:"/profile",
+              pathname:"/auth/profile",
               params:{refresh:refresh}
             });
         }).catch(error => {
@@ -111,17 +109,6 @@ const ProfilePage = () => {
           />
         </View>
 
-        <View style={globalStyles.formGroup}>
-          <BodyText style={styles.label}>Bio</BodyText>
-          <TextArea
-            multiline
-            numberOfLines={3}
-            value={formData.bio}
-            onChangeText={(text) => handleChange("bio", text)}
-            placeholder="A little about yourself..."
-          />
-        </View>
-
         <TouchableOpacity
           style={[styles.button, updating && { opacity: 0.6 }]}
           disabled={updating}
@@ -137,8 +124,6 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
-
-
 
 const styles = StyleSheet.create({
   container: {
