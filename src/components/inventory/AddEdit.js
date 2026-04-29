@@ -32,7 +32,8 @@ export default function AddProduct() {
       cost_price: form.cost_price,
       selling_price: form.selling_price,
       stock_quantity: form.stock_quantity,
-    });
+    })
+    .catch(error => console.log(error,"hello restock error"))
 
     router.push("/inventory");
   };

@@ -19,22 +19,19 @@ export async function upsertProduct(
 
   const now = new Date().toISOString();
 
-  cost_price = parseFloat(cost_price) || 0;
-  selling_price = parseFloat(selling_price) || 0;
-  stock_quantity = parseFloat(stock_quantity) || 0;
-
-  created_at = created_at || now;
-
   const isNew = !id;
   id = id || newUuid();
 
-  const batchId = newUuid();
-  const movementId = newUuid();
+  const unitCost = parseFloat(cost_price) || 0;
+  const sellPrice = parseFloat(selling_price) || 0;
+  const initialStock = parseFloat(stock_quantity) || 0;
+
+  created_at = created_at || now;
 
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
-    // 1️⃣ PRODUCT UPSERT
+    // 1️⃣ PRODUCT ONLY
     await db.runAsync(
       `
       INSERT INTO products (
@@ -45,17 +42,15 @@ export async function upsertProduct(
         name,
         selling_price,
         cost_price,
-        stock_quantity,
         created_at,
         updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
         selling_price = excluded.selling_price,
         cost_price = excluded.cost_price,
-        stock_quantity = excluded.stock_quantity,
         updated_at = excluded.updated_at,
         updated_by = excluded.updated_by
       `,
@@ -65,129 +60,45 @@ export async function upsertProduct(
         user_id,
         user_id,
         name,
-        selling_price,
-        cost_price,
-        stock_quantity,
+        sellPrice,
+        unitCost,
         created_at,
         now,
       ]
     );
 
-    // 2️⃣ INITIAL STOCK (ONLY IF NEW)
-    if (isNew && stock_quantity > 0) {
-      await db.runAsync(
-        `
-        INSERT INTO inventory_batches
-        (id, product_id, quantity_remaining, cost_price, selling_price, date, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `,
-        [
-          batchId,
-          id,
-          stock_quantity,
-          cost_price,
-          selling_price,
-          now,
-          now,
-          now,
-        ]
-      );
-
-      await db.runAsync(
-        `
-        INSERT INTO inventory_movements
-        (id, product_id, batch_id, unit_cost, quantity, type, date, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, 'purchase', ?, ?, ?)
-        `,
-        [
-          movementId,
-          id,
-          batchId,
-          cost_price,
-          stock_quantity,
-          now,
-          now,
-          now,
-        ]
-      );
+    // 2️⃣ INITIAL STOCK → delegate to restock
+    if (isNew && initialStock > 0) {
+      await restockProduct(db, id, {
+        stock_quantity: initialStock,
+        cost_price: unitCost,
+        selling_price: sellPrice,
+      },
+      { useTransaction: false }
+    );
     }
 
-    await db.runAsync("COMMIT");
-    // 🔥 3️⃣ SYNC EVENT (PRODUCT ONLY)
+    // 3️⃣ SYNC PRODUCT (should ideally be queued in DB)
     syncEvent(db, {
       model: "products",
       operation: "upsert",
       payload: {
         id,
-
         company_id,
         created_by: user_id,
         updated_by: user_id,
-
         name,
-        selling_price,
-        cost_price,
-        stock_quantity,
-
+        selling_price: sellPrice,
+        cost_price: unitCost,
         created_at,
         updated_at: now,
-        deleted_at: null
-      }
-    })
-    .catch(err => {
-  console.error("Sync failed:", err);
-});
+        deleted_at: null,
+      },
+    }).catch((err) => {
+      console.error("Sync failed:", err);
+    });
 
-    // 🔥 4️⃣ OPTIONAL (IMPORTANT IMPROVEMENT)
-    // You SHOULD also sync inventory events separately:
-    if (isNew && stock_quantity > 0) {
-      syncEvent(db, {
-        model: "inventory_batches",
-        operation: "insert",
-        payload: {
-          id: batchId,
-          product_id: id,
-          quantity_remaining: stock_quantity,
-          cost_price,
-          selling_price,
-          date: now,
-          created_at: now,
-          updated_at: now,
-          deleted_at: null,
-
-          company_id,
-          created_by: user_id,
-          updated_by: user_id
-        }
-      })
-      .catch(err => {
-  console.error("Sync failed:", err);
-});
-
-      syncEvent(db, {
-        model: "inventory_movements",
-        operation: "insert",
-        payload: {
-          id: movementId,
-          product_id: id,
-          batch_id: batchId,
-          unit_cost: cost_price,
-          quantity: stock_quantity,
-          type: "purchase",
-          date: now,
-          created_at: now,
-          updated_at: now,
-          deleted_at: null,
-
-          company_id,
-          created_by: user_id,
-          updated_by: user_id
-        }
-      })
-      .catch(err => {
-        console.error("Sync failed:", err);
-      });
-    }
+    await db.runAsync("COMMIT");
 
     return id;
 
@@ -349,69 +260,87 @@ export async function deleteProduct(db, id) {
   }
 }
 
-export const restockProduct = async (db, productId, form) => {
-  const { company_id, user_id } = getActiveContextSync();
+export const restockProduct = async (
+  db,
+  productId,
+  form,
+  { useTransaction = true } = {}
+) => {
+  const { company_id, user_id } = getActiveContextSync(db);
 
   const { stock_quantity, cost_price, selling_price } = form;
 
   const now = new Date().toISOString();
 
-  const quantity = parseFloat(stock_quantity) || 0;
-  const unitCost = parseFloat(cost_price) || 0;
-  const sellPrice = parseFloat(selling_price) || 0;
+  const quantity = Number(stock_quantity);
+  const unitCost = Number(cost_price);
+  const sellPrice = Number(selling_price);
 
-  if (quantity <= 0) {
+  if (!quantity || quantity <= 0) {
     throw new Error("Stock quantity must be greater than 0");
+  }
+
+  if (isNaN(unitCost) || isNaN(sellPrice)) {
+    throw new Error("Invalid pricing values");
   }
 
   const batchId = newUuid();
   const movementId = newUuid();
 
-  await db.runAsync("BEGIN TRANSACTION");
+  if (useTransaction) {
+    await db.runAsync("BEGIN TRANSACTION");
+  }
 
   try {
-    // 1️⃣ Batch (source of truth)
+    // 1️⃣ Batch
     await db.runAsync(
       `
       INSERT INTO inventory_batches 
-      (id, product_id, quantity_remaining, cost_price, selling_price, date)
-      VALUES (?, ?, ?, ?, ?, ?)
+      (id, company_id, created_by, updated_by, product_id, quantity_remaining, cost_price, selling_price, date, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
-      [batchId, productId, quantity, unitCost, sellPrice, now]
+      [
+        batchId,
+        company_id,
+        user_id,
+        user_id,
+        productId,
+        quantity,
+        unitCost,
+        sellPrice,
+        now,
+        now,
+        now,
+      ]
     );
 
-    // 2️⃣ Movement (audit log)
+    // 2️⃣ Movement
     await db.runAsync(
       `
       INSERT INTO inventory_movements
-      (id, product_id, batch_id, unit_cost, quantity, type, date)
-      VALUES (?, ?, ?, ?, ?, 'purchase', ?)
+      (id, company_id, created_by, updated_by, product_id, batch_id, unit_cost, quantity, type, date, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'purchase', ?, ?, ?)
       `,
       [
         movementId,
+        company_id,
+        user_id,
+        user_id,
         productId,
         batchId,
         unitCost,
         quantity,
         now,
+        now,
+        now,
       ]
     );
 
-    // 3️⃣ Product projection
-    await db.runAsync(
-      `
-      UPDATE products 
-      SET stock_quantity = COALESCE(stock_quantity, 0) + ?,
-          updated_at = ?
-      WHERE id = ?
-      `,
-      [quantity, now, productId]
-    );
+    if (useTransaction) {
+      await db.runAsync("COMMIT");
+    }
 
-    await db.runAsync("COMMIT");
-
-    // 🔥 4️⃣ SYNC REAL ENTITIES (NOT BUSINESS EVENT)
-
+    // 🔥 Sync AFTER commit
     syncEvent(db, {
       model: "inventory_batches",
       operation: "insert",
@@ -422,18 +351,14 @@ export const restockProduct = async (db, productId, form) => {
         cost_price: unitCost,
         selling_price: sellPrice,
         date: now,
-
         company_id,
         created_by: user_id,
         updated_by: user_id,
         created_at: now,
         updated_at: now,
-        deleted_at: null
-      }
-    })
-    .catch(err => {
-  console.error("Sync failed:", err);
-});
+        deleted_at: null,
+      },
+    }).catch(console.error);
 
     syncEvent(db, {
       model: "inventory_movements",
@@ -446,23 +371,21 @@ export const restockProduct = async (db, productId, form) => {
         quantity,
         type: "purchase",
         date: now,
-
         company_id,
         created_by: user_id,
         updated_by: user_id,
         created_at: now,
         updated_at: now,
-        deleted_at: null
-      }
-    })
-    .catch(err => {
-  console.error("Sync failed:", err);
-});
+        deleted_at: null,
+      },
+    }).catch(console.error);
 
     return batchId;
 
   } catch (error) {
-    await db.runAsync("ROLLBACK");
+    if (useTransaction) {
+      await db.runAsync("ROLLBACK");
+    }
     throw error;
   }
 };

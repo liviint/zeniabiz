@@ -178,7 +178,6 @@ const migrateDbIfNeeded = async (db) => {
     sku TEXT,
     selling_price REAL NOT NULL,
     cost_price REAL DEFAULT 0,
-    stock_quantity REAL DEFAULT 0,
 
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
