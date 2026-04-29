@@ -4,7 +4,6 @@ import CompanyProvider from "./CompanyProvider"
 
 const migrateDbIfNeeded = async (db) => {
 
-  
 
   /* 
   await db.execAsync(`DROP TABLE IF EXISTS companies;`);

@@ -17,7 +17,7 @@ import { Card, BodyText } from "../../../../src/components/ThemeProvider/compone
 import PageLoader from "../../../../src/components/common/PageLoader";
 import { useIsFocused } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
-import { testSetUp } from "../../../../src/db/testingDb";
+import { debugActiveSession, testSetUp , debugSessionIntegrity} from "../../../../src/db/testingDb";
 
 const ProfileView = () => {
   const db = useSQLiteContext()
@@ -84,7 +84,9 @@ const handleTriggerLogout = () => {
   },[user, refresh, isFocused])
 useEffect(() => {
   (async () => {
-    testSetUp(db)
+    // testSetUp(db)
+    debugActiveSession(db)
+    debugSessionIntegrity(db)
   })();
 }, []);
 

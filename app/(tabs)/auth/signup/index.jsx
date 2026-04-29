@@ -61,7 +61,13 @@ const Signup = () => {
       const {company_id, user_id} =  await getActiveContextSync(db);
       console.log(company_id, user_id,"hello local user")
       safeLocalStorage.removeItem("token")
-      await api.post("/accounts/register/", {...formData,email: formData.email.trim().toLowerCase(), uuid:user_id, company_id,});
+      await api.post("/accounts/register/", 
+        {
+        ...formData,
+        email: formData.email.trim().toLowerCase(), 
+        uuid:user_id, 
+        company_id:company_id,
+      });
       setSuccess(true);
       setFormData(initialForm);
       Alert.alert("Success", "A verification link has been sent to your email.");

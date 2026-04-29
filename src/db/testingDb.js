@@ -1,3 +1,4 @@
+import { getActiveContextSync } from "./utils";
 export const testSetUp = async(db) => {
     try {
       console.log("🚀 Checking app initialization...");
@@ -36,4 +37,109 @@ export const testSetUp = async(db) => {
     } catch (err) {
       console.error("❌ App init check failed:", err);
     }
+}
+
+export async function debugActiveSession(db) {
+  try {
+    // 1. Full session table
+    const sessions = await db.getAllAsync(
+      `SELECT * FROM app_session`
+    );
+
+    // 2. Current active context (cached)
+    let cached = null;
+    try {
+      cached = getActiveContextSync();
+    } catch (e) {
+      cached = { error: e.message };
+    }
+
+    // 3. Distinct company ids used in DB (optional safety check)
+    const companyIds = await db.getAllAsync(
+      `SELECT DISTINCT company_uuid FROM app_session`
+    );
+
+    // 4. Print summary
+    console.log("🧠 ACTIVE CONTEXT (CACHE):", cached);
+    console.log("📦 ALL SESSIONS:", sessions);
+    console.log("🏢 DISTINCT COMPANY IDS:", companyIds);
+
+    // 5. Quick validation flags
+    const issues = [];
+
+    if (!sessions || sessions.length === 0) {
+      issues.push("No session found in app_session table");
+    }
+
+    if (companyIds.length > 1) {
+      issues.push("Multiple company_ids detected (this is BAD)");
+    }
+
+    if (!cached?.company_id) {
+      issues.push("Cached context missing company_id");
+    }
+
+    if (!cached?.user_id) {
+      issues.push("Cached context missing user_id");
+    }
+
+    console.log("⚠️ SESSION ISSUES:", issues.length ? issues : "None");
+
+    return {
+      cached,
+      sessions,
+      companyIds,
+      issues,
+    };
+  } catch (err) {
+    console.error("❌ debugActiveSession failed:", err);
+    return { error: err.message };
+  }
+}
+
+export async function debugSessionIntegrity(db) {
+  const session = await db.getFirstAsync(
+    `SELECT * FROM app_session LIMIT 5`
+  );
+
+  const products = await db.getAllAsync(
+    `SELECT id, company_id FROM products LIMIT 20`
+  );
+
+  const movements = await db.getAllAsync(
+    `SELECT id, company_id FROM inventory_movements LIMIT 20`
+  );
+
+  const companiesInProducts = [...new Set(products.map(p => p.company_id))];
+  const companiesInMovements = [...new Set(movements.map(m => m.company_id))];
+
+  const issues = [];
+
+  if (companiesInProducts.length > 1) {
+    issues.push("Products contain multiple company IDs");
+  }
+
+  if (companiesInMovements.length > 1) {
+    issues.push("Inventory movements contain multiple company IDs");
+  }
+
+  if (
+    session?.company_uuid &&
+    (companiesInProducts.includes(session.company_uuid) === false ||
+      companiesInMovements.includes(session.company_uuid) === false)
+  ) {
+    issues.push("Session company does not match local data");
+  }
+
+  console.log("🧠 SESSION:", session);
+  console.log("🏢 PRODUCT COMPANIES:", companiesInProducts);
+  console.log("🏢 MOVEMENT COMPANIES:", companiesInMovements);
+  console.log("⚠️ ISSUES:", issues);
+
+  return {
+    session,
+    companiesInProducts,
+    companiesInMovements,
+    issues,
+  };
 }
