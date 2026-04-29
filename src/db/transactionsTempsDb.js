@@ -15,9 +15,9 @@ export const upsertExpenseTemplate = async (db, template) => {
     note = null,
   } = template;
 
-  const { company_id, user_id } = getActiveContextSync();
+  const { company, user_id } = getActiveContextSync();
 
-  if (!company_id || !user_id) {
+  if (!company || !user_id) {
     throw new Error("Missing active company or user context");
   }
 
@@ -74,7 +74,7 @@ export const upsertExpenseTemplate = async (db, template) => {
       payload: {
         id: templateId,
 
-        company_id,
+        company,
         user_id,
 
         title,

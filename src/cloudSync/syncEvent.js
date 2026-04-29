@@ -8,7 +8,7 @@ export async function syncEvent(db, {
   payload
 }) {
   const now = new Date().toISOString();
-
+  
   const event = {
     id: generateUUID(),
     model,

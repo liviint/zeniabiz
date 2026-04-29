@@ -42,7 +42,6 @@ export default function AddProduct() {
       if (!id) return;
       (async () => {
         const data = await getProductById(db, id);
-        console.log(data,"hello data")
         setForm(data)
       })();
     }, []);

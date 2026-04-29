@@ -48,7 +48,7 @@ export async function ensureLocalCompany(db, userUuid) {
       `
       INSERT INTO company_members (
         uuid,
-        company_id,
+        company,
         user_id,
         role,
         created_at,

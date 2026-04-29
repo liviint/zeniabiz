@@ -58,15 +58,15 @@ const Signup = () => {
     setSuccess(false);
 
     try {
-      const {company_id, user_id} =  await getActiveContextSync(db);
-      console.log(company_id, user_id,"hello local user")
+      const {company, user_id} =  await getActiveContextSync(db);
+      console.log(company, user_id,"hello local user")
       safeLocalStorage.removeItem("token")
       await api.post("/accounts/register/", 
         {
         ...formData,
         email: formData.email.trim().toLowerCase(), 
         uuid:user_id, 
-        company_id:company_id,
+        company:company,
       });
       setSuccess(true);
       setFormData(initialForm);

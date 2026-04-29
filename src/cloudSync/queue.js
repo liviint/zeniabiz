@@ -1,6 +1,7 @@
 import {getNextRetryTime} from "./utils"
 
 export async function addToQueue(db, event) {
+  console.log(event.payload.company,"hello event payload")
   await db.runAsync(
     `INSERT INTO sync_queue 
     (id, model, operation, payload, client_request_id, status, created_at, updated_at)

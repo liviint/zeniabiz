@@ -17,7 +17,7 @@ export async function upsertExpense(
     date,
   }
 ) {
-  const { company_id, user_id } = getActiveContextSync();
+  const { company, user_id } = getActiveContextSync();
 
   const now = new Date().toISOString();
   const transactionDate = date ? date.toISOString() : now;
@@ -33,7 +33,7 @@ export async function upsertExpense(
       `
       INSERT INTO expenses (
         id,
-        company_id,
+        company,
         created_by,
         updated_by,
         title,
@@ -60,7 +60,7 @@ export async function upsertExpense(
       `,
       [
         expenseId,
-        company_id,
+        company,
         user_id,
         user_id,
         title,
@@ -86,7 +86,7 @@ export async function upsertExpense(
       payload: {
         id: expenseId,
 
-        company_id,
+        company,
         created_by: user_id,
         updated_by: user_id,
 

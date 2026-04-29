@@ -15,7 +15,7 @@ export async function upsertProduct(
     created_at,
   }
 ) {
-  const { company_id, user_id } = getActiveContextSync(db);
+  const { company, user_id } = getActiveContextSync(db);
 
   const now = new Date().toISOString();
 
@@ -36,7 +36,7 @@ export async function upsertProduct(
       `
       INSERT INTO products (
         id,
-        company_id,
+        company,
         created_by,
         updated_by,
         name,
@@ -56,7 +56,7 @@ export async function upsertProduct(
       `,
       [
         id,
-        company_id,
+        company,
         user_id,
         user_id,
         name,
@@ -84,7 +84,7 @@ export async function upsertProduct(
       operation: "upsert",
       payload: {
         id,
-        company_id,
+        company,
         created_by: user_id,
         updated_by: user_id,
         name,
@@ -266,7 +266,7 @@ export const restockProduct = async (
   form,
   { useTransaction = true } = {}
 ) => {
-  const { company_id, user_id } = getActiveContextSync(db);
+  const { company, user_id } = getActiveContextSync(db);
 
   const { stock_quantity, cost_price, selling_price } = form;
 
@@ -296,12 +296,12 @@ export const restockProduct = async (
     await db.runAsync(
       `
       INSERT INTO inventory_batches 
-      (id, company_id, created_by, updated_by, product_id, quantity_remaining, cost_price, selling_price, date, created_at, updated_at)
+      (id, company, created_by, updated_by, product_id, quantity_remaining, cost_price, selling_price, date, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         batchId,
-        company_id,
+        company,
         user_id,
         user_id,
         productId,
@@ -318,12 +318,12 @@ export const restockProduct = async (
     await db.runAsync(
       `
       INSERT INTO inventory_movements
-      (id, company_id, created_by, updated_by, product_id, batch_id, unit_cost, quantity, type, date, created_at, updated_at)
+      (id, company, created_by, updated_by, product_id, batch_id, unit_cost, quantity, type, date, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'purchase', ?, ?, ?)
       `,
       [
         movementId,
-        company_id,
+        company,
         user_id,
         user_id,
         productId,
@@ -351,7 +351,7 @@ export const restockProduct = async (
         cost_price: unitCost,
         selling_price: sellPrice,
         date: now,
-        company_id,
+        company,
         created_by: user_id,
         updated_by: user_id,
         created_at: now,
@@ -371,7 +371,7 @@ export const restockProduct = async (
         quantity,
         type: "purchase",
         date: now,
-        company_id,
+        company,
         created_by: user_id,
         updated_by: user_id,
         created_at: now,

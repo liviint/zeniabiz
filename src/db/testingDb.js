@@ -72,11 +72,11 @@ export async function debugActiveSession(db) {
     }
 
     if (companyIds.length > 1) {
-      issues.push("Multiple company_ids detected (this is BAD)");
+      issues.push("Multiple companies detected (this is BAD)");
     }
 
-    if (!cached?.company_id) {
-      issues.push("Cached context missing company_id");
+    if (!cached?.company) {
+      issues.push("Cached context missing company");
     }
 
     if (!cached?.user_id) {
@@ -103,15 +103,20 @@ export async function debugSessionIntegrity(db) {
   );
 
   const products = await db.getAllAsync(
-    `SELECT id, company_id FROM products LIMIT 20`
+    `SELECT id, company FROM products LIMIT 20`
   );
 
   const movements = await db.getAllAsync(
-    `SELECT id, company_id FROM inventory_movements LIMIT 20`
+    `SELECT id, company FROM inventory_movements LIMIT 20`
   );
 
-  const companiesInProducts = [...new Set(products.map(p => p.company_id))];
-  const companiesInMovements = [...new Set(movements.map(m => m.company_id))];
+   const batches = await db.getAllAsync(
+    `SELECT id, company FROM inventory_batches LIMIT 20`
+  );
+
+  const companiesInProducts = [...new Set(products.map(p => p.company))];
+  const companiesInMovements = [...new Set(movements.map(m => m.company))];
+  const companiesInBatches = [...new Set(batches.map(m => m.company))];
 
   const issues = [];
 
@@ -134,12 +139,14 @@ export async function debugSessionIntegrity(db) {
   console.log("🧠 SESSION:", session);
   console.log("🏢 PRODUCT COMPANIES:", companiesInProducts);
   console.log("🏢 MOVEMENT COMPANIES:", companiesInMovements);
+  console.log("🏢 BATCHES COMPANIES:", companiesInBatches);
   console.log("⚠️ ISSUES:", issues);
 
   return {
     session,
     companiesInProducts,
     companiesInMovements,
+    companiesInBatches,
     issues,
   };
 }

@@ -67,7 +67,7 @@ export async function loadActiveContext(db) {
 
   const context = {
     user_id: session?.user_uuid ?? null,
-    company_id: session?.company_uuid ?? null,
+    company: session?.company_uuid ?? null,
   };
 
   cachedContext = context;

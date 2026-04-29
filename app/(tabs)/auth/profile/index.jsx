@@ -88,7 +88,7 @@ useEffect(() => {
     debugActiveSession(db)
     debugSessionIntegrity(db)
   })();
-}, []);
+}, [isFocused]);
 
   if (loading) return <PageLoader />
 

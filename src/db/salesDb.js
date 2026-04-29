@@ -14,7 +14,7 @@ export async function createOrUpdateSale(
     title,
   }
 ) {
-  const { company_id, user_id } = getActiveContextSync();
+  const { company, user_id } = getActiveContextSync();
 
   const now = new Date().toISOString();
   const saleDate = date ? date.toISOString() : now;
@@ -245,7 +245,7 @@ export async function createOrUpdateSale(
       operation: "upsert",
       payload: {
         id,
-        company_id,
+        company,
         created_by: user_id,
         updated_by: user_id,
 
@@ -274,7 +274,7 @@ export async function createOrUpdateSale(
           price: item.price,
           cost_price: item.cost_price || 0,
 
-          company_id,
+          company,
           created_by: user_id,
           updated_by: user_id,
 
@@ -300,7 +300,7 @@ export async function createOrUpdateSale(
           reference_id: id,
           date: saleDate,
 
-          company_id,
+          company,
           created_by: user_id,
           updated_by: user_id,
 

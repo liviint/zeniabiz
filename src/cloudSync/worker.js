@@ -9,6 +9,7 @@ export async function runSync(db) {
   const grouped = {}
 
   for (const item of pending) {
+    console.log(item.model,item.payload.company,"hello item")
     if (!grouped[item.model]) {
       grouped[item.model] = []
     }

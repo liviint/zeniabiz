@@ -4,7 +4,6 @@ import CompanyProvider from "./CompanyProvider"
 
 const migrateDbIfNeeded = async (db) => {
 
-
   /* 
   await db.execAsync(`DROP TABLE IF EXISTS companies;`);
   await db.execAsync(`DROP TABLE IF EXISTS company_members;`);
@@ -22,6 +21,7 @@ const migrateDbIfNeeded = async (db) => {
   await db.execAsync(`DROP TABLE IF EXISTS sales;`); 
   await db.execAsync(`DROP TABLE IF EXISTS sale_items;`);
   
+  await db.execAsync(`DROP TABLE IF EXISTS sync_queue;`);
   await db.execAsync(`DROP TABLE IF EXISTS app_settings;`);
    */
   
@@ -46,7 +46,7 @@ const migrateDbIfNeeded = async (db) => {
   CREATE TABLE IF NOT EXISTS company_members (
     uuid TEXT PRIMARY KEY,
 
-    company_id TEXT NOT NULL,
+    company TEXT NOT NULL,
     user_id TEXT NOT NULL,
 
     role TEXT NOT NULL CHECK(role IN ('owner', 'admin', 'staff')),
@@ -54,7 +54,7 @@ const migrateDbIfNeeded = async (db) => {
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
 
-    FOREIGN KEY (company_id) REFERENCES companies(id)
+    FOREIGN KEY (company) REFERENCES companies(id)
   );
 
   CREATE TABLE IF NOT EXISTS local_user (
@@ -88,13 +88,13 @@ const migrateDbIfNeeded = async (db) => {
   );
 
   CREATE INDEX IF NOT EXISTS idx_company_members_company 
-  ON company_members(company_id);
+  ON company_members(company);
 
 
   CREATE TABLE IF NOT EXISTS expenses (
     id TEXT PRIMARY KEY,
 
-    company_id TEXT NOT NULL,
+    company TEXT NOT NULL,
     created_by TEXT,
     updated_by TEXT,
 
@@ -118,12 +118,12 @@ const migrateDbIfNeeded = async (db) => {
   ON expenses(category_id);
 
   CREATE INDEX IF NOT EXISTS idx_expenses_company 
-  ON expenses(company_id);
+  ON expenses(company);
 
   CREATE TABLE IF NOT EXISTS expense_categories (
     id TEXT PRIMARY KEY,
 
-    company_id TEXT,
+    company TEXT,
     created_by TEXT,
     updated_by TEXT,
 
@@ -140,13 +140,13 @@ const migrateDbIfNeeded = async (db) => {
   );
 
   CREATE INDEX IF NOT EXISTS idx_categories_company 
-  ON expense_categories(company_id);
+  ON expense_categories(company);
 
 
   CREATE TABLE IF NOT EXISTS expense_templates (
     id TEXT PRIMARY KEY,
 
-    company_id TEXT,
+    company TEXT,
     created_by TEXT,
     updated_by TEXT,
 
@@ -169,7 +169,7 @@ const migrateDbIfNeeded = async (db) => {
   CREATE TABLE IF NOT EXISTS products (
     id TEXT PRIMARY KEY,
 
-    company_id TEXT,
+    company TEXT,
     created_by TEXT,
     updated_by TEXT,
 
@@ -184,12 +184,12 @@ const migrateDbIfNeeded = async (db) => {
   );
 
   CREATE INDEX IF NOT EXISTS idx_products_company 
-  ON products(company_id);
+  ON products(company);
 
   CREATE TABLE IF NOT EXISTS inventory_batches (
     id TEXT PRIMARY KEY,
 
-    company_id TEXT,
+    company TEXT,
     created_by TEXT,
     updated_by TEXT,
 
@@ -211,12 +211,12 @@ const migrateDbIfNeeded = async (db) => {
   ON inventory_batches(product_id, created_at, quantity_remaining);
 
   CREATE INDEX IF NOT EXISTS idx_batches_company 
-  ON inventory_batches(company_id);
+  ON inventory_batches(company);
 
   CREATE TABLE IF NOT EXISTS inventory_movements (
     id TEXT PRIMARY KEY,
 
-    company_id TEXT,
+    company TEXT,
     created_by TEXT,
     updated_by TEXT,
 
@@ -242,12 +242,12 @@ const migrateDbIfNeeded = async (db) => {
   ON inventory_movements(product_id);
 
   CREATE INDEX IF NOT EXISTS idx_movements_company 
-  ON inventory_movements(company_id);
+  ON inventory_movements(company);
 
   CREATE TABLE IF NOT EXISTS sales (
     id TEXT PRIMARY KEY,
 
-    company_id TEXT,
+    company TEXT,
     created_by TEXT,
     updated_by TEXT,
 
@@ -263,12 +263,12 @@ const migrateDbIfNeeded = async (db) => {
   );
 
   CREATE INDEX IF NOT EXISTS idx_sales_company 
-  ON sales(company_id);
+  ON sales(company);
 
   CREATE TABLE IF NOT EXISTS sale_items (
     id TEXT PRIMARY KEY,
 
-    company_id TEXT,
+    company TEXT,
     created_by TEXT,
     updated_by TEXT,
 

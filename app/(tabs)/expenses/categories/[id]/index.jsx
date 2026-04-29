@@ -22,7 +22,6 @@ export default function CategoryDetailsScreen() {
     const loadCategory = async () => {
         try {
             const data = await getCategories(db,id);
-            console.log(data,"hello data")
             setCategory(data);
         } catch (err) {
             console.log("Failed to load category", err);

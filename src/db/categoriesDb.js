@@ -76,9 +76,9 @@ export const getUnsyncedCategories = (db) => {
 }
 
 export const upsertCategory = async (db, { id, name, color, icon }) => {
-  const { company_id, user_id } = getActiveContextSync();
+  const { company, user_id } = getActiveContextSync();
 
-  if (!company_id || !user_id) {
+  if (!company || !user_id) {
     throw new Error("Missing active company or user context");
   }
 
@@ -125,7 +125,7 @@ export const upsertCategory = async (db, { id, name, color, icon }) => {
       payload: {
         id: categoryId,
 
-        company_id,
+        company,
         user_id,
 
         name: name?.trim(),
