@@ -3,9 +3,11 @@ import { sendBulkSync } from "./api"
 
 
 const SYNC_ORDER = [
+  "expense_categories", 
   "products",
   "inventory_batches",
   "inventory_movements",
+  "expenses",
 ];
 
 export async function runSync(db) {
@@ -14,23 +16,6 @@ export async function runSync(db) {
   if (pending.length === 0) return;
 
   for (const model of SYNC_ORDER) {
-    console.log("Pending count:", pending.length);
-
-console.log(
-  "Models:",
-  pending.reduce((acc, i) => {
-    acc[i.model] = (acc[i.model] || 0) + 1;
-    return acc;
-  }, {})
-);
-
-console.log(
-  "Sample:",
-  pending.slice(0, 3).map(i => ({
-    model: i.model,
-    id: i.payload?.id,
-  }))
-);
     // 🔥 regroup every iteration using latest state
     const grouped = {};
 
@@ -68,8 +53,25 @@ console.log(
   }
 
   for (const model in remainingGrouped) {
-    await syncModel(db, model, remainingGrouped[model]);
-  }
+  const items = remainingGrouped[model];
+
+  console.log(
+    "Models:",
+    {
+      [model]: items.length
+    }
+  );
+
+  console.log(
+    "Sample:",
+    items.slice(0, 3).map(i => ({
+      model: i.model,
+      id: i.payload?.id,
+    }))
+  );
+
+  await syncModel(db, model, items);
+}
 }
 
 
@@ -83,10 +85,11 @@ async function syncModel(db, model, items) {
 
   const res = await sendBulkSync(model, payload);
 
-  if (!res.ok) {
-    console.log(res.type, model, "Sync failed");
-
-    return false; // 🔥 important
+  if (res.status !== 200 || !res.data) {
+    console.log("❌ Sync failed:", model);
+    console.log("Status:", res.status);
+    console.log("Response:", res.data);
+    return false;
   }
 
   const data = res.data;

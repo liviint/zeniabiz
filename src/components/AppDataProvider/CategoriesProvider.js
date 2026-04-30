@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useSQLiteContext } from "expo-sqlite";
-import { seedCategoriesIfEmpty } from "../../db/categoriesDb";
+import { seedCategoriesIfEmpty,syncDefaultCategories } from "../../db/categoriesDb";
 
 export default function CategoriesProvder() {
     const db = useSQLiteContext();
@@ -8,6 +8,7 @@ export default function CategoriesProvder() {
     useEffect(() => {
         (async () => {
         await seedCategoriesIfEmpty(db);
+        await syncDefaultCategories(db);
         })();
     }, []);
 

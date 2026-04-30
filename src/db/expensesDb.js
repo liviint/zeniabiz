@@ -20,7 +20,7 @@ export async function upsertExpense(
   const { company, user_id } = getActiveContextSync();
 
   const now = new Date().toISOString();
-  const transactionDate = date ? date.toISOString() : now;
+  const expenseDate = date ? date.toISOString() : now;
 
   const expenseId = id || newUuid();
   const cleanAmount = parseFloat(amount) || 0;
@@ -28,7 +28,7 @@ export async function upsertExpense(
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
-    // 1️⃣ Upsert expense (LOCAL DB)
+    // 1️⃣ UPSERT LOCAL EXPENSE
     await db.runAsync(
       `
       INSERT INTO expenses (
@@ -55,8 +55,8 @@ export async function upsertExpense(
         note = excluded.note,
         payee = excluded.payee,
         updated_at = excluded.updated_at,
-        date = excluded.date,
-        updated_by = excluded.updated_by
+        updated_by = excluded.updated_by,
+        date = excluded.date
       `,
       [
         expenseId,
@@ -71,40 +71,35 @@ export async function upsertExpense(
         payee,
         now,
         now,
-        transactionDate,
+        expenseDate,
       ]
     );
 
     await db.runAsync("COMMIT");
 
-    console.log("hello here122")
-
-    // 2️⃣ SYNC EVENT (AFTER COMMIT ONLY)
+    // 2️⃣ SYNC EVENT (after commit only)
     syncEvent(db, {
       model: "expenses",
       operation: "upsert",
       payload: {
         id: expenseId,
-
         company,
         created_by: user_id,
         updated_by: user_id,
 
         title,
         amount: cleanAmount,
-        category,
-        category_id,
+        category:category_id,
         note,
         payee,
-        date: transactionDate,
+        date: expenseDate,
 
         created_at: now,
         updated_at: now,
-        deleted_at: null
-      }
-    })
-    .catch(err => {
-      console.error("Sync enqueue failed:", err);
+        deleted_at: null,
+      },
+    }).catch((err) => {
+      console.error("Expense sync enqueue failed:", err);
     });
 
     return expenseId;

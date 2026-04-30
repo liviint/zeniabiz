@@ -1,8 +1,38 @@
 export const DEFAULT_CATEGORIES = [
-  { name: "Stock", color: "#FF6B6B", icon: "📦" },
-  { name: "Rent", color: "#6BCB77", icon: "🏠" },
-  { name: "Utilities", color: "#FFD93D", icon: "💡" },
-  { name: "Salaries", color: "#FF9F1C", icon: "💼" },
-  { name: "Marketing", color: "#FF6EC7", icon: "📢" },
-  { name: "Transport", color: "#4D96FF", icon: "🚚" },
+  {
+    id: "c1a1b111-0000-4000-8000-000000000001",
+    name: "Stock",
+    color: "#FF6B6B",
+    icon: "📦",
+  },
+  {
+    id: "c1a1b111-0000-4000-8000-000000000002",
+    name: "Rent",
+    color: "#6BCB77",
+    icon: "🏠",
+  },
+  {
+    id: "c1a1b111-0000-4000-8000-000000000003",
+    name: "Utilities",
+    color: "#FFD93D",
+    icon: "💡",
+  },
+  {
+    id: "c1a1b111-0000-4000-8000-000000000004",
+    name: "Salaries",
+    color: "#FF9F1C",
+    icon: "💼",
+  },
+  {
+    id: "c1a1b111-0000-4000-8000-000000000005",
+    name: "Marketing",
+    color: "#FF6EC7",
+    icon: "📢",
+  },
+  {
+    id: "c1a1b111-0000-4000-8000-000000000006",
+    name: "Transport",
+    color: "#4D96FF",
+    icon: "🚚",
+  },
 ];

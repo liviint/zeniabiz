@@ -13,19 +13,16 @@ export const seedCategoriesIfEmpty = async (db, apiData = []) => {
 
     if (rows[0].count > 0) return;
 
-    const categoriesToSeed = apiData.length
-      ? apiData
-      : DEFAULT_CATEGORIES;
 
     await db.runAsync("BEGIN TRANSACTION");
 
-    for (const cat of categoriesToSeed) {
+    for (const cat of DEFAULT_CATEGORIES) {
       await db.runAsync(
         `INSERT INTO expense_categories 
           (id, name, color, icon, created_at, updated_at)
           VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))`,
         [
-          newUuid(),
+          cat.id,   
           cat.name,
           cat.color,
           cat.icon,
@@ -40,6 +37,35 @@ export const seedCategoriesIfEmpty = async (db, apiData = []) => {
     console.error("❌ Failed to seed categories:", error);
   }
 };
+
+export async function syncDefaultCategories(db) {
+  const alreadySynced = await db.getFirstAsync(
+    `SELECT value FROM app_settings WHERE key = 'default_categories_synced'`
+  );
+
+  if (alreadySynced) return;
+  const now = new Date().toISOString();
+  for (const cat of DEFAULT_CATEGORIES) {
+    await syncEvent(db, {
+      model: "expense_categories",
+      operation: "upsert",
+      payload: {
+        id: cat.id,
+        name: cat.name,
+        color: cat.color,
+        icon: cat.icon,
+        company: getActiveContextSync().company,
+        created_at: now,
+        updated_at: now,
+      }
+    });
+  }
+
+  await db.runAsync(
+    `INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)`,
+    ["default_categories_synced", "1"]
+  );
+}
 
 export const getCategories = async (db, id = null) => {
   if (id) {
