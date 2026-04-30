@@ -27,13 +27,13 @@ export async function runSync(db) {
     }
 
     if (grouped[model] && grouped[model].length > 0) {
-    const success = await syncModel(db, model, grouped[model]);
+      const success = await syncModel(db, model, grouped[model]);
 
-    // 🔥 CRITICAL: stop everything if failed
-    if (!success) {
-      console.log("Stopping sync due to failure in:", model);
-      return;
-    }
+      // 🔥 CRITICAL: stop everything if failed
+      if (!success) {
+        console.log("Stopping sync due to failure in:", model);
+        return;
+      }
   }
 
     // 🔥 refresh pending after syncing this model
@@ -85,20 +85,25 @@ async function syncModel(db, model, items) {
 
   const res = await sendBulkSync(model, payload);
 
-  if (res.status !== 200 || !res.data) {
-    console.log("❌ Sync failed:", model);
-    console.log("Status:", res.status);
-    console.log("Response:", res.data);
+  // ❌ handle wrapper failure
+  if (!res.ok) {
+    console.log(`❌ Sync failed: ${model}`);
+    console.log("Type:", res.type);
+    console.log("Error:", res.error);
     return false;
   }
 
   const data = res.data;
 
-  for (const accepted of data.accepted) {
+  console.log(`📦 Sync response: ${model}`);
+  console.log("✅ accepted:", data.accepted?.length || 0);
+  console.log("❌ rejected:", data.rejected?.length || 0);
+
+  for (const accepted of data.accepted || []) {
     await markAsSynced(db, accepted.client_request_id);
   }
 
-  for (const rejected of data.rejected) {
+  for (const rejected of data.rejected || []) {
     const failedItem = items.find(
       i => i.client_request_id === rejected.client_request_id
     );
@@ -112,13 +117,13 @@ async function syncModel(db, model, items) {
       errorText.includes("does not exist");
 
     if (isDependencyError) {
-      console.log("Dependency error, will retry:", rejected.id);
+      console.log("🔁 Dependency retry:", rejected.client_request_id);
       continue;
     }
 
     await markAsFailed(db, failedItem);
   }
 
-  return true; // ✅ success
+  return true;
 }
 
