@@ -1,7 +1,6 @@
 import {api} from "../../api"
 
 export async function sendBulkSync(model, items) {
-  console.log(items[0].company,model,"hello model items")
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
 
@@ -13,7 +12,7 @@ export async function sendBulkSync(model, items) {
     );
 
     clearTimeout(timeout);
-    console.log(res,"hello res 123...")
+    // console.log(res,"hello res 123...")
     return { ok: true, data: res.data };
   } catch (err) {
     clearTimeout(timeout);
