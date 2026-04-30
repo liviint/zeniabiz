@@ -114,18 +114,19 @@ export const upsertCategory = async (db, { id, name, color, icon }) => {
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
-    // 1️⃣ Local write
+    // 1️⃣ Local DB write (idempotent)
     await db.runAsync(
       `
       INSERT INTO expense_categories (
         id,
+        company,
         name,
         color,
         icon,
         created_at,
         updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
         color = excluded.color,
@@ -134,6 +135,7 @@ export const upsertCategory = async (db, { id, name, color, icon }) => {
       `,
       [
         categoryId,
+        company,
         name?.trim(),
         color,
         icon,
@@ -144,15 +146,15 @@ export const upsertCategory = async (db, { id, name, color, icon }) => {
 
     await db.runAsync("COMMIT");
 
-    // 2️⃣ Sync event (after commit only)
+    // 2️⃣ Sync event (AFTER commit ONLY)
     syncEvent(db, {
       model: "expense_categories",
       operation: "upsert",
       payload: {
         id: categoryId,
-
         company,
-        user_id,
+        created_by: user_id,
+        updated_by: user_id,
 
         name: name?.trim(),
         color,
@@ -160,15 +162,13 @@ export const upsertCategory = async (db, { id, name, color, icon }) => {
 
         created_at: now,
         updated_at: now,
-        deleted_at: null
-      }
-    })
-    .catch(err => {
-  console.error("Sync failed:", err);
-});
+        deleted_at: null,
+      },
+    }).catch((err) => {
+      console.error("Category sync enqueue failed:", err);
+    });
 
     return categoryId;
-
   } catch (error) {
     await db.runAsync("ROLLBACK");
     throw error;
@@ -176,8 +176,15 @@ export const upsertCategory = async (db, { id, name, color, icon }) => {
 };
 
 export const deleteCategory = async (db, id) => {
+  const { company, user_id } = getActiveContextSync();
+
+  if (!company || !user_id) {
+    throw new Error("Missing active company or user context");
+  }
+
   const now = new Date().toISOString();
 
+  // 🔎 check usage first
   const usage = await db.getFirstAsync(
     `SELECT COUNT(*) as count FROM expenses WHERE category_id = ?`,
     [id]
@@ -190,7 +197,7 @@ export const deleteCategory = async (db, id) => {
   await db.runAsync("BEGIN TRANSACTION");
 
   try {
-    // 🗑 Soft delete
+    // 🗑 soft delete locally
     await db.runAsync(
       `
       UPDATE expense_categories
@@ -202,22 +209,24 @@ export const deleteCategory = async (db, id) => {
 
     await db.runAsync("COMMIT");
 
-    // 🔥 SYNC EVENT (after commit)
+    // 🔥 SYNC EVENT (after commit ONLY)
     syncEvent(db, {
       model: "expense_categories",
       operation: "delete",
       payload: {
         id,
-        deleted_at: now
-      }
-    })
-    .catch(err => {
-  console.error("Sync failed:", err);
-});
+        company,
+        created_by: user_id,
+        updated_by: user_id,
+
+        deleted_at: now,
+      },
+    }).catch((err) => {
+      console.error("Category delete sync failed:", err);
+    });
 
   } catch (error) {
     await db.runAsync("ROLLBACK");
     throw error;
   }
 };
-

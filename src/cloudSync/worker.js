@@ -8,6 +8,9 @@ const SYNC_ORDER = [
   "inventory_batches",
   "inventory_movements",
   "expenses",
+  "expense_templates",
+  "sales",
+  "sale_items", 
 ];
 
 export async function runSync(db) {

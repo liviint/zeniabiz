@@ -65,8 +65,6 @@ export default function TransactionTemplatesListScreen() {
           <SecondaryText style={styles.category}>
             {item.category || "Uncategorized"}
           </SecondaryText>
-
-          <Text style={styles.typeBadge}>{item.type.toUpperCase()}</Text>
         </View>
 
         {item.note ? (
@@ -98,7 +96,7 @@ export default function TransactionTemplatesListScreen() {
       )}
       <AddButton
         primaryAction={{
-          route: "/expenses-templates/add",
+          route: "/expenses/templates/add",
           label: "Add Template",
         }}
       />

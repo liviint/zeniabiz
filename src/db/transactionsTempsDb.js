@@ -32,6 +32,7 @@ export const upsertExpenseTemplate = async (db, template) => {
       `
       INSERT INTO expense_templates (
         id,
+        company,
         title,
         amount,
         category,
@@ -41,7 +42,7 @@ export const upsertExpenseTemplate = async (db, template) => {
         created_at,
         updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
@@ -54,6 +55,7 @@ export const upsertExpenseTemplate = async (db, template) => {
       `,
       [
         templateId,
+        company,
         title,
         amount,
         category,
@@ -67,31 +69,32 @@ export const upsertExpenseTemplate = async (db, template) => {
 
     await db.runAsync("COMMIT");
 
-    // 2️⃣ Sync event (with ownership context)
-    await syncEvent(db, {
+    // 2️⃣ Sync event (after commit ONLY)
+    syncEvent(db, {
       model: "expense_templates",
       operation: "upsert",
       payload: {
         id: templateId,
 
         company,
-        user_id,
+        created_by: user_id,
+        updated_by: user_id,
 
         title,
         amount,
-        category,
-        category_id,
+        category:category_id,
         payee,
         note,
 
         created_at: now,
         updated_at: now,
         deleted_at: null,
-      }
+      },
+    }).catch((err) => {
+      console.error("Expense template sync failed:", err);
     });
 
     return templateId;
-
   } catch (error) {
     await db.runAsync("ROLLBACK");
     throw error;

@@ -59,10 +59,6 @@ export default function AddTransactionTemplateScreen() {
       return Alert.alert("Validation Error", "Template title is required.");
     }
 
-    if (!form.type) {
-      return Alert.alert("Validation Error", "Transaction type is required.");
-    }
-
     await upsertExpenseTemplate(db, {
       title: form.title,
       amount: form.amount ? parseFloat(form.amount) : null,

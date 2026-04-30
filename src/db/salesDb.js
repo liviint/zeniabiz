@@ -225,12 +225,7 @@ export async function createOrUpdateSale(
         }
       }
 
-      await db.runAsync(
-        `UPDATE products 
-         SET stock_quantity = stock_quantity - ?, updated_at = ?
-         WHERE id = ?`,
-        [item.quantity, now, item.product_id]
-      );
+      
     }
 
     await db.runAsync("COMMIT");
@@ -267,7 +262,7 @@ export async function createOrUpdateSale(
         operation: "upsert",
         payload: {
           id: newUuid(),
-          sale_id: id,
+          sale: id,
           product_id: item.product_id,
           batch_id: item.batch_id || null,
           quantity: item.quantity,
