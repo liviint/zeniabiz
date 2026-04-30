@@ -91,24 +91,21 @@ export const createRange = (type, baseDate = new Date()) => {
             return createRange("day", baseDate);
     }
 };
-
 export const normalizeRange = (state) => {
-    const format = (d) => {
-        const date = new Date(d);
+  const start = new Date(state.startDate);
+  const end = new Date(state.endDate);
 
-        return (
-            date.getFullYear() +
-            "-" +
-            String(date.getMonth() + 1).padStart(2, "0") +
-            "-" +
-            String(date.getDate()).padStart(2, "0")
-        );
-    };
+  // start of day (UTC-safe)
+  start.setHours(0, 0, 0, 0);
 
-    return {
-        startDate: format(state.startDate),
-        endDate: format(state.endDate),
-    };
+  // end of day → next day start (exclusive boundary)
+  end.setHours(0, 0, 0, 0);
+  end.setDate(end.getDate() + 1);
+
+  return {
+    startDate: start.toISOString(),
+    endDate: end.toISOString(),
+  };
 };
 
 

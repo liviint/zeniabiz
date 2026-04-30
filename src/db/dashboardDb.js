@@ -1,48 +1,49 @@
 import { normalizeRange } from "../utils/timeNavigatorHelpers";
+import { getSaleItems, getSales } from "./salesDb";
 
 export const getCashFlow = async (db, timeState) => {
   const { startDate, endDate } = normalizeRange(timeState)
 
   const result = await db.getAllAsync(
-    `
-    SELECT 
-      d.date,
-      COALESCE(s.revenue, 0) - COALESCE(e.expenses, 0) as net
-    FROM (
-      SELECT DATE(date) as date FROM sales
-      WHERE DATE(date) >= DATE(?) AND DATE(date) < DATE(?)
+  `
+  SELECT 
+    d.date,
+    COALESCE(s.revenue, 0) - COALESCE(e.expenses, 0) as net
+  FROM (
+    SELECT DATE(date) as date FROM sales
+    WHERE date >= ? AND date < ?
 
-      UNION
+    UNION
 
-      SELECT DATE(date) as date FROM expenses
-      WHERE DATE(date) >= DATE(?) AND DATE(date) < DATE(?) 
+    SELECT DATE(date) as date FROM expenses
+    WHERE date >= ? AND date < ?
       AND deleted_at IS NULL
-    ) d
+  ) d
 
-    LEFT JOIN (
-      SELECT DATE(date) as date, SUM(amount) as revenue
-      FROM sales
-      WHERE DATE(date) >= DATE(?) AND DATE(date) < DATE(?)
-      GROUP BY DATE(date)
-    ) s ON s.date = d.date
+  LEFT JOIN (
+    SELECT DATE(date) as date, SUM(amount) as revenue
+    FROM sales
+    WHERE date >= ? AND date < ?
+    GROUP BY DATE(date)
+  ) s ON s.date = d.date
 
-    LEFT JOIN (
-      SELECT DATE(date) as date, SUM(amount) as expenses
-      FROM expenses
-      WHERE DATE(date) >= DATE(?) AND DATE(date) < DATE(?)
+  LEFT JOIN (
+    SELECT DATE(date) as date, SUM(amount) as expenses
+    FROM expenses
+    WHERE date >= ? AND date < ?
       AND deleted_at IS NULL
-      GROUP BY DATE(date)
-    ) e ON e.date = d.date
+    GROUP BY DATE(date)
+  ) e ON e.date = d.date
 
-    ORDER BY d.date ASC
-    `,
-    [
-      startDate, endDate,
-      startDate, endDate,
-      startDate, endDate,
-      startDate, endDate,
-    ]
-  );
+  ORDER BY d.date ASC
+  `,
+  [
+    startDate, endDate,
+    startDate, endDate,
+    startDate, endDate,
+    startDate, endDate,
+  ]
+);
 
   // -------------------------------
   // 🔥 NORMALIZE DATA (IMPORTANT)
@@ -158,7 +159,6 @@ export const getCashFlow = async (db, timeState) => {
 
 export const getExpensesBreakDown = async (db, timeState) => {
   const { startDate, endDate } = normalizeRange(timeState)
-  console.log(timeState,startDate,endDate,"hello dates")
   if (!startDate || !endDate) {
     throw new Error("Invalid time range");
   }
@@ -191,6 +191,7 @@ export async function getFinancialStats(db, timeState) {
   // -------------------------
   // 1. Revenue & Cost
   // -------------------------
+  
   const revenueAndCost = await db.getFirstAsync(
     `
     SELECT 
@@ -204,6 +205,7 @@ export async function getFinancialStats(db, timeState) {
     `,
     [startDate, endDate]
   );
+
 
   // -------------------------
   // 2. Expenses

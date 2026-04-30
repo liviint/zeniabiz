@@ -78,10 +78,10 @@ export async function createOrUpdateSale(
       // -------------------------
       await db.runAsync(
         `
-        INSERT INTO sales (id, title, note, date, amount, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO sales (id,company, title, note, date, amount, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `,
-        [id, finalTitle, note ?? null, saleDate, total, now, now]
+        [id,company, finalTitle, note ?? null, saleDate, total, now, now]
       );
     }
 
@@ -140,11 +140,12 @@ export async function createOrUpdateSale(
 
         await db.runAsync(
           `INSERT INTO sale_items 
-          (id, sale_id, product_id, batch_id, quantity, price, cost_price)
-          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          (id, sale_id,company, product_id, batch_id, quantity, price, cost_price)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             newUuid(),
             id,
+            company,
             item.product_id,
             item.batch_id,
             remaining,
@@ -156,13 +157,14 @@ export async function createOrUpdateSale(
         await db.runAsync(
           `
           INSERT INTO inventory_movements
-          (id, product_id, batch_id, unit_cost, quantity, type, reference_id, date)
-          VALUES (?, ?, ?, ?, ?, 'sale', ?, ?)
+          (id, product_id, batch_id,company, unit_cost, quantity, type, reference_id, date)
+          VALUES (?, ?, ?, ?, ?, ?, 'sale', ?, ?)
           `,
           [
             newUuid(),
             item.product_id,
             item.batch_id,
+            company,
             batch.cost_price,
             -remaining,
             id,
@@ -191,11 +193,12 @@ export async function createOrUpdateSale(
 
           await db.runAsync(
             `INSERT INTO sale_items 
-            (id, sale_id, product_id, batch_id, quantity, price, cost_price)
-            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            (id, sale_id,company, product_id, batch_id, quantity, price, cost_price)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               newUuid(),
               id,
+              company,
               item.product_id,
               batch.id,
               take,
@@ -207,12 +210,13 @@ export async function createOrUpdateSale(
           await db.runAsync(
             `
             INSERT INTO inventory_movements
-            (id, product_id, batch_id, unit_cost, quantity, type, reference_id, date)
-            VALUES (?, ?, ?, ?, ?, 'sale', ?, ?)
+            (id, product_id,company, batch_id, unit_cost, quantity, type, reference_id, date)
+            VALUES (?, ?, ?, ?, ?, ?, 'sale', ?, ?)
             `,
             [
               newUuid(),
               item.product_id,
+              company,
               batch.id,
               batch.cost_price,
               -take,
