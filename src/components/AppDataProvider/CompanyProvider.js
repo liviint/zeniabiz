@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { ensureLocalCompany } from "../../db/companiesDb";
 import { ensureLocalUser } from "../../db/usersDb";
@@ -7,6 +7,7 @@ import { loadActiveContext } from "../../db/utils";
 
 export default function AppDataProvider({ children }) {
   const db = useSQLiteContext();
+  const [ready, setReady] = useState(false);
 
  useEffect(() => {
   (async () => {
@@ -16,6 +17,7 @@ export default function AppDataProvider({ children }) {
 
     if (session) {
       await loadActiveContext(db);
+      setReady(true)
     } else {
       const userUuid = await ensureLocalUser(db);
       await ensureLocalCompany(db, userUuid);
@@ -23,6 +25,6 @@ export default function AppDataProvider({ children }) {
     }
   })();
 }, []);
-
+  if (!ready) return null;
   return children;
 }

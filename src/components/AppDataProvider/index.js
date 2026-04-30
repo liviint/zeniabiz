@@ -329,8 +329,9 @@ export default function AppDataProvider({ children }) {
   return (
     <SQLiteProvider databaseName="zeniabiz.db" onInit={migrateDbIfNeeded}>
       <CategoriesProvider />
-      <CompanyProvider />
+      <CompanyProvider >
         {children}
+      </CompanyProvider >
     </SQLiteProvider>
   );
 }
