@@ -16,6 +16,24 @@ const MODEL_FIELDS = {
     "updated_at",
     "deleted_at",
   ],
+  sale_items: [
+    "id",
+    "company",
+    "created_by",
+    "updated_by",
+
+    "sale_id",
+    "product_id",
+    "batch_id",
+
+    "quantity",
+    "price",
+    "cost_price",
+
+    "created_at",
+    "updated_at",
+    "deleted_at",
+  ],
   expenses: [
     "id",
     "company",
@@ -43,6 +61,27 @@ const MODEL_FIELDS = {
     "name",
     "color",
     "icon",
+    "created_at",
+    "updated_at",
+    "deleted_at",
+  ],
+  expense_templates: [
+    "id",
+    "company",
+    "created_by",
+    "updated_by",
+
+    "title",
+    "amount",
+    "type",
+
+    "category",
+    "category_id",
+    "usage_count",
+
+    "payee",
+    "note",
+
     "created_at",
     "updated_at",
     "deleted_at",
@@ -88,11 +127,13 @@ export async function pullServerChanges(db, model, endpoint) {
     },
   });
 
+  console.log(res.data,"hello res.data")
+
   if (!res.data) return false;
 
   const { data, cursor: nextCursor, has_more } = res.data;
 
-  await applyServerChanges(db, model, data[model] || []);
+  await applyServerChanges(db, model, data || []);
 
   if (nextCursor) {
     await saveSyncCursor(db, model, nextCursor);

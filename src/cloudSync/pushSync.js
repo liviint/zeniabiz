@@ -15,8 +15,8 @@ const SYNC_ORDER = [
 
 export async function pushLocalChanges(db) {
   let pending = await getPendingItems(db);
-
-  if (pending.length === 0) return;
+    console.log(pending,"hello pending")
+  if (pending.length === 0) return true;
 
   for (const model of SYNC_ORDER) {
     // 🔥 regroup every iteration using latest state

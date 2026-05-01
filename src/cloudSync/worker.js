@@ -2,7 +2,7 @@ import {pullServerChanges} from "./pullSync"
 import {pushLocalChanges} from "./pushSync"
 
 const PULL_ORDER = [
-  "companies",
+  
   "expense_categories", 
   "products",
   "inventory_batches",

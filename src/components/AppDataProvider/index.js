@@ -55,6 +55,7 @@ const migrateDbIfNeeded = async (db) => {
 
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    deleted_at TEXT,
 
     FOREIGN KEY (company) REFERENCES companies(id)
   );
@@ -237,6 +238,7 @@ const migrateDbIfNeeded = async (db) => {
 
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TEXT,
 
     FOREIGN KEY (product_id) REFERENCES products(id),
     FOREIGN KEY (batch_id) REFERENCES inventory_batches(id)
