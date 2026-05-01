@@ -5,7 +5,7 @@ import { ensureLocalUser } from "../../db/usersDb";
 import { loadActiveContext } from "../../db/utils";
 
 
-export default function AppDataProvider({ children }) {
+export default function SessionProvider({ children }) {
   const db = useSQLiteContext();
   const [ready, setReady] = useState(false);
 

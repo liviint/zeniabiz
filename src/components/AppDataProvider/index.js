@@ -1,6 +1,7 @@
 import { SQLiteProvider } from "expo-sqlite";
 import CategoriesProvider from "./CategoriesProvider";
-import CompanyProvider from "./CompanyProvider"
+import SessionProvider from "./SessionProvider"
+import SyncProvider from "./SyncProvider"
 
 const migrateDbIfNeeded = async (db) => {
   
@@ -322,16 +323,25 @@ const migrateDbIfNeeded = async (db) => {
 
   CREATE INDEX IF NOT EXISTS idx_sync_model 
   ON sync_queue(model);
+
+  CREATE TABLE IF NOT EXISTS sync_state (
+    model TEXT PRIMARY KEY,
+    cursor TEXT,
+    updated_at TEXT
+  );
+
 `);
 };
 
 export default function AppDataProvider({ children }) {
   return (
     <SQLiteProvider databaseName="zeniabiz.db" onInit={migrateDbIfNeeded}>
-      <CategoriesProvider />
-      <CompanyProvider >
-        {children}
-      </CompanyProvider >
+      <SessionProvider>
+        <SyncProvider>
+          <CategoriesProvider />
+          {children}
+        </SyncProvider>
+      </SessionProvider>
     </SQLiteProvider>
   );
 }
