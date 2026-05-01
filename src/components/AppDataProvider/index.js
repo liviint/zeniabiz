@@ -327,6 +327,7 @@ const migrateDbIfNeeded = async (db) => {
   CREATE TABLE IF NOT EXISTS sync_state (
     model TEXT PRIMARY KEY,
     cursor TEXT,
+    version INTEGER DEFAULT 0,
     updated_at TEXT
   );
 

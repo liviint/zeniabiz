@@ -1,25 +1,90 @@
 import { getSyncCursor, saveSyncCursor } from "./syncState";
 import { api } from "@/api";
 
+// -------------------------
+// MODEL FIELD WHITELIST
+// -------------------------
+const MODEL_FIELDS = {
+  sales: [
+    "id",
+    "company",
+    "title",
+    "note",
+    "amount",
+    "date",
+    "created_at",
+    "updated_at",
+    "deleted_at",
+  ],
+  expenses: [
+    "id",
+    "company",
+    "amount",
+    "title",
+    "date",
+    "category_id",
+    "created_at",
+    "updated_at",
+    "deleted_at",
+  ],
+  products: [
+    "id",
+    "company",
+    "name",
+    "selling_price",
+    "cost_price",
+    "created_at",
+    "updated_at",
+    "deleted_at",
+  ],
+  expense_categories: [
+    "id",
+    "company",
+    "name",
+    "color",
+    "icon",
+    "created_at",
+    "updated_at",
+    "deleted_at",
+  ],
+  inventory_batches: [
+    "id",
+    "company",
+    "product_id",
+    "quantity_remaining",
+    "cost_price",
+    "selling_price",
+    "date",
+    "created_at",
+    "updated_at",
+    "deleted_at",
+  ],
+  inventory_movements: [
+    "id",
+    "company",
+    "product_id",
+    "batch_id",
+    "unit_cost",
+    "quantity",
+    "type",
+    "reference_id",
+    "date",
+    "created_at",
+    "updated_at",
+    "deleted_at",
+  ],
+};
 
-const SYNC_ORDER = [
-  "expense_categories", 
-  "products",
-  "inventory_batches",
-  "inventory_movements",
-  "expenses",
-  "expense_templates",
-  "sales",
-  "sale_items", 
-];
-
-
+// -------------------------
+// PULL SYNC
+// -------------------------
 export async function pullServerChanges(db, model, endpoint) {
-  const cursor = await getSyncCursor(db, model);
+  const state = await getSyncCursor(db, model);
 
   const res = await api.get(endpoint, {
     params: {
-      cursor: cursor ? JSON.stringify(cursor) : null,
+      cursor: state.cursor ? JSON.stringify(state.cursor) : null,
+      version: state.version,
     },
   });
 
@@ -27,15 +92,12 @@ export async function pullServerChanges(db, model, endpoint) {
 
   const { data, cursor: nextCursor, has_more } = res.data;
 
-  // 1. apply changes locally
   await applyServerChanges(db, model, data[model] || []);
 
-  // 2. update cursor
   if (nextCursor) {
     await saveSyncCursor(db, model, nextCursor);
   }
 
-  // 3. if more → recursively continue
   if (has_more) {
     return pullServerChanges(db, model, endpoint);
   }
@@ -43,9 +105,20 @@ export async function pullServerChanges(db, model, endpoint) {
   return true;
 }
 
-
+// -------------------------
+// APPLY SERVER CHANGES
+// -------------------------
 export async function applyServerChanges(db, model, items) {
+  const fields = MODEL_FIELDS[model];
+
+  if (!fields) {
+    throw new Error(`No schema defined for model: ${model}`);
+  }
+
   for (const item of items) {
+    // -------------------------
+    // DELETE SYNC
+    // -------------------------
     if (item.deleted_at) {
       await db.runAsync(
         `UPDATE ${model} SET deleted_at = ? WHERE id = ?`,
@@ -54,23 +127,40 @@ export async function applyServerChanges(db, model, items) {
       continue;
     }
 
-    const columns = Object.keys(item).join(", ");
-    const placeholders = Object.keys(item).map(() => "?").join(", ");
-    const values = Object.values(item);
+    // -------------------------
+    // FILTER SAFE FIELDS ONLY
+    // -------------------------
+    const filtered = {};
+    for (const f of fields) {
+      filtered[f] = item[f] ?? null;
+    }
 
+    const columns = Object.keys(filtered).join(", ");
+    const placeholders = Object.keys(filtered).map(() => "?").join(", ");
+    const values = Object.values(filtered);
+
+    // -------------------------
+    // UPSERT WITH CONFLICT SAFETY
+    // -------------------------
     await db.runAsync(
       `
       INSERT INTO ${model} (${columns})
       VALUES (${placeholders})
       ON CONFLICT(id) DO UPDATE SET
-        ${Object.keys(item)
-          .filter(k => k !== "id")
-          .map(k => `${k} = excluded.${k}`)
+        ${Object.keys(filtered)
+          .filter((k) => k !== "id")
+          .map(
+            (k) => `
+              ${k} = CASE 
+                WHEN excluded.updated_at >= ${model}.updated_at 
+                THEN excluded.${k} 
+                ELSE ${model}.${k} 
+              END
+            `
+          )
           .join(", ")}
       `,
       values
     );
   }
 }
-
-

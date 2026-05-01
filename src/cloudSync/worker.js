@@ -1,17 +1,34 @@
 import {pullServerChanges} from "./pullSync"
 import {pushLocalChanges} from "./pushSync"
 
+const PULL_ORDER = [
+  "companies",
+  "expense_categories", 
+  "products",
+  "inventory_batches",
+  "inventory_movements",
+  "expenses",
+  "expense_templates",
+  "sales",
+  "sale_items", 
+];
 
+let SYNC_LOCK = false;
 
 export async function runSync(db) {
-  const pushed = await pushLocalChanges(db);
+  if (SYNC_LOCK) return;
 
-  if (!pushed) return;
+  SYNC_LOCK = true;
 
-  await Promise.all([
-    pullServerChanges(db, "sales", "/core/sales/pull/"),
-    pullServerChanges(db, "expenses", "/core/expenses/pull/"),
-    pullServerChanges(db, "products", "/core/products/pull/"),
-  ]);
+  try {
+    const pushed = await pushLocalChanges(db);
+    if (!pushed) return;
+
+    for (const model of PULL_ORDER) {
+      await pullServerChanges(db, model, `/core/${model}/pull/`);
+    }
+  } finally {
+    SYNC_LOCK = false;
+  }
 }
 
