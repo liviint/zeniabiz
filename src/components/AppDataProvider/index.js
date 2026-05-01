@@ -23,6 +23,7 @@ const migrateDbIfNeeded = async (db) => {
   await db.execAsync(`DROP TABLE IF EXISTS sale_items;`);
   
   await db.execAsync(`DROP TABLE IF EXISTS sync_queue;`);
+  await db.execAsync(`DROP TABLE IF EXISTS sync_state;`);
   await db.execAsync(`DROP TABLE IF EXISTS app_settings;`);
    */
   
@@ -88,7 +89,7 @@ const migrateDbIfNeeded = async (db) => {
     updated_at TEXT
   );
 
-  CREATE UNIQUE INDEX idx_single_session ON app_session(id);
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_single_session ON app_session(id);
 
   CREATE INDEX IF NOT EXISTS idx_company_members_company 
   ON company_members(company);
