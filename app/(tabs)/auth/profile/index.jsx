@@ -74,8 +74,12 @@ const handleTriggerLogout = () => {
   };
 
   useEffect(() => {
-    let ctx = getActiveContextSync(db)
-    setActiveContext(ctx)
+    (
+      async () => {
+        let ctx = await getActiveContextSync(db)
+        setActiveContext(ctx)
+      }
+    )()
   },[isFocused])
 
   useEffect(() => {

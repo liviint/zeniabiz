@@ -10,13 +10,13 @@ import { useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
 import { setUserDetails } from "@/store/features/userSlice";
 import { api } from "../../../../api";
-import { safeLocalStorage } from "../../../../utils/storage";
 import * as WebBrowser from "expo-web-browser";
 import { validateEmail } from "../../../../src/helpers";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import { Card, BodyText, FormLabel, Input } from "../../../../src/components/ThemeProvider/components";
 import { upsertLocalUser, createSession } from "../../../../src/db/usersDb";
 import { useSQLiteContext } from "expo-sqlite";
+import { loadActiveContext } from "../../../../src/db/utils";
 WebBrowser.maybeCompleteAuthSession();
 
 export default function Index() {
@@ -67,7 +67,7 @@ export default function Index() {
     const { access, refresh, user } = response.data;
     await upsertLocalUser(db, user);
     await createSession(db, { user, access, refresh });
-
+    await loadActiveContext(db)
     dispatch(setUserDetails(response.data));
 
     setSuccess(true);
