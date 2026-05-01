@@ -3,77 +3,63 @@ import { useSQLiteContext } from "expo-sqlite";
 import { AppState } from "react-native";
 import NetInfo from "@react-native-community/netinfo";
 import { loadActiveContext } from "@/src/db/utils";
-import { runSync } from "@/src/cloudSync/worker";
-
-let syncing = false;
-
-async function safeSync(db) {
-  if (syncing) return;
-  syncing = true;
-
-  try {
-    await runSync(db);
-  } catch (err) {
-    console.error("Sync error:", err);
-  } finally {
-    syncing = false;
-  }
-}
-
-let scheduled = false;
-
-function scheduleSync(db) {
-  if (scheduled) return;
-
-  scheduled = true;
-
-  setTimeout(() => {
-    scheduled = false;
-    safeSync(db);
-  }, 1000);
-}
+import { scheduleSync } from "@/src/cloudSync/worker";
 
 export default function SyncProvider({ children }) {
   const db = useSQLiteContext();
   const [ready, setReady] = useState(false);
 
-  useEffect(() => {
-    let appStateSub;
-    let netSub;
+    useEffect(() => {
+        let appStateSub;
+        let netSub;
+        let interval;
 
-    (async () => {
-      try {
-        // 1️⃣ Load session context FIRST
-        await loadActiveContext(db);
+        (async () => {
+            try {
+                const ctx = await loadActiveContext(db);
 
-        // 2️⃣ Initial sync
-        await scheduleSync(db);
+                const isAuthenticated = !!ctx?.access_token;
 
-        // 3️⃣ App foreground sync
-        appStateSub = AppState.addEventListener("change", state => {
-          if (state === "active") {
-            scheduleSync(db);
-          }
-        });
+                // ❌ no sync engine if not logged in
+                if (!isAuthenticated) {
+                    setReady(true);
+                    return;
+                }
 
-        // 4️⃣ Network reconnect sync
-        netSub = NetInfo.addEventListener(state => {
-          if (state.isConnected) {
-            scheduleSync(db);
-          }
-        });
+                // 🚀 initial sync
+                await scheduleSync(db);
 
-        setReady(true);
-      } catch (err) {
-        console.error("SyncProvider init error:", err);
-      }
-    })();
+            // foreground sync
+                appStateSub = AppState.addEventListener("change", state => {
+                    if (state === "active") {
+                    scheduleSync(db);
+                    }
+                });
 
-    return () => {
-      appStateSub?.remove?.();
-      netSub?.();
-    };
-  }, []);
+            // network reconnect sync
+            netSub = NetInfo.addEventListener(state => {
+                if (state.isConnected) {
+                scheduleSync(db);
+                }
+            });
+
+            // 🔥 periodic safety sync (IMPORTANT)
+            interval = setInterval(() => {
+                scheduleSync(db);
+            }, 2 * 60 * 1000);
+
+            setReady(true);
+            } catch (err) {
+            console.error("SyncProvider init error:", err);
+            }
+        })();
+
+        return () => {
+            appStateSub?.remove?.();
+            netSub?.();
+            clearInterval(interval);
+        };
+    }, []);
 
   if (!ready) return null;
 

@@ -32,3 +32,31 @@ export async function runSync(db) {
   }
 }
 
+let syncing = false;
+
+async function safeSync(db) {
+  if (syncing) return;
+  syncing = true;
+
+  try {
+    await runSync(db);
+  } catch (err) {
+    console.error("Sync error:", err);
+  } finally {
+    syncing = false;
+  }
+}
+
+let scheduled = false;
+
+export function scheduleSync(db) {
+  if (scheduled) return;
+
+  scheduled = true;
+
+  setTimeout(() => {
+    scheduled = false;
+    safeSync(db);
+  }, 1000);
+}
+

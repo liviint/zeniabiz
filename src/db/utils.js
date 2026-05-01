@@ -62,16 +62,18 @@ let cachedContext = null;
 
 export async function loadActiveContext(db) {
   const session = await db.getFirstAsync(
-    `SELECT user_uuid, company_uuid FROM app_session LIMIT 1`
+    `SELECT * FROM app_session LIMIT 1`
   );
 
-  const context = {
+  cachedContext = {
     user_id: session?.user_uuid ?? null,
     company: session?.company_uuid ?? null,
+    access_token: session?.access_token ?? null,
+    refresh_token: session?.refresh_token ?? null,
+    is_authenticated: !!session?.access_token,
   };
 
-  cachedContext = context;
-  return context;
+  return cachedContext;
 }
 
 export function getActiveContextSync() {
@@ -80,7 +82,3 @@ export function getActiveContextSync() {
   }
   return cachedContext;
 }
-
-
-
-

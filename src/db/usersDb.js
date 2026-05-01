@@ -82,7 +82,15 @@ export async function getCurrentSession(db) {
     );
 }
 
-export async function createSession(db, { user, access, refresh }) {
+export async function getSessionCompany(db, user) {
+  const session = await db.getFirstAsync(
+    `SELECT company_uuid FROM app_session LIMIT 1`
+  );
+
+  return session?.company_uuid || user?.company_id || null;
+}
+
+export async function createSession(db, { user, access, refresh, company = null  }) {
   const now = new Date().toISOString();
 
   try {
@@ -94,11 +102,7 @@ export async function createSession(db, { user, access, refresh }) {
       `SELECT uuid FROM local_user LIMIT 1`
     );
 
-    const session = await db.getFirstAsync(
-    `SELECT company_uuid FROM app_session LIMIT 1`
-    );
-
-    const companyUuid = session?.company_uuid || null;
+    let companyUuid = company || await getSessionCompany(db, user);
 
     console.log("📦 Local user from DB:", localUser);
 

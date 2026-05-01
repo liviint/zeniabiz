@@ -1,5 +1,5 @@
 import axios from "axios";
-import {safeLocalStorage} from './utils/storage'
+import { getActiveContextSync } from "./src/db/utils";
 
 const baseURL = "http://192.168.8.95:8000/api"
 
@@ -7,8 +7,12 @@ export let api = axios.create({baseURL})
 
 api.interceptors.request.use(
   async(config) => {
-      const token = await safeLocalStorage.getItem("token")
-      if(token) config.headers.Authorization = `Bearer ${token}`;
+      const ctx = getActiveContextSync();
+
+      if (ctx?.access_token) {
+        config.headers.Authorization = `Bearer ${ctx.access_token}`;
+      }
+
       return config;
   },
   error => {

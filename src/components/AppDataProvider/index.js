@@ -88,6 +88,8 @@ const migrateDbIfNeeded = async (db) => {
     updated_at TEXT
   );
 
+  CREATE UNIQUE INDEX idx_single_session ON app_session(id);
+
   CREATE INDEX IF NOT EXISTS idx_company_members_company 
   ON company_members(company);
 

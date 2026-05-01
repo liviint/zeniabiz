@@ -58,8 +58,6 @@ export default function Index() {
   setSuccess(false);
 
   try {
-    safeLocalStorage.removeItem("token");
-
     const response = await api.post("accounts/login/", {
       ...formData,
       email: formData.email.trim().toLowerCase(),
@@ -67,7 +65,6 @@ export default function Index() {
 
 
     const { access, refresh, user } = response.data;
-    await safeLocalStorage.setItem("token", access);
     await upsertLocalUser(db, user);
     await createSession(db, { user, access, refresh });
 
