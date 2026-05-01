@@ -4,6 +4,38 @@ import { syncEvent } from "../cloudSync/syncEvent";
 
 const newUuid = () => uuid.v4();
 
+async function resolveBatchesFIFO(db, productId, quantityNeeded) {
+  const batches = await db.getAllAsync(
+    `SELECT * FROM inventory_batches
+     WHERE product_id = ? AND quantity_remaining > 0
+     ORDER BY date ASC`,
+    [productId]
+  );
+
+  const allocations = [];
+  let remaining = quantityNeeded;
+
+  for (const batch of batches) {
+    if (remaining <= 0) break;
+
+    const take = Math.min(batch.quantity_remaining, remaining);
+
+    allocations.push({
+      batch: batch.id,
+      cost_price: batch.cost_price,
+      quantity: take,
+    });
+
+    remaining -= take;
+  }
+
+  if (remaining > 0) {
+    throw new Error("Not enough stock across batches");
+  }
+
+  return allocations;
+}
+
 export async function createOrUpdateSale(
   db,
   {
@@ -45,7 +77,7 @@ export async function createOrUpdateSale(
     // -------------------------
     if (isEdit) {
       const oldItems = await db.getAllAsync(
-        `SELECT batch_id, quantity FROM sale_items WHERE sale_id = ?`,
+        `SELECT batch, quantity FROM sale_items WHERE sale_id = ?`,
         [id]
       );
 
@@ -54,7 +86,7 @@ export async function createOrUpdateSale(
           `UPDATE inventory_batches
            SET quantity_remaining = quantity_remaining + ?
            WHERE id = ?`,
-          [item.quantity, item.batch_id]
+          [item.quantity, item.batch]
         );
       }
 
@@ -89,35 +121,85 @@ export async function createOrUpdateSale(
     // 🔵 VALIDATION + STOCK CHECK
     // -------------------------
     for (const item of items) {
-      const required = Number(item.quantity);
+      let allocations = [];
 
-      if (item.batch_id) {
-        const batch = await db.getFirstAsync(
-          `SELECT quantity_remaining FROM inventory_batches WHERE id = ?`,
-          [item.batch_id]
-        );
+ 
+    if (item.batch) {
+      const batch = await db.getFirstAsync(
+        `SELECT * FROM inventory_batches WHERE id = ?`,
+        [item.batch]
+      );
 
-        if (!batch || batch.quantity_remaining < required) {
-          throw new Error(`Not enough stock in selected batch`);
-        }
-      } else {
-        const batches = await db.getAllAsync(
-          `SELECT quantity_remaining FROM inventory_batches
-           WHERE product_id = ? AND quantity_remaining > 0
-           ORDER BY date ASC`,
-          [item.product_id]
-        );
-
-        const totalAvailable = batches.reduce(
-          (sum, b) => sum + b.quantity_remaining,
-          0
-        );
-
-        if (totalAvailable < required) {
-          throw new Error(`Not enough stock for ${item.name}`);
-        }
+      if (!batch || batch.quantity_remaining < item.quantity) {
+        throw new Error(`Not enough stock in selected batch`);
       }
+
+      allocations = [
+        {
+          batch: batch.id,
+          cost_price: batch.cost_price,
+          quantity: item.quantity,
+        },
+      ];
     }
+
+    else {
+      allocations = await resolveBatchesFIFO(
+        db,
+        item.product_id,
+        item.quantity
+      );
+    }
+
+  // -------------------------
+  // 🔴 APPLY ALLOCATIONS
+  // -------------------------
+  for (const alloc of allocations) {
+    const batch = await db.getFirstAsync(
+      `SELECT cost_price FROM inventory_batches WHERE id = ?`,
+      [alloc.batch]
+    );
+
+    await db.runAsync(
+      `UPDATE inventory_batches
+       SET quantity_remaining = quantity_remaining - ?
+       WHERE id = ?`,
+      [alloc.quantity, alloc.batch]
+    );
+
+    await db.runAsync(
+      `INSERT INTO sale_items 
+      (id, sale_id, company, product_id, batch, quantity, price, cost_price)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        newUuid(),
+        id,
+        company,
+        item.product_id,
+        alloc.batch,
+        alloc.quantity,
+        item.price,
+        batch.cost_price,
+      ]
+    );
+
+    await db.runAsync(
+      `INSERT INTO inventory_movements
+      (id, product_id, batch, company, unit_cost, quantity, type, reference_id, date)
+      VALUES (?, ?, ?, ?, ?, ?, 'sale', ?, ?)`,
+      [
+        newUuid(),
+        item.product_id,
+        alloc.batch,
+        company,
+        batch.cost_price,
+        -alloc.quantity,
+        id,
+        saleDate,
+      ]
+    );
+  }
+}
 
     // -------------------------
     // 🔴 APPLY SALE LOGIC
@@ -125,29 +207,29 @@ export async function createOrUpdateSale(
     for (const item of items) {
       let remaining = Number(item.quantity);
 
-      if (item.batch_id) {
+      if (item.batch) {
         const batch = await db.getFirstAsync(
           `SELECT cost_price FROM inventory_batches WHERE id = ?`,
-          [item.batch_id]
+          [item.batch]
         );
 
         await db.runAsync(
           `UPDATE inventory_batches
            SET quantity_remaining = quantity_remaining - ?
            WHERE id = ?`,
-          [remaining, item.batch_id]
+          [remaining, item.batch]
         );
 
         await db.runAsync(
           `INSERT INTO sale_items 
-          (id, sale_id,company, product_id, batch_id, quantity, price, cost_price)
+          (id, sale_id,company, product_id, batch, quantity, price, cost_price)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             newUuid(),
             id,
             company,
             item.product_id,
-            item.batch_id,
+            item.batch,
             remaining,
             item.price,
             batch.cost_price,
@@ -157,13 +239,13 @@ export async function createOrUpdateSale(
         await db.runAsync(
           `
           INSERT INTO inventory_movements
-          (id, product_id, batch_id,company, unit_cost, quantity, type, reference_id, date)
+          (id, product_id, batch,company, unit_cost, quantity, type, reference_id, date)
           VALUES (?, ?, ?, ?, ?, ?, 'sale', ?, ?)
           `,
           [
             newUuid(),
             item.product_id,
-            item.batch_id,
+            item.batch,
             company,
             batch.cost_price,
             -remaining,
@@ -193,7 +275,7 @@ export async function createOrUpdateSale(
 
           await db.runAsync(
             `INSERT INTO sale_items 
-            (id, sale_id,company, product_id, batch_id, quantity, price, cost_price)
+            (id, sale_id,company, product_id, batch, quantity, price, cost_price)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               newUuid(),
@@ -210,7 +292,7 @@ export async function createOrUpdateSale(
           await db.runAsync(
             `
             INSERT INTO inventory_movements
-            (id, product_id,company, batch_id, unit_cost, quantity, type, reference_id, date)
+            (id, product_id,company, batch, unit_cost, quantity, type, reference_id, date)
             VALUES (?, ?, ?, ?, ?, ?, 'sale', ?, ?)
             `,
             [
@@ -265,10 +347,10 @@ export async function createOrUpdateSale(
         model: "sale_items",
         operation: "upsert",
         payload: {
-          id: newUuid(),
+          id:item.id || newUuid(),
           sale: id,
           product_id: item.product_id,
-          batch_id: item.batch_id || null,
+          batch: item.batch || null,
           quantity: item.quantity,
           price: item.price,
           cost_price: item.cost_price || 0,
@@ -292,7 +374,7 @@ export async function createOrUpdateSale(
         payload: {
           id: newUuid(),
           product_id: item.product_id,
-          batch_id: item.batch_id || null,
+          batch: item.batch || null,
           unit_cost: item.cost_price || 0,
           quantity: -Number(item.quantity),
           type: "sale",

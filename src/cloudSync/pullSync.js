@@ -24,7 +24,7 @@ const MODEL_FIELDS = {
 
     "sale_id",
     "product_id",
-    "batch_id",
+    "batch",
 
     "quantity",
     "price",
@@ -102,7 +102,7 @@ const MODEL_FIELDS = {
     "id",
     "company",
     "product_id",
-    "batch_id",
+    "batch",
     "unit_cost",
     "quantity",
     "type",

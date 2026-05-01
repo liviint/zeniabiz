@@ -28,6 +28,7 @@ export default function SaleDetails() {
 
       // Load sale items
       const i = await getSaleItems(db, sale_id);
+      console.log(i,"hello sale items")
       setItems(i);
     })();
   }, [sale_id, isFocused]);

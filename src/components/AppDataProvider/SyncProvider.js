@@ -19,7 +19,7 @@ export default function SyncProvider({ children }) {
                 const ctx = await loadActiveContext(db);
 
                 const isAuthenticated = !!ctx?.access_token;
-
+                console.log(ctx,"hello ctx")
                 // ❌ no sync engine if not logged in
                 if (!isAuthenticated) {
                     setReady(true);

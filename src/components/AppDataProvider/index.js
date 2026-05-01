@@ -226,7 +226,7 @@ const migrateDbIfNeeded = async (db) => {
     updated_by TEXT,
 
     product_id TEXT NOT NULL,
-    batch_id TEXT,
+    batch TEXT,
 
     unit_cost REAL,
     quantity INTEGER NOT NULL,
@@ -241,7 +241,7 @@ const migrateDbIfNeeded = async (db) => {
     deleted_at TEXT,
 
     FOREIGN KEY (product_id) REFERENCES products(id),
-    FOREIGN KEY (batch_id) REFERENCES inventory_batches(id)
+    FOREIGN KEY (batch) REFERENCES inventory_batches(id)
   );
 
   CREATE INDEX IF NOT EXISTS idx_movements_product 
@@ -280,7 +280,7 @@ const migrateDbIfNeeded = async (db) => {
 
     sale_id TEXT,
     product_id TEXT,
-    batch_id TEXT,
+    batch TEXT,
 
     quantity INTEGER,
     price REAL,
@@ -291,7 +291,7 @@ const migrateDbIfNeeded = async (db) => {
     deleted_at TEXT,
 
     FOREIGN KEY (sale_id) REFERENCES sales(id),
-    FOREIGN KEY (batch_id) REFERENCES inventory_batches(id)
+    FOREIGN KEY (batch) REFERENCES inventory_batches(id)
   );
 
   CREATE INDEX IF NOT EXISTS idx_sale_items_sale 

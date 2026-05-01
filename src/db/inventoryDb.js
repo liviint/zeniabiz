@@ -318,7 +318,7 @@ export const restockProduct = async (
     await db.runAsync(
       `
       INSERT INTO inventory_movements
-      (id, company, created_by, updated_by, product_id, batch_id, unit_cost, quantity, type, date, created_at, updated_at)
+      (id, company, created_by, updated_by, product_id, batch, unit_cost, quantity, type, date, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'purchase', ?, ?, ?)
       `,
       [
@@ -366,7 +366,7 @@ export const restockProduct = async (
       payload: {
         id: movementId,
         product_id: productId,
-        batch_id: batchId,
+        batch: batchId,
         unit_cost: unitCost,
         quantity,
         type: "purchase",
@@ -418,7 +418,7 @@ export const getStockMovements = async (db, limit = 100) => {
       m.id,
       m.product_id,
       p.name AS product_name,
-      m.batch_id,
+      m.batch,
       m.quantity,
       m.unit_cost,
       m.type,
