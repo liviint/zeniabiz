@@ -17,7 +17,8 @@ import { Card, BodyText } from "../../../../src/components/ThemeProvider/compone
 import PageLoader from "../../../../src/components/common/PageLoader";
 import { useIsFocused } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
-import { debugActiveSession, testSetUp , debugSessionIntegrity} from "../../../../src/db/testingDb";
+import { getActiveContextSync } from "../../../../src/db/utils";
+import { debugActiveSession,  debugSessionIntegrity} from "../../../../src/db/testingDb";
 
 const ProfileView = () => {
   const db = useSQLiteContext()
@@ -26,19 +27,15 @@ const ProfileView = () => {
   const isFocused = useIsFocused()
   const {refresh} = useLocalSearchParams()
   const dispatch = useDispatch();
-  const user = useSelector((state) => state?.user?.userDetails);
+  const [activeContext,setActiveContext] = useState(null)
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const refereshToken = useSelector(
-          (state) => state?.user?.userDetails?.refresh
-      );
-  
 
 const handleLogoutOk = () => {
   api({
       url: "accounts/logout/",
       method: "POST",
-      data: { refresh: refereshToken },
+      data: { refresh: activeContext?.refresh_token },
     })
       .catch(error => console.log(error))
       .finally(() => {
@@ -77,11 +74,17 @@ const handleTriggerLogout = () => {
   };
 
   useEffect(() => {
-      if (user) {
+    let ctx = getActiveContextSync(db)
+    setActiveContext(ctx)
+  },[isFocused])
+
+  useEffect(() => {
+      if (activeContext?.access_token) {
         getUserData();
       }
       else setUserData(null)
-  },[user, refresh, isFocused])
+  },[activeContext, refresh, isFocused])
+
 useEffect(() => {
   (async () => {
     // testSetUp(db)
