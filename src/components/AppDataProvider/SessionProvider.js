@@ -22,6 +22,7 @@ export default function SessionProvider({ children }) {
       const userUuid = await ensureLocalUser(db);
       await ensureLocalCompany(db, userUuid);
       await loadActiveContext(db);
+      setReady(true)
     }
   })();
 }, []);
