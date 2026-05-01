@@ -51,22 +51,22 @@ export default function Index() {
   };
 
   const handleSubmit = async () => {
-  if (!validateForm()) return;
+    if (!validateForm()) return;
 
-  setLoading(true);
-  setServerError("");
-  setSuccess(false);
+    setLoading(true);
+    setServerError("");
+    setSuccess(false);
 
-  try {
-    const response = await api.post("accounts/login/", {
-      ...formData,
-      email: formData.email.trim().toLowerCase(),
-    });
+    try {
+      const response = await api.post("accounts/login/", {
+        ...formData,
+        email: formData.email.trim().toLowerCase(),
+      });
 
 
-    const { access, refresh, user } = response.data;
+    const { access, refresh, user, company_uuid } = response.data;
     await upsertLocalUser(db, user);
-    await createSession(db, { user, access, refresh });
+    await createSession(db, { user, access, refresh,company_uuid });
     await loadActiveContext(db)
     dispatch(setUserDetails(response.data));
 

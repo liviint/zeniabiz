@@ -90,7 +90,7 @@ export async function getSessionCompany(db, user) {
   return session?.company_uuid || user?.company_id || null;
 }
 
-export async function createSession(db, { user, access, refresh, company = null  }) {
+export async function createSession(db, { user, access, refresh, company_uuid = null  }) {
   const now = new Date().toISOString();
 
   try {
@@ -102,7 +102,7 @@ export async function createSession(db, { user, access, refresh, company = null 
       `SELECT uuid FROM local_user LIMIT 1`
     );
 
-    let companyUuid = company || await getSessionCompany(db, user);
+    let companyUuid = company_uuid || await getSessionCompany(db, user);
 
     console.log("📦 Local user from DB:", localUser);
 
