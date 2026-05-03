@@ -127,7 +127,7 @@ export async function pullServerChanges(db, model, endpoint) {
     },
   });
 
-  console.log(res.data,"hello res.data")
+  // console.log(res.data,"hello res.data")
 
   if (!res.data) return false;
 
