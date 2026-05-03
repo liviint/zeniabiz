@@ -1,4 +1,5 @@
 import { StyleSheet, Dimensions } from "react-native";
+import { useSelector } from "react-redux";
 import { useIsFocused } from "@react-navigation/native";
 import { LineChart } from "react-native-chart-kit";
 import { useSQLiteContext } from "expo-sqlite";
@@ -17,10 +18,11 @@ export default function CashflowChart({timeState}) {
     labels: [],
     datasets: [{ data: [] }],
   });
+  const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
 
   useEffect(() => {
     loadChart();
-  }, [isFocused, timeState]);
+  }, [lastSyncedAt,isFocused, timeState]);
 
   const loadChart = async () => {
     let res = await getCashFlow(db, timeState)

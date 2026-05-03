@@ -22,7 +22,7 @@ export default function SyncProvider({ children }) {
                 return;
             }
             try {
-                await scheduleSync(db);
+                await scheduleSync(db,dispatch);
             } catch (err) {
                 console.error("Sync failed:", err);
             } 

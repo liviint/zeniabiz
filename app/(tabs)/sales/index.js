@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { View, SectionList, Pressable } from "react-native";
+import { useSelector } from "react-redux";
+import { View, SectionList, Pressable, RefreshControl } from "react-native";
 import { useIsFocused } from "@react-navigation/native";
 import {
   Card,
@@ -14,8 +15,10 @@ import { AddButton } from "../../../src/components/common/AddButton";
 import EmptyState from "../../../src/components/common/EmptyState";
 import TimeFilters from "../../../src/components/common/TimeFilters";
 import { groupDataIntoSections } from "../../../src/helpers";
+import { useManualSync } from "../../../src/hooks/useManualSync";
 
 export default function SalesList() {
+  const { onRefresh, refreshing } = useManualSync();
   const { globalStyles } = useThemeStyles();
   const isFocused = useIsFocused();
   const db = useSQLiteContext();
@@ -24,6 +27,7 @@ export default function SalesList() {
   const [sales, setSales] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
 
   useEffect(() => {
     if (!db) return;
@@ -33,7 +37,7 @@ export default function SalesList() {
       setSales(data.sort((a, b) => new Date(b.date) - new Date(a.date)));
       setIsLoading(false);
     })();
-  }, [isFocused, selectedMonth]);
+  }, [isFocused, selectedMonth,lastSyncedAt]);
 
   const formatDate = (date) => {
     if (!date) return "";
@@ -58,6 +62,7 @@ export default function SalesList() {
 
   return (
     <View style={globalStyles.container}>
+      <RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>
       <BodyText style={globalStyles.title}>My Sales</BodyText>
 
       <TimeFilters 
@@ -69,6 +74,7 @@ export default function SalesList() {
     <SectionList
       sections={sections}
       keyExtractor={(item) => item.id}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       renderSectionHeader={({ section }) => (
         <BodyText style={{ fontWeight: "700", marginVertical: 6 }}>
           {section.title}

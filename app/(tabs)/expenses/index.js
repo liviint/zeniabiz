@@ -1,8 +1,9 @@
 import { useIsFocused } from "@react-navigation/native";
+import { useSelector } from "react-redux";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { Pressable, SectionList, StyleSheet, View } from "react-native";
+import { Pressable, SectionList, StyleSheet, View, RefreshControl } from "react-native";
 import { BodyText, Card, SecondaryText } from "../../../src/components/ThemeProvider/components";
 import { AddButton } from "../../../src/components/common/AddButton";
 import ButtonLinks from "../../../src/components/common/ButtonLinks";
@@ -12,8 +13,10 @@ import { getExpenses } from "../../../src/db/expensesDb"
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { dateFormat } from "../../../utils/dateFormat";
 import { groupDataIntoSections } from "../../../src/helpers";
+import { useManualSync } from "../../../src/hooks/useManualSync";
 
 export default function FinanceListPage() {
+    const { onRefresh, refreshing } = useManualSync();
     const db = useSQLiteContext()
     const router = useRouter();
     const [expenses,setTransactions] = useState([])
@@ -21,6 +24,7 @@ export default function FinanceListPage() {
     const isFocused = useIsFocused()
     const {globalStyles} = useThemeStyles()
     const [selectedMonth, setSelectedMonth] = useState(new Date());
+    const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
 
     let fetchExpenses = async() => {
         let expenses = await getExpenses(db, selectedMonth)
@@ -28,11 +32,11 @@ export default function FinanceListPage() {
     }
 
     useEffect(() => {
-    if (isFocused) {
-      fetchExpenses()
-    }
-    setIsLoading(false)
-    },[isFocused, selectedMonth])
+      if (isFocused) {
+        fetchExpenses()
+      }
+        setIsLoading(false)
+    },[isFocused, selectedMonth,lastSyncedAt])
 
   let grouped = groupDataIntoSections(expenses)
 
@@ -89,6 +93,7 @@ export default function FinanceListPage() {
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         renderItem={renderItem}
         renderSectionHeader={({ section: { title } }) => (
           <BodyText style={{ fontWeight: "bold", padding: 10 }}>

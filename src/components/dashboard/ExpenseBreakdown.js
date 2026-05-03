@@ -1,4 +1,5 @@
 import { StyleSheet, Dimensions } from "react-native";
+import { useSelector } from "react-redux";
 import { useIsFocused } from "@react-navigation/native";
 import { PieChart } from "react-native-chart-kit";
 import { useSQLiteContext } from "expo-sqlite";
@@ -14,10 +15,11 @@ export default function ExpenseBreakdown({timeState}) {
   const isFocused = useIsFocused()
   const db = useSQLiteContext();
   const [data, setData] = useState([]);
+  const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
 
   useEffect(() => {
     loadData();
-  }, [isFocused, timeState]);
+  }, [lastSyncedAt,isFocused, timeState]);
 
   const loadData = async () => {
     const result = await getExpensesBreakDown(db, timeState) 

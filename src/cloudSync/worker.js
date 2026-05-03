@@ -1,5 +1,6 @@
 import {pullServerChanges} from "./pullSync"
 import {pushLocalChanges} from "./pushSync"
+import { syncStarted, syncFinished } from "../store/features/syncSlice";
 
 const PULL_ORDER = [
   
@@ -15,10 +16,12 @@ const PULL_ORDER = [
 
 let SYNC_LOCK = false;
 
-export async function runSync(db) {
+export async function runSync(db,dispatch) {
   if (SYNC_LOCK) return;
 
   SYNC_LOCK = true;
+
+  dispatch(syncStarted());
 
   try {
     await pushLocalChanges(db);
@@ -28,17 +31,18 @@ export async function runSync(db) {
     }
   } finally {
     SYNC_LOCK = false;
+    dispatch(syncFinished());
   }
 }
 
 let syncing = false;
 
-async function safeSync(db) {
+async function safeSync(db,dispatch) {
   if (syncing) return;
   syncing = true;
 
   try {
-    await runSync(db);
+    await runSync(db,dispatch);
   } catch (err) {
     console.error("Sync error:", err);
   } finally {
@@ -48,14 +52,14 @@ async function safeSync(db) {
 
 let scheduled = false;
 
-export function scheduleSync(db) {
+export function scheduleSync(db,dispatch) {
   if (scheduled) return;
 
   scheduled = true;
 
   setTimeout(() => {
     scheduled = false;
-    safeSync(db);
+    safeSync(db,dispatch);
   }, 1000);
 }
 

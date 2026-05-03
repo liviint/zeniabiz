@@ -1,4 +1,5 @@
 import { useIsFocused } from "@react-navigation/native";
+import { useSelector } from "react-redux";
 import { View, StyleSheet } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
@@ -7,10 +8,11 @@ import {getFinancialStats } from "../../db/dashboardDb";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { SecondaryText } from "../ThemeProvider/components";
 
-export default function SummaryCards({ timeState,refreshKey }) {
+export default function SummaryCards({ isSyncing,timeState }) {
   const { colors } = useThemeStyles()
   const isFocused = useIsFocused();
   const db = useSQLiteContext();
+  const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
 
   const [stats, setStats] = useState({
     revenue: 0,
@@ -28,7 +30,7 @@ export default function SummaryCards({ timeState,refreshKey }) {
 
   useEffect(() => {
     fetchStats();
-  }, [refreshKey, isFocused, timeState]);
+  }, [lastSyncedAt, isFocused, timeState]);
 
   const formatNumber = (num) =>
     Number(num || 0).toLocaleString();

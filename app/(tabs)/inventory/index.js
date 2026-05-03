@@ -1,8 +1,9 @@
 import { useIsFocused } from "@react-navigation/native";
+import { useSelector } from "react-redux";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { FlatList, Pressable, StyleSheet, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, View , RefreshControl} from "react-native";
 import { BodyText, Card, SecondaryText, Input } from "../../../src/components/ThemeProvider/components";
 import { AddButton } from "../../../src/components/common/AddButton";
 import { getProducts } from "../../../src/db/inventoryDb";
@@ -10,12 +11,15 @@ import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import EmptyState from "../../../src/components/common/EmptyState";
 import { StatCard } from "../../../src/components/common/StatCard";
 import { useDebounce } from "../../../src/hooks/useDebounce";
+import { useManualSync } from "../../../src/hooks/useManualSync";
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();
+  const { onRefresh, refreshing } = useManualSync();
   const router = useRouter();
   const isFocused = useIsFocused();
   const { globalStyles } = useThemeStyles();
+  const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
 
   const [products, setProducts] = useState([]);
   const [isLoading,setIsLoading] = useState(true)
@@ -32,7 +36,7 @@ export default function ProductsListPage() {
 
   useEffect(() => {
     if (isFocused) fetchProducts();
-  }, [isFocused, debouncedSearch, filter]);
+  }, [isFocused, debouncedSearch, filter,lastSyncedAt]);
 
   const renderItem = ({ item }) => (
     <Pressable onPress={() => router.push(`/inventory/${item.id}`)}>
@@ -60,6 +64,7 @@ export default function ProductsListPage() {
         data={products}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ paddingBottom: 96 }}
         ListHeaderComponent={
           <ListHeader

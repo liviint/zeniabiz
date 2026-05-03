@@ -1,5 +1,5 @@
-import { View, ScrollView, StyleSheet, RefreshControl } from "react-native";
-import { useState, useCallback } from "react";
+import { View, ScrollView, RefreshControl } from "react-native";
+import { useState } from "react";
 import SummaryCards from "../../../src/components/dashboard/SummaryCards"
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { BodyText, SecondaryText } from "../../../src/components/ThemeProvider/components";
@@ -7,20 +7,13 @@ import CashflowChart from "../../../src/components/dashboard/CashflowChart";
 import ExpenseBreakdown from "../../../src/components/dashboard/ExpenseBreakdown";
 import TimeNavigator from "../../../src/components/common/TimeNavigator"
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
+import { useManualSync } from "../../../src/hooks/useManualSync";
 
 export default function DashboardScreen() {
     const { globalStyles } = useThemeStyles()
-    const [refreshing, setRefreshing] = useState(false);
+    const { onRefresh, refreshing } = useManualSync();
 
     const [timeState, setTimeState] = useState(createRange("month"));
-
-    const onRefresh = useCallback(() => {
-        setRefreshing(true);
-
-        setTimeout(() => {
-            setRefreshing(false);
-        }, 800);
-    }, []);
 
     return (
         <View style={globalStyles.container}>
@@ -55,24 +48,3 @@ export default function DashboardScreen() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-
-  header: {
-    paddingTop: 50,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-  },
-
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#333333",
-  },
-
-  subtitle: {
-    fontSize: 13,
-    color: "#777",
-    marginTop: 4,
-  },
-});
