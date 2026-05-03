@@ -21,8 +21,7 @@ export async function runSync(db) {
   SYNC_LOCK = true;
 
   try {
-    const pushed = await pushLocalChanges(db);
-    if (!pushed) return;
+    await pushLocalChanges(db);
 
     for (const model of PULL_ORDER) {
       await pullServerChanges(db, model, `/core/${model}/pull/`);

@@ -9,6 +9,7 @@ import {
 import { useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
 import { setUserDetails } from "@/store/features/userSlice";
+import { triggerSync } from "../../../../src/store/features/syncSlice";
 import { api } from "../../../../api";
 import * as WebBrowser from "expo-web-browser";
 import { validateEmail } from "../../../../src/helpers";
@@ -68,6 +69,7 @@ export default function Index() {
     await upsertLocalUser(db, user);
     await createSession(db, { user, access, refresh,company_uuid });
     await loadActiveContext(db)
+    dispatch(triggerSync());
     dispatch(setUserDetails(response.data));
 
     setSuccess(true);
@@ -76,7 +78,7 @@ export default function Index() {
     setFormData({ email: "", password: "" });
 
   } catch (error) {
-    console.error("Login failed:", error?.response);
+    console.error("Login failed:",error, error?.response);
 
     setServerError(
       error.response?.data?.message ||

@@ -1,13 +1,35 @@
 import { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { useSQLiteContext } from "expo-sqlite";
 import { AppState } from "react-native";
 import NetInfo from "@react-native-community/netinfo";
-import { loadActiveContext } from "@/src/db/utils";
 import { scheduleSync } from "@/src/cloudSync/worker";
+import { triggerSync } from "@/src/store/features/syncSlice";
 
 export default function SyncProvider({ children }) {
-  const db = useSQLiteContext();
-  const [ready, setReady] = useState(false);
+    const db = useSQLiteContext();
+    const [ready, setReady] = useState(false); 
+
+    const dispatch = useDispatch();
+    const trigger = useSelector((state) => state.sync.trigger);
+    const user = useSelector((state) => state.user.userDetails);
+
+
+    useEffect(() => {
+        const run = async () => {
+            if (!user) {
+                setReady(true);
+                return;
+            }
+            try {
+                await scheduleSync(db);
+            } catch (err) {
+                console.error("Sync failed:", err);
+            } 
+        };
+
+        run();
+    }, [trigger]);
 
     useEffect(() => {
         let appStateSub;
@@ -16,36 +38,23 @@ export default function SyncProvider({ children }) {
 
         (async () => {
             try {
-                const ctx = await loadActiveContext(db);
-
-                const isAuthenticated = !!ctx?.access_token;
-                console.log(ctx,"hello ctx")
-                // ❌ no sync engine if not logged in
-                if (!isAuthenticated) {
-                    setReady(true);
-                    return;
-                }
-
-                // 🚀 initial sync
-                await scheduleSync(db);
-
-            // foreground sync
+                // foreground sync
                 appStateSub = AppState.addEventListener("change", state => {
                     if (state === "active") {
-                    scheduleSync(db);
+                        dispatch(triggerSync())
                     }
                 });
 
             // network reconnect sync
             netSub = NetInfo.addEventListener(state => {
                 if (state.isConnected) {
-                scheduleSync(db);
+                    dispatch(triggerSync())
                 }
             });
 
             // 🔥 periodic safety sync (IMPORTANT)
             interval = setInterval(() => {
-                scheduleSync(db);
+                dispatch(triggerSync())
             }, 2 * 60 * 1000);
 
             setReady(true);
