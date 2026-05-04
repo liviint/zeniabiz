@@ -18,6 +18,7 @@ const migrateDbIfNeeded = async (db) => {
   await db.execAsync(`DROP TABLE IF EXISTS products;`);
   await db.execAsync(`DROP TABLE IF EXISTS inventory_batches;`);
   await db.execAsync(`DROP TABLE IF EXISTS inventory_movements;`);
+  await db.execAsync(`DROP TABLE IF EXISTS applied_movements;`);
 
   await db.execAsync(`DROP TABLE IF EXISTS sales;`); 
   await db.execAsync(`DROP TABLE IF EXISTS sale_items;`);
@@ -242,6 +243,11 @@ const migrateDbIfNeeded = async (db) => {
 
     FOREIGN KEY (product_id) REFERENCES products(id),
     FOREIGN KEY (batch) REFERENCES inventory_batches(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS applied_movements (
+    id TEXT PRIMARY KEY,
+    applied_at TEXT
   );
 
   CREATE INDEX IF NOT EXISTS idx_movements_product 

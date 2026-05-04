@@ -1,14 +1,34 @@
 import uuid from "react-native-uuid";
 import { getMonthRange, getActiveContextSync } from "./utils";
 import { syncEvent } from "../cloudSync/syncEvent";
+import { applyMovementToBatches } from "./inventoryDb";
 
 const newUuid = () => uuid.v4();
 
-async function resolveBatchesFIFO(db, productId, quantityNeeded) {
+async function allocateStock(db, productId, quantityNeeded, batchId = null) {
+  if (batchId) {
+    const batch = await db.getFirstAsync(
+      `SELECT * FROM inventory_batches WHERE id = ?`,
+      [batchId]
+    );
+
+    if (!batch || batch.quantity_remaining < quantityNeeded) {
+      throw new Error("Not enough stock in selected batch");
+    }
+
+    return [
+      {
+        batch: batch.id,
+        cost_price: batch.cost_price,
+        quantity: quantityNeeded,
+      },
+    ];
+  }
+
   const batches = await db.getAllAsync(
     `SELECT * FROM inventory_batches
      WHERE product_id = ? AND quantity_remaining > 0
-     ORDER BY date ASC`,
+     ORDER BY date ASC, created_at ASC`,
     [productId]
   );
 
@@ -36,17 +56,74 @@ async function resolveBatchesFIFO(db, productId, quantityNeeded) {
   return allocations;
 }
 
+  async function insertMovementAndApply(db, movement) {
+  await db.runAsync(
+    `INSERT INTO inventory_movements
+    (id, product_id, batch, company, unit_cost, quantity, type, reference_id, date, created_at, updated_at, created_by, updated_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      movement.id,
+      movement.product_id,
+      movement.batch,
+      movement.company,
+      movement.unit_cost,
+      movement.quantity,
+      movement.type,
+      movement.reference_id,
+      movement.date,
+      movement.created_at,
+      movement.updated_at,
+      movement.created_by,
+      movement.updated_by,
+    ]
+  );
+
+  await applyMovementToBatches(db, movement);
+}
+
+async function reverseSaleMovements(db, saleId, context) {
+  const { company, user_id } = context;
+  const now = new Date().toISOString();
+
+  const oldMovements = await db.getAllAsync(
+    `SELECT * FROM inventory_movements WHERE reference_id = ?`,
+    [saleId]
+  );
+
+  const reversals = [];
+
+  for (const m of oldMovements) {
+    const reversal = {
+      id: newUuid(),
+      product_id: m.product_id,
+      batch: m.batch,
+      company,
+      unit_cost: m.unit_cost,
+      quantity: Math.abs(m.quantity),
+      type: "adjustment",
+      reference_id: saleId,
+      date: now,
+      created_by: user_id,
+      updated_by: user_id,
+      created_at: now,
+      updated_at: now,
+    };
+
+    await insertMovementAndApply(db, reversal);
+    reversals.push(reversal);
+  }
+
+  await db.runAsync(`DELETE FROM sale_items WHERE sale_id = ?`, [saleId]);
+
+  return reversals;
+}
+
+
 export async function createOrUpdateSale(
   db,
-  {
-    sale_id = null,
-    items = [],
-    note = null,
-    date,
-    title,
-  }
+  { sale_id = null, items = [], note = null, date, title }
 ) {
-  const { company, user_id } = getActiveContextSync();
+  const { company, user_id } = getActiveContextSync(db);
 
   const now = new Date().toISOString();
   const saleDate = date ? date.toISOString() : now;
@@ -55,182 +132,110 @@ export async function createOrUpdateSale(
   const id = sale_id || newUuid();
 
   const total = items.reduce(
-    (sum, item) => sum + Number(item.price) * Number(item.quantity),
+    (sum, i) => sum + Number(i.price) * Number(i.quantity),
     0
   );
 
   const totalItems = items.reduce(
-    (sum, item) => sum + Number(item.quantity),
+    (sum, i) => sum + Number(i.quantity),
     0
   );
 
-  const finalSaleItems = [];
-  const finalMovements = [];
-
   const finalTitle =
-    title?.trim()?.length > 0
-      ? title
-      : `Sold ${totalItems} item${totalItems > 1 ? "s" : ""} - ${total}`;
+    title?.trim() || `Sold ${totalItems} item${totalItems > 1 ? "s" : ""} - ${total}`;
 
-  await db.runAsync("BEGIN TRANSACTION");
+  const finalMovements = [];
+  const finalSaleItems = [];
+
+  await db.runAsync("BEGIN");
 
   try {
     // -------------------------
-    // 🟡 EDIT FLOW (restore state)
+    // EDIT → reverse first
     // -------------------------
     if (isEdit) {
-      const oldItems = await db.getAllAsync(
-        `SELECT batch, quantity FROM sale_items WHERE sale_id = ?`,
-        [id]
-      );
-
-      for (const item of oldItems) {
-        await db.runAsync(
-          `UPDATE inventory_batches
-           SET quantity_remaining = quantity_remaining + ?
-           WHERE id = ?`,
-          [item.quantity, item.batch]
-        );
-      }
-
-      await db.runAsync(`DELETE FROM sale_items WHERE sale_id = ?`, [id]);
-      await db.runAsync(
-        `DELETE FROM inventory_movements WHERE reference_id = ?`,
-        [id]
-      );
+      await reverseSaleMovements(db, id, { company, user_id });
 
       await db.runAsync(
-        `
-        UPDATE sales
-        SET title = ?, note = ?, date = ?, amount = ?, updated_at = ?
-        WHERE id = ?
-        `,
+        `UPDATE sales
+         SET title=?, note=?, date=?, amount=?, updated_at=?
+         WHERE id=?`,
         [finalTitle, note ?? null, saleDate, total, now, id]
       );
     } else {
-      // -------------------------
-      // 🟢 CREATE FLOW
-      // -------------------------
       await db.runAsync(
-        `
-        INSERT INTO sales (id,company, title, note, date, amount, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `,
-        [id,company, finalTitle, note ?? null, saleDate, total, now, now]
+        `INSERT INTO sales (id, company, title, note, date, amount, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [id, company, finalTitle, note ?? null, saleDate, total, now, now]
       );
     }
 
     // -------------------------
-    // 🔵 VALIDATION + STOCK CHECK
+    // PROCESS ITEMS
     // -------------------------
     for (const item of items) {
-      let allocations = [];
-
- 
-    if (item.batch) {
-      const batch = await db.getFirstAsync(
-        `SELECT * FROM inventory_batches WHERE id = ?`,
-        [item.batch]
-      );
-
-      if (!batch || batch.quantity_remaining < item.quantity) {
-        throw new Error(`Not enough stock in selected batch`);
-      }
-
-      allocations = [
-        {
-          batch: batch.id,
-          cost_price: batch.cost_price,
-          quantity: item.quantity,
-        },
-      ];
-    }
-
-    else {
-      allocations = await resolveBatchesFIFO(
+      const allocations = await allocateStock(
         db,
         item.product_id,
-        item.quantity
+        item.quantity,
+        item.batch
       );
+
+      for (const alloc of allocations) {
+        const movement = {
+          id: newUuid(),
+          product_id: item.product_id,
+          batch: alloc.batch,
+          company,
+          unit_cost: alloc.cost_price,
+          quantity: -alloc.quantity,
+          type: "sale",
+          reference_id: id,
+          date: saleDate,
+          created_by: user_id,
+          updated_by: user_id,
+          created_at: now,
+          updated_at: now,
+        };
+
+        await insertMovementAndApply(db, movement);
+
+        const saleItemId = newUuid();
+
+        await db.runAsync(
+          `INSERT INTO sale_items
+          (id, sale_id, company, product_id, batch, quantity, price, cost_price)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            saleItemId,
+            id,
+            company,
+            item.product_id,
+            alloc.batch,
+            alloc.quantity,
+            item.price,
+            alloc.cost_price,
+          ]
+        );
+
+        finalMovements.push(movement);
+        finalSaleItems.push({
+          id: saleItemId,
+          sale_id: id,
+          product_id: item.product_id,
+          batch: alloc.batch,
+          quantity: alloc.quantity,
+          price: item.price,
+          cost_price: alloc.cost_price,
+        });
+      }
     }
-
-    console.log(allocations,"hello allocations")
-
-  // -------------------------
-  // 🔴 APPLY ALLOCATIONS
-  // -------------------------
-  for (const alloc of allocations) {
-    const saleItemId = newUuid();
-    const movementId = newUuid();
-
-    await db.runAsync(
-      `UPDATE inventory_batches
-       SET quantity_remaining = quantity_remaining - ?
-       WHERE id = ?`,
-      [alloc.quantity, alloc.batch]
-    );
-
-    await db.runAsync(
-      `INSERT INTO sale_items 
-      (id, sale_id, company, product_id, batch, quantity, price, cost_price)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        saleItemId,
-        id,
-        company,
-        item.product_id,
-        alloc.batch,
-        alloc.quantity,
-        item.price,
-        alloc.cost_price,
-      ]
-    );
-
-    await db.runAsync(
-      `INSERT INTO inventory_movements
-      (id, product_id, batch, company, unit_cost, quantity, type, reference_id, date)
-      VALUES (?, ?, ?, ?, ?, ?, 'sale', ?, ?)`,
-      [
-        movementId,
-        item.product_id,
-        alloc.batch,
-        company,
-        alloc.cost_price,
-        -alloc.quantity,
-        id,
-        saleDate,
-      ]
-    );
-    finalSaleItems.push({
-      id: saleItemId,
-      sale: id,
-      product_id: item.product_id,
-      batch: alloc.batch,
-      quantity: alloc.quantity,
-      price: item.price,
-      cost_price: alloc.cost_price,
-    });
-
-    finalMovements.push({
-      id:movementId,
-      product_id: item.product_id,
-      batch: alloc.batch,
-      unit_cost: alloc.cost_price,
-      quantity: -alloc.quantity,
-      type: "sale",
-      reference_id: id,
-      date: saleDate,
-    });
-  }
-}
 
     await db.runAsync("COMMIT");
 
     // -------------------------
-    // 🔥 SYNC (FULL CONSISTENCY)
+    // SYNC
     // -------------------------
-
-    // 1. Sale header
     await syncEvent(db, {
       model: "sales",
       operation: "upsert",
@@ -239,19 +244,16 @@ export async function createOrUpdateSale(
         company,
         created_by: user_id,
         updated_by: user_id,
-
         title: finalTitle,
         note,
         date: saleDate,
         amount: total,
-
         created_at: now,
         updated_at: now,
         deleted_at: null,
       },
     });
 
-    // 2. Sale items
     for (const item of finalSaleItems) {
       await syncEvent(db, {
         model: "sale_items",
@@ -268,7 +270,6 @@ export async function createOrUpdateSale(
       });
     }
 
-    // 3. Inventory movements
     for (const movement of finalMovements) {
       await syncEvent(db, {
         model: "inventory_movements",
@@ -287,10 +288,9 @@ export async function createOrUpdateSale(
 
     return id;
 
-  } catch (error) {
+  } catch (err) {
     await db.runAsync("ROLLBACK");
-    console.error("SALE ERROR:", error);
-    throw error;
+    throw err;
   }
 }
 

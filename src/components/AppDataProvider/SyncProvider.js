@@ -16,19 +16,36 @@ export default function SyncProvider({ children }) {
 
 
     useEffect(() => {
+        let unsubscribe;
+
         const run = async () => {
             if (!user) {
                 setReady(true);
                 return;
             }
-            try {
-                await scheduleSync(db,dispatch);
-            } catch (err) {
-                console.error("Sync failed:", err);
-            } 
+
+            const state = await NetInfo.fetch();
+
+            if (state.isConnected) {
+                try {
+                    await scheduleSync(db, dispatch);
+                } catch (err) {
+                    console.error("Sync failed:", err);
+                }
+            }
+
+            unsubscribe = NetInfo.addEventListener(state => {
+                if (state.isConnected) {
+                    scheduleSync(db, dispatch);
+                }
+            });
         };
 
         run();
+
+        return () => {
+            unsubscribe?.();
+        };
     }, [trigger]);
 
     useEffect(() => {

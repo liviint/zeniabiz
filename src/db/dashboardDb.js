@@ -1,5 +1,4 @@
 import { normalizeRange } from "../utils/timeNavigatorHelpers";
-import { getSaleItems, getSales } from "./salesDb";
 
 export const getCashFlow = async (db, timeState) => {
   const { startDate, endDate } = normalizeRange(timeState)

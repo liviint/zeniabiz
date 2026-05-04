@@ -82,3 +82,16 @@ export function getActiveContextSync() {
   }
   return cachedContext;
 }
+
+export async function withTransaction(db, fn) {
+  await db.runAsync("BEGIN");
+
+  try {
+    const result = await fn();
+    await db.runAsync("COMMIT");
+    return result;
+  } catch (e) {
+    await db.runAsync("ROLLBACK");
+    throw e;
+  }
+}
