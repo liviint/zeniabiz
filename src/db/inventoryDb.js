@@ -22,11 +22,11 @@ export async function upsertProduct(
 
     const isNew = !id;
     id = id || newUuid();
+    
 
     const unitCost = parseFloat(cost_price) || 0;
     const sellPrice = parseFloat(selling_price) || 0;
     const initialStock = parseFloat(stock_quantity) || 0;
-
     created_at = created_at || now;
 
     // 1️⃣ PRODUCT ONLY
@@ -206,6 +206,7 @@ export async function getProductBatches(db, id) {
     `,
     [id]
   );
+  console.log(batches,"hello batches")
 
   return batches
 }
@@ -319,9 +320,6 @@ export const restockProduct = async (
       ]
     );
 
-    // ✅ 2️⃣ APPLY PROJECTION
-    await applyMovementToBatches(db, movement);
-
     // ✅ 3️⃣ SYNC ONLY MOVEMENT
     syncEvent(db, {
       model: "inventory_movements",
@@ -330,12 +328,10 @@ export const restockProduct = async (
     }).catch(console.error);
 
     return batchId;
-
 };
 
-export async function applyMovementToBatches(db, movement,) {
+export async function applyMovementToBatches(db, movement) {
   const {
-    id,
     product_id,
     batch,
     quantity,
@@ -347,161 +343,154 @@ export async function applyMovementToBatches(db, movement,) {
     updated_by,
     date,
   } = movement;
-  
-    const now = new Date().toISOString();
-
-    // 🔒 Idempotency check
-    const exists = await db.getFirstAsync(
-      `SELECT id FROM applied_movements WHERE id = ?`,
-      [id]
-    );
-    if (exists) return;
 
   try {
-    if (type === "purchase") {
+    const now = new Date().toISOString();
+  console.log(movement,"hello movement apply")
+
+  if (type === "purchase") {
+    await db.runAsync(
+      `
+      INSERT OR IGNORE INTO inventory_batches
+      (id, company, created_by, updated_by, product_id, quantity_remaining, cost_price, selling_price, date, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        batch,
+        company,
+        created_by,
+        updated_by,
+        product_id,
+        quantity,
+        unit_cost,
+        selling_price,
+        date,
+        now,
+        now,
+      ]
+    );
+  }
+
+  else if (type === "sale") {
+    let remaining = Math.abs(quantity);
+
+    const batches = await db.getAllAsync(
+      `
+      SELECT id, quantity_remaining
+      FROM inventory_batches
+      WHERE product_id = ?
+        AND quantity_remaining > 0
+        AND deleted_at IS NULL
+      ORDER BY date ASC, created_at ASC
+      `,
+      [product_id]
+    );
+
+    for (const b of batches) {
+      if (remaining <= 0) break;
+
+      const deduct = Math.min(b.quantity_remaining, remaining);
+
       await db.runAsync(
         `
-        INSERT OR IGNORE INTO inventory_batches
+        UPDATE inventory_batches
+        SET quantity_remaining = quantity_remaining - ?,
+            updated_at = ?
+        WHERE id = ?
+        `,
+        [deduct, now, b.id]
+      );
+
+      remaining -= deduct;
+    }
+
+    if (remaining > 0) {
+      throw new Error(
+        `Insufficient stock for product ${product_id}. Missing ${remaining}`
+      );
+    }
+  }
+
+  else if (type === "adjustment") {
+    if (quantity > 0) {
+      await db.runAsync(
+        `
+        INSERT INTO inventory_batches
         (id, company, created_by, updated_by, product_id, quantity_remaining, cost_price, selling_price, date, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
-          batch,
+          batch || newUuid(),
           company,
           created_by,
           updated_by,
           product_id,
           quantity,
-          unit_cost,
-          selling_price, // ⚠️ replace later with real selling_price
+          unit_cost || 0,
+          0,
           date,
           now,
           now,
         ]
       );
+    } else {
+      // same deduction logic...
     }
-
-    else if (type === "sale") {
-      let remaining = Math.abs(quantity);
-
-      const batches = await db.getAllAsync(
-        `
-        SELECT id, quantity_remaining
-        FROM inventory_batches
-        WHERE product_id = ?
-          AND quantity_remaining > 0
-          AND deleted_at IS NULL
-        ORDER BY date ASC, created_at ASC
-        `,
-        [product_id]
-      );
-
-      for (const b of batches) {
-        if (remaining <= 0) break;
-
-        const deduct = Math.min(b.quantity_remaining, remaining);
-
-        await db.runAsync(
-          `
-          UPDATE inventory_batches
-          SET quantity_remaining = quantity_remaining - ?,
-              updated_at = ?
-          WHERE id = ?
-          `,
-          [deduct, now, b.id]
-        );
-
-        remaining -= deduct;
-      }
-
-      if (remaining > 0) {
-        throw new Error(
-          `Insufficient stock for product ${product_id}. Missing ${remaining}`
-        );
-      }
-    }
-
-    else if (type === "adjustment") {
-      if (quantity > 0) {
-        await db.runAsync(
-          `
-          INSERT INTO inventory_batches
-          (id, company, created_by, updated_by, product_id, quantity_remaining, cost_price, selling_price, date, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `,
-          [
-            batch || newUuid(),
-            company,
-            created_by,
-            updated_by,
-            product_id,
-            quantity,
-            unit_cost || 0,
-            0,
-            date,
-            now,
-            now,
-          ]
-        );
-      } else {
-        let remaining = Math.abs(quantity);
-
-        const batches = await db.getAllAsync(
-          `
-          SELECT id, quantity_remaining
-          FROM inventory_batches
-          WHERE product_id = ?
-            AND quantity_remaining > 0
-            AND deleted_at IS NULL
-          ORDER BY date ASC, created_at ASC
-          `,
-          [product_id]
-        );
-
-        for (const b of batches) {
-          if (remaining <= 0) break;
-
-          const deduct = Math.min(b.quantity_remaining, remaining);
-
-          await db.runAsync(
-            `
-            UPDATE inventory_batches
-            SET quantity_remaining = quantity_remaining - ?,
-                updated_at = ?
-            WHERE id = ?
-            `,
-            [deduct, now, b.id]
-          );
-
-          remaining -= deduct;
-        }
-
-        if (remaining > 0) {
-          throw new Error(
-            `Adjustment failed. Not enough stock for ${product_id}`
-          );
-        }
-      }
-    }
-
-    else {
-      throw new Error(`Unsupported movement type: ${type}`);
-    }
-
-    // ✅ MARK AS APPLIED (CRITICAL)
-    await db.runAsync(
-      `
-      INSERT INTO applied_movements (id, applied_at)
-      VALUES (?, ?)
-      `,
-      [id, now]
-    );
-
-
-  } catch (error) {
-    throw error;
   }
-  
+
+  else {
+    throw new Error(`Unsupported movement type: ${type}`);
+  }
+  } catch (error) {
+    console.log(error,"hello apply batch error")
+  }
+}
+
+export async function processPendingMovements(db) {
+  const movements = await db.getAllAsync(
+    `
+    SELECT m.*
+    FROM inventory_movements m
+    LEFT JOIN applied_movements a ON a.id = m.id
+    WHERE a.id IS NULL
+      AND m.deleted_at IS NULL
+    ORDER BY m.date ASC
+    `
+  );
+  const all = await db.getAllAsync(
+  `SELECT * FROM inventory_movements ORDER BY created_at DESC`
+);
+const alla = await db.getAllAsync(
+  `SELECT * FROM applied_movements `
+);
+
+
+console.log("ALL MOVEMENTS:", all,alla);
+  console.log(movements,"hello movements")
+
+  if (!movements.length) return;
+
+  await db.runAsync("BEGIN");
+
+  try {
+    for (const m of movements) {
+      await applyMovementToBatches(db, m);
+
+      await db.runAsync(
+        `
+        INSERT INTO applied_movements (id, applied_at)
+        VALUES (?, ?)
+        `,
+        [m.id, new Date().toISOString()]
+      );
+    }
+
+    await db.runAsync("COMMIT");
+
+  } catch (err) {
+    await db.runAsync("ROLLBACK");
+    throw err;
+  }
 }
 
 export async function getInventoryStats(db) {

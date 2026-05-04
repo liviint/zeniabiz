@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { useIsFocused } from "@react-navigation/native";
 import { View, TouchableOpacity, Text } from "react-native";
 import { useLocalSearchParams , useRouter} from "expo-router";
@@ -8,11 +9,13 @@ import { getSaleById, getSaleItems, deleteSale } from "../../../../src/db/salesD
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import DeleteButton from "../../../../src/components/common/DeleteButton";
 import { dateFormat } from "../../../../src/utils/dateFormat";
+import { triggerBatchProcessing } from "../../../../src/store/features/batchesSlice";
 
 export default function SaleDetails() {
   const { globalStyles } = useThemeStyles();
   const isFocused = useIsFocused();
   const db = useSQLiteContext();
+  const dispatch = useDispatch()
   const router = useRouter();
   const { id: sale_id } = useLocalSearchParams();
 
@@ -35,6 +38,7 @@ export default function SaleDetails() {
 
   const handleDelete = async () => {
     await deleteSale(db, sale_id);
+    dispatch(triggerBatchProcessing())
     router.back();
   };
 

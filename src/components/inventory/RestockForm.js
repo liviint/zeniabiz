@@ -1,14 +1,17 @@
 import { useLocalSearchParams } from "expo-router";
+import { useDispatch } from "react-redux";
 import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
 import { Alert, Pressable, StyleSheet, View , Modal } from "react-native";
 import { BodyText, Card, Input } from "../../components/ThemeProvider/components";
 import { getProductById, restockProduct } from "../../db/inventoryDb";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
+import { triggerBatchProcessing } from "../../store/features/batchesSlice";
 
 export default function RestockForm({
     product, restockVisible, setRestockVisible, setProduct, setReoloadBatches }) {
     const db = useSQLiteContext();
+    const dispatch = useDispatch()
     const { globalStyles } = useThemeStyles();
     const { id } = useLocalSearchParams();
 
@@ -51,7 +54,7 @@ export default function RestockForm({
             cost_price: cost,
             selling_price: price
         });
-
+        dispatch(triggerBatchProcessing())
         const updated = await getProductById(db, id);
         setProduct(updated);
 

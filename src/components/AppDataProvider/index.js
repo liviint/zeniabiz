@@ -2,6 +2,7 @@ import { SQLiteProvider } from "expo-sqlite";
 import CategoriesProvider from "./CategoriesProvider";
 import SessionProvider from "./SessionProvider"
 import SyncProvider from "./SyncProvider"
+import InventoryProvider from "./InventoryProvider"
 
 const migrateDbIfNeeded = async (db) => {
   
@@ -352,6 +353,7 @@ export default function AppDataProvider({ children }) {
       <SessionProvider>
         <SyncProvider>
           <CategoriesProvider />
+          <InventoryProvider />
           {children}
         </SyncProvider>
       </SessionProvider>

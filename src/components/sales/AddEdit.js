@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { useIsFocused } from "@react-navigation/native";
 import {
   View,
@@ -24,10 +25,12 @@ import {
 } from "../../../src/db/salesDb";
 import { getCategories } from "../../../src/db/categoriesDb";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import {triggerBatchProcessing} from "../../../src/store/features/batchesSlice"
 
 export default function SellPage() {
   const db = useSQLiteContext();
   const { id } = useLocalSearchParams();
+  const dispatch = useDispatch()
   const isFocused = useIsFocused();
   const router = useRouter();
   const { globalStyles } = useThemeStyles();
@@ -155,7 +158,7 @@ export default function SellPage() {
       category: category?.name,
       category_id: category?.id || null,
     });
-
+    dispatch(triggerBatchProcessing());
     Alert.alert("Success", "Sale recorded");
     router.push("/sales");
   };
