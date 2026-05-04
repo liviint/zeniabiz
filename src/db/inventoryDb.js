@@ -110,41 +110,74 @@ export async function getProducts(
 ) {
   let sql = `
     SELECT 
-      p.*,
-      COALESCE(SUM(b.quantity_remaining), 0) AS stock_quantity,
-      COALESCE(SUM(b.quantity_remaining * b.cost_price), 0) AS stock_value
+      p.id,
+      p.name,
+      p.sku,
+      p.selling_price,
+      p.cost_price,
+      p.created_at,
+
+      -- STOCK (pure ledger calculation)
+      COALESCE(SUM(
+        CASE 
+          WHEN m.type = 'purchase' THEN m.quantity
+          WHEN m.type = 'sale' THEN -ABS(m.quantity)
+          WHEN m.type = 'adjustment' THEN m.quantity
+          ELSE 0
+        END
+      ), 0) AS stock_quantity,
+
+      -- STOCK VALUE (cost basis approximation)
+      COALESCE(SUM(
+        CASE 
+          WHEN m.type = 'purchase' THEN m.quantity * m.unit_cost
+          WHEN m.type = 'adjustment' THEN m.quantity * m.unit_cost
+          ELSE 0
+        END
+      ), 0) AS stock_value
+
     FROM products p
-    LEFT JOIN inventory_batches b
-      ON p.id = b.product_id
-      AND b.quantity_remaining > 0
+    LEFT JOIN inventory_movements m
+      ON m.product_id = p.id
+      AND m.deleted_at IS NULL
+
     WHERE p.deleted_at IS NULL
   `;
 
   const params = [];
 
-  // 📅 Month filter
+  // 📅 Month filter (applies to movements, not products)
   if (selectedMonth) {
     const { startDate, endDate } = getMonthRange(selectedMonth);
 
     sql += `
-      AND p.created_at >= ?
-      AND p.created_at < ?
+      AND (
+        m.date IS NULL 
+        OR (
+          datetime(m.date) >= datetime(?)
+          AND datetime(m.date) < datetime(?)
+        )
+      )
     `;
+
     params.push(startDate, endDate);
   }
 
   // 🔍 Search
-  if (search) {
+  if (search?.trim()) {
     sql += `
-      AND (p.name LIKE ? OR p.sku LIKE ?)
+      AND (
+        p.name LIKE ? OR 
+        p.sku LIKE ?
+      )
     `;
     params.push(`%${search}%`, `%${search}%`);
   }
 
-  // 🧱 GROUPING (REQUIRED)
+  // 🧱 GROUPING
   sql += ` GROUP BY p.id`;
 
-  // 🎯 Filters (must use HAVING)
+  // 🎯 FILTERS
   if (filter === "low_stock") {
     sql += `
       HAVING stock_quantity > 0
@@ -156,43 +189,82 @@ export async function getProducts(
     `;
   }
 
-  // 🔃 Sorting
-  if (sort === "newest") {
-    sql += ` ORDER BY datetime(p.created_at) DESC`;
-  } else if (sort === "oldest") {
-    sql += ` ORDER BY datetime(p.created_at) ASC`;
-  } else if (sort === "high_stock") {
-    sql += ` ORDER BY stock_quantity DESC`;
-  } else if (sort === "low_stock") {
-    sql += ` ORDER BY stock_quantity ASC`;
-  } else if (sort === "price_high") {
-    sql += ` ORDER BY p.selling_price DESC`;
-  } else if (sort === "price_low") {
-    sql += ` ORDER BY p.selling_price ASC`;
-  } else {
-    sql += ` ORDER BY datetime(p.created_at) DESC`;
+  // 🔃 SORTING
+  switch (sort) {
+    case "oldest":
+      sql += ` ORDER BY datetime(p.created_at) ASC`;
+      break;
+
+    case "high_stock":
+      sql += ` ORDER BY stock_quantity DESC`;
+      break;
+
+    case "low_stock":
+      sql += ` ORDER BY stock_quantity ASC`;
+      break;
+
+    case "price_high":
+      sql += ` ORDER BY p.selling_price DESC`;
+      break;
+
+    case "price_low":
+      sql += ` ORDER BY p.selling_price ASC`;
+      break;
+
+    case "newest":
+    default:
+      sql += ` ORDER BY datetime(p.created_at) DESC`;
+      break;
   }
 
   return await db.getAllAsync(sql, params);
 }
 
 export async function getProductById(db, id) {
-  return await db.getFirstAsync(
+  const product = await db.getFirstAsync(
     `
     SELECT 
-      p.*,
-      COALESCE(SUM(b.quantity_remaining), 0) AS stock_quantity,
-      COALESCE(SUM(b.quantity_remaining * b.cost_price), 0) AS stock_value
+      p.id,
+      p.name,
+      p.sku,
+      p.cost_price,
+      p.selling_price,
+      p.created_at,
+
+      -- STOCK = purchases - sales +/- adjustments
+      COALESCE(SUM(
+        CASE 
+          WHEN m.type = 'purchase' THEN m.quantity
+          WHEN m.type = 'sale' THEN -ABS(m.quantity)
+          WHEN m.type = 'adjustment' THEN m.quantity
+          ELSE 0
+        END
+      ), 0) AS stock_quantity,
+
+      -- STOCK VALUE (cost basis from movements only)
+      COALESCE(SUM(
+        CASE 
+          WHEN m.type = 'purchase' THEN m.quantity * m.unit_cost
+          WHEN m.type = 'adjustment' THEN m.quantity * m.unit_cost
+          ELSE 0
+        END
+      ), 0) AS stock_value
+
     FROM products p
-    LEFT JOIN inventory_batches b
-      ON p.id = b.product_id
-      AND b.quantity_remaining > 0
+    LEFT JOIN inventory_movements m
+      ON m.product_id = p.id
+      AND m.deleted_at IS NULL
+
     WHERE p.id = ?
+      AND p.deleted_at IS NULL
+
     GROUP BY p.id
     LIMIT 1
     `,
     [id]
   );
+
+  return product;
 }
 
 export async function getProductBatches(db, id) {
