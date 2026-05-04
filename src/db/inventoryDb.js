@@ -329,162 +329,111 @@ export const restockProduct = async (
     return batchId;
 };
 
-export async function applyMovementToBatches(db, movement) {
-  const {
-    product_id,
-    batch,
-    quantity,
-    type,
-    unit_cost,
-    selling_price,
-    company,
-    created_by,
-    updated_by,
-    date,
-  } = movement;
+export function buildFIFO(movements) {
+  const batches = [];
 
-  try {
-    const now = new Date().toISOString();
-  console.log(movement,"hello movement apply")
+  for (const m of movements) {
+    const qty = Number(m.quantity);
 
-  if (type === "purchase") {
-    await db.runAsync(
-      `
-      INSERT OR IGNORE INTO inventory_batches
-      (id, company, created_by, updated_by, product_id, quantity_remaining, cost_price, selling_price, date, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
-      [
-        batch,
-        company,
-        created_by,
-        updated_by,
-        product_id,
-        quantity,
-        unit_cost,
-        selling_price,
-        date,
-        now,
-        now,
-      ]
-    );
-  }
+    // -----------------------
+    // 1️⃣ PURCHASE → creates stock
+    // -----------------------
+    if (m.type === "purchase") {
+      if (qty <= 0) continue;
 
-  else if (type === "sale") {
-    let remaining = Math.abs(quantity);
-
-    const batches = await db.getAllAsync(
-      `
-      SELECT id, quantity_remaining
-      FROM inventory_batches
-      WHERE product_id = ?
-        AND quantity_remaining > 0
-        AND deleted_at IS NULL
-      ORDER BY date ASC, created_at ASC
-      `,
-      [product_id]
-    );
-
-    for (const b of batches) {
-      if (remaining <= 0) break;
-
-      const deduct = Math.min(b.quantity_remaining, remaining);
-
-      await db.runAsync(
-        `
-        UPDATE inventory_batches
-        SET quantity_remaining = quantity_remaining - ?,
-            updated_at = ?
-        WHERE id = ?
-        `,
-        [deduct, now, b.id]
-      );
-
-      remaining -= deduct;
+      batches.push({
+        source_id: m.id,
+        product_id: m.product_id,
+        remaining: qty,
+        cost_price: Number(m.unit_cost || 0),
+        date: m.date,
+      });
     }
 
-    if (remaining > 0) {
-      throw new Error(
-        `Insufficient stock for product ${product_id}. Missing ${remaining}`
-      );
+    // -----------------------
+    // 2️⃣ SALE → consumes stock FIFO
+    // -----------------------
+    else if (m.type === "sale") {
+      let remainingToDeduct = Math.abs(qty);
+
+      for (const batch of batches) {
+        if (remainingToDeduct <= 0) break;
+        if (batch.remaining <= 0) continue;
+
+        const take = Math.min(batch.remaining, remainingToDeduct);
+
+        batch.remaining -= take;
+        remainingToDeduct -= take;
+      }
+
+      // If you want strict validation, uncomment:
+      // if (remainingToDeduct > 0) {
+      //   throw new Error("Insufficient stock during FIFO build");
+      // }
+    }
+
+    // -----------------------
+    // 3️⃣ ADJUSTMENT → can add or remove stock
+    // -----------------------
+    else if (m.type === "adjustment") {
+      if (qty > 0) {
+        // stock increase
+        batches.push({
+          source_id: m.id,
+          product_id: m.product_id,
+          remaining: qty,
+          cost_price: Number(m.unit_cost || 0),
+          date: m.date,
+        });
+      } else {
+        // stock decrease
+        let remainingToDeduct = Math.abs(qty);
+
+        for (const batch of batches) {
+          if (remainingToDeduct <= 0) break;
+          if (batch.remaining <= 0) continue;
+
+          const take = Math.min(batch.remaining, remainingToDeduct);
+
+          batch.remaining -= take;
+          remainingToDeduct -= take;
+        }
+      }
     }
   }
 
-  else if (type === "adjustment") {
-    if (quantity > 0) {
-      await db.runAsync(
-        `
-        INSERT INTO inventory_batches
-        (id, company, created_by, updated_by, product_id, quantity_remaining, cost_price, selling_price, date, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `,
-        [
-          batch || newUuid(),
-          company,
-          created_by,
-          updated_by,
-          product_id,
-          quantity,
-          unit_cost || 0,
-          0,
-          date,
-          now,
-          now,
-        ]
-      );
-    } else {
-      // same deduction logic...
-    }
-  }
-
-  else {
-    throw new Error(`Unsupported movement type: ${type}`);
-  }
-  } catch (error) {
-    console.log(error,"hello apply batch error")
-  }
+  // -----------------------
+  // 4️⃣ return only active stock
+  // -----------------------
+  return batches.filter(b => b.remaining > 0);
 }
 
-export async function getInventoryStats(db) {
-  const result = await db.getFirstAsync(`
-    SELECT
-      COUNT(DISTINCT p.id) as total_products,
-      COALESCE(SUM(b.quantity_remaining), 0) as total_stock,
-      COALESCE(SUM(b.quantity_remaining * b.cost_price), 0) as stock_value
-    FROM products p
-    LEFT JOIN inventory_batches b
-      ON p.id = b.product_id
-      AND b.quantity_remaining > 0
-    WHERE p.deleted_at IS NULL
-  `);
-
-  return {
-    totalProducts: result?.total_products || 0,
-    totalStock: result?.total_stock || 0,
-    stockValue: result?.stock_value || 0,
-  };
-}
-
-export const getStockMovements = async (db, limit = 100) => {
-  const result = await db.getAllAsync(
+export async function getTotalStockValue(db) {
+  const movements = await db.getAllAsync(
     `
-    SELECT 
-      m.id,
-      m.product_id,
-      p.name AS product_name,
-      m.batch,
-      m.quantity,
-      m.unit_cost,
-      m.type,
-      m.reference_id,
-      m.date
-    FROM inventory_movements m
-    LEFT JOIN products p ON p.id = m.product_id
-    ORDER BY m.date DESC
-    LIMIT ?
-    `,
-    [limit]
+    SELECT *
+    FROM inventory_movements
+    WHERE deleted_at IS NULL
+    ORDER BY product_id, date ASC, created_at ASC
+    `
   );
 
-  return result;
-};
+  const grouped = {};
+
+  for (const m of movements) {
+    if (!grouped[m.product_id]) grouped[m.product_id] = [];
+    grouped[m.product_id].push(m);
+  }
+
+  let total = 0;
+
+  for (const productId in grouped) {
+    const batches = buildFIFO(grouped[productId]);
+
+    for (const b of batches) {
+      total += b.remaining * b.cost_price;
+    }
+  }
+
+  return { stock_value: total };
+}

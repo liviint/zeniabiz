@@ -114,12 +114,11 @@ export async function allocateFIFO(db, productId, requiredQty) {
   async function insertMovementAndApply(db, movement) {
   await db.runAsync(
     `INSERT INTO inventory_movements
-    (id, product_id, batch, company, unit_cost, quantity, type, reference_id, date, created_at, updated_at, created_by, updated_by)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    (id, product_id, company, unit_cost, quantity, type, reference_id, date, created_at, updated_at, created_by, updated_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       movement.id,
       movement.product_id,
-      movement.batch,
       movement.company,
       movement.unit_cost,
       movement.quantity,

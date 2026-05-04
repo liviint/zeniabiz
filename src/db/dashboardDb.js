@@ -1,4 +1,5 @@
 import { normalizeRange } from "../utils/timeNavigatorHelpers";
+import { getTotalStockValue } from "./inventoryDb";
 
 export const getCashFlow = async (db, timeState) => {
   const { startDate, endDate } = normalizeRange(timeState)
@@ -223,14 +224,9 @@ export async function getFinancialStats(db, timeState) {
   // -------------------------
   // 3. Stock (NOT time-based)
   // -------------------------
-  const stockResult = await db.getFirstAsync(
-    `
-    SELECT 
-      COALESCE(SUM(quantity_remaining * cost_price), 0) AS stock_value
-    FROM inventory_batches
-    WHERE quantity_remaining > 0
-    `
-  );
+
+  
+  const stockResult = await getTotalStockValue(db) 
 
   // -------------------------
   // 4. Safe extraction
