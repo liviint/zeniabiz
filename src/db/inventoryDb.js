@@ -196,18 +196,18 @@ export async function getProductById(db, id) {
 }
 
 export async function getProductBatches(db, id) {
-  const batches = await db.getAllAsync(
-    `
-    SELECT *
-    FROM inventory_batches
-    WHERE product_id = ?
-    AND quantity_remaining > 0
-    ORDER BY created_at ASC
-    `,
-    [id]
-  );
-  console.log(batches,"hello batches")
+    const movements = await db.getAllAsync(
+        `
+        SELECT *
+        FROM inventory_movements
+        WHERE product_id = ?
+          AND deleted_at IS NULL
+        ORDER BY date ASC, created_at ASC
+        `,
+      [id]
+    );
 
+  const batches = buildFIFO(movements);
   return batches
 }
 
@@ -301,8 +301,8 @@ export const restockProduct = async (
     await db.runAsync(
       `
       INSERT INTO inventory_movements
-      (id, company, created_by, updated_by, product_id, unit_cost, quantity, type, date, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (id, company, created_by, updated_by, product_id, unit_cost,selling_price, quantity, type, date, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         movement.id,
@@ -311,6 +311,7 @@ export const restockProduct = async (
         movement.updated_by,
         movement.product_id,
         movement.unit_cost,
+        movement.selling_price,
         movement.quantity,
         movement.type,
         movement.date,
@@ -340,12 +341,13 @@ export function buildFIFO(movements) {
     // -----------------------
     if (m.type === "purchase") {
       if (qty <= 0) continue;
-
+      console.log(m,"hello m")
       batches.push({
         source_id: m.id,
         product_id: m.product_id,
-        remaining: qty,
+        quantity_remaining: qty,
         cost_price: Number(m.unit_cost || 0),
+        selling_price: Number(m.selling_price || 0),
         date: m.date,
       });
     }
@@ -358,11 +360,11 @@ export function buildFIFO(movements) {
 
       for (const batch of batches) {
         if (remainingToDeduct <= 0) break;
-        if (batch.remaining <= 0) continue;
+        if (batch.quantity_remaining <= 0) continue;
 
-        const take = Math.min(batch.remaining, remainingToDeduct);
+        const take = Math.min(batch.quantity_remaining, remainingToDeduct);
 
-        batch.remaining -= take;
+        batch.quantity_remaining -= take;
         remainingToDeduct -= take;
       }
 
@@ -381,8 +383,9 @@ export function buildFIFO(movements) {
         batches.push({
           source_id: m.id,
           product_id: m.product_id,
-          remaining: qty,
+          quantity_remaining: qty,
           cost_price: Number(m.unit_cost || 0),
+          selling_price: Number(m.selling_price || 0),
           date: m.date,
         });
       } else {
@@ -391,11 +394,11 @@ export function buildFIFO(movements) {
 
         for (const batch of batches) {
           if (remainingToDeduct <= 0) break;
-          if (batch.remaining <= 0) continue;
+          if (batch.quantity_remaining <= 0) continue;
 
-          const take = Math.min(batch.remaining, remainingToDeduct);
+          const take = Math.min(batch.quantity_remaining, remainingToDeduct);
 
-          batch.remaining -= take;
+          batch.quantity_remaining -= take;
           remainingToDeduct -= take;
         }
       }
@@ -405,7 +408,7 @@ export function buildFIFO(movements) {
   // -----------------------
   // 4️⃣ return only active stock
   // -----------------------
-  return batches.filter(b => b.remaining > 0);
+  return batches.filter(b => b.quantity_remaining > 0);
 }
 
 export async function getTotalStockValue(db) {
@@ -431,7 +434,7 @@ export async function getTotalStockValue(db) {
     const batches = buildFIFO(grouped[productId]);
 
     for (const b of batches) {
-      total += b.remaining * b.cost_price;
+      total += b.quantity_remaining * b.cost_price;
     }
   }
 

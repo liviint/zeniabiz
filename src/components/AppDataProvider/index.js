@@ -228,6 +228,7 @@ const migrateDbIfNeeded = async (db) => {
     product_id TEXT NOT NULL,
 
     unit_cost REAL,
+    selling_price REAL,
     quantity INTEGER NOT NULL,
 
     type TEXT NOT NULL CHECK (type IN ('purchase', 'sale', 'adjustment')),

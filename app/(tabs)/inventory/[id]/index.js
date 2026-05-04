@@ -30,6 +30,7 @@ export default function ProductViewPage() {
 
     const getBatches = async() => {
       const data = await getProductBatches(db, id);
+      console.log(data,"hello data 123...")
       setStockBatches(data);
     }
 
@@ -76,7 +77,7 @@ export default function ProductViewPage() {
 
         <DetailRow
           label="Added"
-          value={new Date(batch.created_at).toLocaleDateString()}
+          value={new Date(batch.date).toLocaleDateString()}
         />
       </Card>
     ))}
