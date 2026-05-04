@@ -301,8 +301,8 @@ export const restockProduct = async (
     await db.runAsync(
       `
       INSERT INTO inventory_movements
-      (id, company, created_by, updated_by, product_id, batch, unit_cost, quantity, type, date, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (id, company, created_by, updated_by, product_id, unit_cost, quantity, type, date, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         movement.id,
@@ -310,7 +310,6 @@ export const restockProduct = async (
         movement.created_by,
         movement.updated_by,
         movement.product_id,
-        movement.batch,
         movement.unit_cost,
         movement.quantity,
         movement.type,
@@ -443,53 +442,6 @@ export async function applyMovementToBatches(db, movement) {
   }
   } catch (error) {
     console.log(error,"hello apply batch error")
-  }
-}
-
-export async function processPendingMovements(db) {
-  const movements = await db.getAllAsync(
-    `
-    SELECT m.*
-    FROM inventory_movements m
-    LEFT JOIN applied_movements a ON a.id = m.id
-    WHERE a.id IS NULL
-      AND m.deleted_at IS NULL
-    ORDER BY m.date ASC
-    `
-  );
-  const all = await db.getAllAsync(
-  `SELECT * FROM inventory_movements ORDER BY created_at DESC`
-);
-const alla = await db.getAllAsync(
-  `SELECT * FROM applied_movements `
-);
-
-
-console.log("ALL MOVEMENTS:", all,alla);
-  console.log(movements,"hello movements")
-
-  if (!movements.length) return;
-
-  await db.runAsync("BEGIN");
-
-  try {
-    for (const m of movements) {
-      await applyMovementToBatches(db, m);
-
-      await db.runAsync(
-        `
-        INSERT INTO applied_movements (id, applied_at)
-        VALUES (?, ?)
-        `,
-        [m.id, new Date().toISOString()]
-      );
-    }
-
-    await db.runAsync("COMMIT");
-
-  } catch (err) {
-    await db.runAsync("ROLLBACK");
-    throw err;
   }
 }
 

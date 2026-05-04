@@ -1,16 +1,13 @@
 import { useRouter, useLocalSearchParams  } from "expo-router";
-import { useDispatch } from "react-redux";
 import { useSQLiteContext } from "expo-sqlite";
 import { useState , useEffect} from "react";
 import { Alert, ScrollView, TouchableOpacity, Text, View} from "react-native";
 import { BodyText, Card, FormLabel, Input , SecondaryText} from "../../../src/components/ThemeProvider/components";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { upsertProduct , getProductById} from "../../db/inventoryDb";
-import { triggerBatchProcessing } from "../../store/features/batchesSlice";
 
 export default function AddProduct() {
   const {id} = useLocalSearchParams()
-  const dispatch = useDispatch()
   const db = useSQLiteContext();
   const router = useRouter();
   const { globalStyles } = useThemeStyles();
@@ -36,7 +33,6 @@ export default function AddProduct() {
           selling_price: form.selling_price,
           stock_quantity: form.stock_quantity,
         })
-        dispatch(triggerBatchProcessing())
     } catch (error) {
       console.log(error,"hello restock error")
     }

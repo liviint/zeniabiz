@@ -2,7 +2,6 @@ import { SQLiteProvider } from "expo-sqlite";
 import CategoriesProvider from "./CategoriesProvider";
 import SessionProvider from "./SessionProvider"
 import SyncProvider from "./SyncProvider"
-import InventoryProvider from "./InventoryProvider"
 
 const migrateDbIfNeeded = async (db) => {
   
@@ -19,7 +18,6 @@ const migrateDbIfNeeded = async (db) => {
   await db.execAsync(`DROP TABLE IF EXISTS products;`);
   await db.execAsync(`DROP TABLE IF EXISTS inventory_batches;`);
   await db.execAsync(`DROP TABLE IF EXISTS inventory_movements;`);
-  await db.execAsync(`DROP TABLE IF EXISTS applied_movements;`);
 
   await db.execAsync(`DROP TABLE IF EXISTS sales;`); 
   await db.execAsync(`DROP TABLE IF EXISTS sale_items;`);
@@ -228,7 +226,6 @@ const migrateDbIfNeeded = async (db) => {
     updated_by TEXT,
 
     product_id TEXT NOT NULL,
-    batch TEXT,
 
     unit_cost REAL,
     quantity INTEGER NOT NULL,
@@ -238,17 +235,13 @@ const migrateDbIfNeeded = async (db) => {
     reference_id TEXT,
     date TEXT NOT NULL,
 
+    processed_at TEXT,
+
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
     deleted_at TEXT,
 
-    FOREIGN KEY (product_id) REFERENCES products(id),
-    FOREIGN KEY (batch) REFERENCES inventory_batches(id)
-  );
-
-  CREATE TABLE IF NOT EXISTS applied_movements (
-    id TEXT PRIMARY KEY,
-    applied_at TEXT
+    FOREIGN KEY (product_id) REFERENCES products(id)
   );
 
   CREATE INDEX IF NOT EXISTS idx_movements_product 
@@ -353,7 +346,6 @@ export default function AppDataProvider({ children }) {
       <SessionProvider>
         <SyncProvider>
           <CategoriesProvider />
-          <InventoryProvider />
           {children}
         </SyncProvider>
       </SessionProvider>
