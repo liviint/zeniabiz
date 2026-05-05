@@ -113,10 +113,19 @@ useEffect(() => {
           <TouchableOpacity
             style={styles.button}
             onPress={() => {
-              router.push("/auth/profile/edit")
+              router.push("/auth/profile/edit");
             }}
           >
             <Text style={styles.btnText}>Update Profile</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => {
+              router.push("/business");
+            }}
+          >
+            <Text style={styles.btnText}>My Business</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -127,6 +136,8 @@ useEffect(() => {
           </TouchableOpacity>
         </View>
       </Card>
+
+      
     </ScrollView>
   );
 };
