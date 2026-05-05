@@ -486,10 +486,13 @@ export function buildFIFO(movements) {
 export async function getTotalStockValue(db) {
   const movements = await db.getAllAsync(
     `
-    SELECT *
-    FROM inventory_movements
-    WHERE deleted_at IS NULL
-    ORDER BY product_id, date ASC, created_at ASC
+    SELECT m.*
+    FROM inventory_movements m
+    INNER JOIN products p
+      ON p.id = m.product_id
+    WHERE m.deleted_at IS NULL
+      AND p.deleted_at IS NULL
+    ORDER BY m.product_id, m.date ASC, m.created_at ASC
     `
   );
 
