@@ -30,7 +30,6 @@ export default function ProductViewPage() {
 
     const getBatches = async() => {
       const data = await getProductBatches(db, id);
-      console.log(data,"hello data 123...")
       setStockBatches(data);
     }
 
@@ -59,7 +58,7 @@ export default function ProductViewPage() {
     <BodyText style={globalStyles.title}>Stock Batches</BodyText>
 
     {stockBatches.map((batch) => (
-      <Card key={batch.id} style={styles.batchCard}>
+      <Card key={batch.source_id} style={styles.batchCard}>
         <DetailRow
           label="Quantity"
           value={batch.quantity_remaining}

@@ -355,7 +355,6 @@ export const restockProduct = async (
     const movement = {
       id: movementId,
       product_id: productId,
-      batch: batchId,
       unit_cost: unitCost,
       selling_price: sellPrice,
       quantity,
@@ -413,7 +412,6 @@ export function buildFIFO(movements) {
     // -----------------------
     if (m.type === "purchase") {
       if (qty <= 0) continue;
-      console.log(m,"hello m")
       batches.push({
         source_id: m.id,
         product_id: m.product_id,

@@ -292,6 +292,7 @@ export async function createOrUpdateSale(
         await insertMovementAndApply(db, movement);
 
         // 2️⃣ sale item (financial record)
+        const saleItemId = newUuid();
         await db.runAsync(
           `
           INSERT INTO sale_items
@@ -299,7 +300,7 @@ export async function createOrUpdateSale(
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
           `,
           [
-            newUuid(),
+            saleItemId,
             id,
             company,
             item.product_id,
@@ -309,6 +310,27 @@ export async function createOrUpdateSale(
             alloc.purchase_id
           ]
         );
+
+        // 🔥 SYNC SALE ITEM
+        await syncEvent(db, {
+          model: "sale_items",
+          operation: "insert",
+          payload: {
+            id: saleItemId,
+            sale: id,
+            company,
+            product_id: item.product_id,
+            quantity: alloc.quantity,
+            price: item.price,
+            cost_price: alloc.cost_price,
+            purchase_movement_id: alloc.purchase_id,
+            created_at: now,
+            updated_at: now,
+            deleted_at: null,
+          },
+        });
+
+        
       }
     }
 
