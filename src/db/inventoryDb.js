@@ -284,6 +284,7 @@ export async function getProductBatches(db, id) {
 }
 
 export async function deleteProduct(db, id) {
+  const { company, user_id } = getActiveContextSync(db);
   const now = new Date().toISOString();
 
   if (!id) {
@@ -311,6 +312,7 @@ export async function deleteProduct(db, id) {
       operation: "delete",
       payload: {
         id,
+        company,
         deleted_at: now
       }
     })

@@ -122,6 +122,7 @@ export async function getExpenses(db, date = new Date()) {
     WHERE 
       date >= ?
       AND date < ?
+      AND deleted_at is NULL
     ORDER BY datetime(date) DESC
     `,
     [start, end]
@@ -140,6 +141,7 @@ export async function getTransactionById(db, id) {
 }
 
 export async function deleteExpense(db, id) {
+  const { company, user_id } = getActiveContextSync();
   const now = new Date().toISOString();
 
   if (!id) {
@@ -167,6 +169,7 @@ export async function deleteExpense(db, id) {
       operation: "delete",
       payload: {
         id,
+        company,
         deleted_at: now,
         updated_at: now
       }

@@ -548,14 +548,25 @@ export async function deleteSale(db, sale_id) {
       throw new Error("No movements found for sale");
     }
 
-    // 2️⃣ create compensating adjustments (NOT reversal)
+    // 2️⃣ get sale_items BEFORE delete (for sync)
+    const saleItems = await db.getAllAsync(
+      `
+      SELECT *
+      FROM sale_items
+      WHERE sale_id = ?
+        AND deleted_at IS NULL
+      `,
+      [sale_id]
+    );
+
+    // 3️⃣ create compensating adjustments
     for (const m of movements) {
       const adjustment = {
         id: newUuid(),
         product_id: m.product_id,
         company,
         unit_cost: m.unit_cost,
-        quantity: Math.abs(m.quantity), // restore stock
+        quantity: Math.abs(m.quantity),
         type: "adjustment",
         reference_id: sale_id,
         date: now,
@@ -569,13 +580,13 @@ export async function deleteSale(db, sale_id) {
       await insertMovementAndApply(db, adjustment);
     }
 
-    // 3️⃣ soft delete sale
+    // 4️⃣ soft delete sale
     await db.runAsync(
       `UPDATE sales SET deleted_at = ?, updated_at = ? WHERE id = ?`,
       [now, now, sale_id]
     );
 
-    // 4️⃣ soft delete sale_items
+    // 5️⃣ soft delete sale_items
     await db.runAsync(
       `UPDATE sale_items SET deleted_at = ?, updated_at = ? WHERE sale_id = ?`,
       [now, now, sale_id]
@@ -583,11 +594,37 @@ export async function deleteSale(db, sale_id) {
 
     await db.runAsync("COMMIT");
 
+    // -------------------------
+    // 🔥 SYNC SECTION
+    // -------------------------
+
+    // 6️⃣ sync sale (as upsert with deleted_at)
     await syncEvent(db, {
       model: "sales",
       operation: "delete",
-      payload: { id: sale_id, deleted_at: now }
+      payload: {
+        id: sale_id,
+        company,
+        deleted_at: now,
+        updated_at: now,
+      },
     });
+
+    // 7️⃣ sync each sale_item individually (upsert delete)
+    for (const item of saleItems) {
+      await syncEvent(db, {
+        model: "sale_items",
+        operation: "delete",
+        payload: {
+          id: item.id,
+          sale_id: item.sale_id,
+          company: item.company,
+          product_id: item.product_id,
+          deleted_at: now,
+          updated_at: now,
+        },
+      });
+    }
 
   } catch (err) {
     await db.runAsync("ROLLBACK");
