@@ -49,7 +49,9 @@ export default function AddProduct() {
 
   return (
     <ScrollView style={globalStyles.container}>
-      <BodyText style={globalStyles.title}>Add Product</BodyText>
+      <BodyText style={globalStyles.title}>
+        {id ? "Update" : "Add"} Product
+      </BodyText>
 
       <Card>
       <View style={globalStyles.formGroup}>
