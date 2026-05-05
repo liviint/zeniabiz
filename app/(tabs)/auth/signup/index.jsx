@@ -70,7 +70,6 @@ const Signup = () => {
       });
       setSuccess(true);
       setFormData(initialForm);
-      Alert.alert("Success", "A verification link has been sent to your email.");
     } catch (error) {
       const data = error?.response?.data;
       let errMsg = "Something went wrong. Please try again.";
@@ -94,7 +93,7 @@ const Signup = () => {
         {serverError ? <Text style={styles.error}>{serverError}</Text> : null}
         {success ? (
           <Text style={styles.success}>
-            A verification link has been sent to your email.
+            Account created successfully. You can now log in and get started.
           </Text>
         ) : null}
 

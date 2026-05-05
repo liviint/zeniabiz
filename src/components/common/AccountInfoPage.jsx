@@ -10,15 +10,15 @@ const AccountInfoPage = () => {
   return (
     <View style={{ ...globalStyles.container, ...styles.container }}>
       <BodyText style={styles.heading}>
-        Your profile
+        Your Business Data
       </BodyText>
 
       <BodyText style={styles.subtext}>
-        You can use ZeniaHub without an account.
-        {"\n\n"}
-        Your journals and habits are stored safely on this device and work fully offline.
-        {"\n\n"}
-        Creating an account is optional — it lets you back up your data, sync across devices, and restore it if you change phones.
+          You can use ZeniaBiz without creating an account.
+          {"\n\n"}
+          All records are stored on this device and work fully offline.
+          {"\n\n"}
+          Creating an account is optional — it lets you back up your data, sync across devices, and collaborate with others to run your business.
       </BodyText>
 
       <View style={styles.buttonContainer}>
@@ -27,7 +27,7 @@ const AccountInfoPage = () => {
           onPress={() => router.push('/auth/signup')}
         >
           <Text style={styles.primaryButtonText}>
-            Create account (optional)
+            Create account (backup & sync)
           </Text>
         </TouchableOpacity>
 
@@ -36,14 +36,14 @@ const AccountInfoPage = () => {
           onPress={() => router.push('/auth/login')}
         >
           <Text style={styles.secondaryButtonText}>
-            Sign in to sync
+            Sign in to sync data
           </Text>
         </TouchableOpacity>
       </View>
 
-      <BodyText style={styles.footerText}>
-        No ads. No pressure. Your data stays yours.
-      </BodyText>
+      {/* <BodyText style={styles.footerText}>
+        Your data stays yours. No lock-in. No hidden costs.
+      </BodyText> */}
     </View>
   );
 };
