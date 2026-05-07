@@ -11,6 +11,8 @@ import {
 import { useSQLiteContext } from "expo-sqlite";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { BodyText } from "../../../src/components/ThemeProvider/components";
+import { api } from "../../../api";
+import { Picker } from "@react-native-picker/picker";
 
 const BusinessPage = () => {
   const db = useSQLiteContext();
@@ -19,7 +21,9 @@ const BusinessPage = () => {
   const [company, setCompany] = useState(null);
   const [members, setMembers] = useState([]);
   const [inviteModal, setInviteModal] = useState(false);
-  const [email, setEmail] = useState("");
+  const initialinviteFormData = { email:"",role:"Staff"}
+  const [inviteFormData,setinviteFormData] = useState(initialinviteFormData)
+  const [roleDropDownOpen, setroleDropDownOpen] = useState(false);
 
   // --- fetch company + members ---
   const loadBusinessData = async () => {
@@ -45,18 +49,17 @@ const BusinessPage = () => {
 
   // --- invite (placeholder logic) ---
   const handleInvite = async () => {
-    if (!email) return;
+    if (!inviteFormData.email) return;
 
     try {
-      // TODO: replace with API call
-      console.log("Inviting:", email);
-
-      setEmail("");
+      await api.post("/core/company-invites/", inviteFormData);
+      setinviteFormData(initialinviteFormData)
       setInviteModal(false);
+
     } catch (err) {
-      console.log(err);
-    }
-  };
+      console.log("Invite error:", err?.response?.data || err.message);
+    } 
+};
 
   return (
     <View style={[globalStyles.container, styles.container]}>
@@ -90,14 +93,32 @@ const BusinessPage = () => {
           <View style={styles.modal}>
             <BodyText style={styles.sectionTitle}>Invite User</BodyText>
 
+            {/* Email */}
             <TextInput
               placeholder="Email address"
-              value={email}
-              onChangeText={setEmail}
+              value={inviteFormData.email}
+              onChangeText={(val) => setinviteFormData(prev => ({...prev,email:val}))}
               style={styles.input}
               autoCapitalize="none"
+              keyboardType="email-address"
             />
 
+            {/* Role */}
+            <BodyText style={{ marginTop: 10, marginBottom: 5 }}>
+              Select Role
+            </BodyText>
+
+            <Picker
+              selectedValue={inviteFormData.role}
+              onValueChange={(value) =>
+                setinviteFormData(prev => ({ ...prev, role: value }))
+              }
+            >
+              <Picker.Item label="Staff" value="staff" />
+              <Picker.Item label="Manager" value="manager" />
+            </Picker>
+
+            {/* Actions */}
             <View style={styles.modalActions}>
               <TouchableOpacity
                 onPress={() => setInviteModal(false)}
