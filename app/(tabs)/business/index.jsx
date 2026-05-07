@@ -30,7 +30,7 @@ const BusinessPage = () => {
 
   // --- fetch company + members ---
   const loadBusinessData = async () => {
-    const {company, user_id} =  await getActiveContextSync(db);
+    const {company } =  await getActiveContextSync(db);
     try {
       // 1. COMPANY INFO
       const companyRes = await api.get(`/core/companies/${company}`);
@@ -39,11 +39,10 @@ const BusinessPage = () => {
       const membersRes = await api.get(`/core/company-members`);
       setMembers(membersRes.data.results);
 
-      // // 3. COMPANY INVITES
-      // const invitesRes = await api.get(`/core/company-invites/${company}`);
-      // setInvites(invitesRes.data);
+      const invitesRes = await api.get(`/core/company-invites`);
+      setInvites(invitesRes.data.results);
 
-      console.log(membersRes.data.results,"hello invite data")
+      console.log(invitesRes.data.results,"hello invite data")
 
     } catch (err) {
       console.log("Failed to load business data:", err?.response?.data || err.message);
@@ -80,7 +79,7 @@ const BusinessPage = () => {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={styles.memberRow}>
-              <BodyText style={styles.memberText}>{item.user_id}</BodyText>
+              <BodyText style={styles.memberText}>{item?.user?.username}</BodyText>
               <BodyText style={styles.role}>{item.role}</BodyText>
             </View>
           )}
@@ -98,12 +97,12 @@ const BusinessPage = () => {
         <BodyText style={styles.sectionTitle}>Invited Members</BodyText>
 
         <FlatList
-          data={members}
-          keyExtractor={(item) => item.uuid}
+          data={invites}
+          keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={styles.memberRow}>
-              <BodyText style={styles.memberText}>{item.user_id}</BodyText>
-              <BodyText style={styles.role}>{item.role}</BodyText>
+              <BodyText style={styles.memberText}>{item?.email}</BodyText>
+              <BodyText style={styles.role}>{item?.accepted ? "Member" :"Pending"}</BodyText>
             </View>
           )}
         />
