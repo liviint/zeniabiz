@@ -32,6 +32,7 @@ const BusinessPage = () => {
   // --- fetch company + members ---
   const loadBusinessData = async () => {
     const {company } =  await getActiveContextSync(db);
+    console.log(company,"hello company")
     try {
       // 1. COMPANY INFO
       const companyRes = await api.get(`/core/companies/${company}`);

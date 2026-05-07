@@ -96,7 +96,7 @@ useEffect(() => {
   (async () => {
     // testSetUp(db)
     debugActiveSession(db)
-    debugSessionIntegrity(db)
+    // debugSessionIntegrity(db)
   })();
 }, [isFocused]);
 

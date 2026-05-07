@@ -10,29 +10,32 @@ import {
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { BodyText } from "../../../../src/components/ThemeProvider/components";
-import { getActiveContextSync } from "../../../../src/db/utils";
+import { getActiveContextSync, loadActiveContext } from "../../../../src/db/utils";
 import { api } from "../../../../api";
+import { createSession } from "../../../../src/db/usersDb";
+import { useSQLiteContext } from "expo-sqlite";
 
 export default function AcceptInviteScreen() {
+  const db = useSQLiteContext();
   const {globalStyles} = useThemeStyles()
   const router = useRouter();
 
   const { token } = useLocalSearchParams();
-
   const [invite, setInvite] = useState(null);
-
   const [loading, setLoading] = useState(true);
-
   const [accepting, setAccepting] = useState(false);
-
   const [error, setError] = useState("");
+  const [activeContext,setActiveContext] = useState(null)
 
   useEffect(() => {
-    let { access_token } = getActiveContextSync()
-    if(!access_token) router.push("/auth/login")
+    let ctx = getActiveContextSync()
+    if(!ctx.access_token) router.push("/auth/login")
+    setActiveContext(ctx)
+
     if (token) {
       loadInvite();
     }
+
   }, [token]);
 
   const loadInvite = async () => {
@@ -73,7 +76,19 @@ export default function AcceptInviteScreen() {
         "Invitation accepted successfully."
       );
 
-      router.replace("/auth/profile");
+      console.log(response.data,"hello invite accepted data")
+      
+      const { company } = response.data;
+
+      await createSession(db, {
+        user:null,
+        access: activeContext.access_token,
+        refresh: activeContext.refresh_token,
+        company_uuid:company?.id,
+      });
+      await loadActiveContext(db)
+
+      // router.push("/auth/profile");
 
     } catch (err) {
       console.log(err);
