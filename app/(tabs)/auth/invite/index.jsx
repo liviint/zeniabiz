@@ -10,7 +10,7 @@ import {
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { BodyText } from "../../../../src/components/ThemeProvider/components";
-
+import { getActiveContextSync } from "../../../../src/db/utils";
 import { api } from "../../../../api";
 
 export default function AcceptInviteScreen() {
@@ -28,6 +28,8 @@ export default function AcceptInviteScreen() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let { access_token } = getActiveContextSync()
+    if(!access_token) router.push("/auth/login")
     if (token) {
       loadInvite();
     }
