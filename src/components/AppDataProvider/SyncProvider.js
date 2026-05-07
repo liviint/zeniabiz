@@ -16,6 +16,7 @@ export default function SyncProvider({ children }) {
 
 
     useEffect(() => {
+        console.log(user,"hello user")
         let unsubscribe;
 
         const run = async () => {

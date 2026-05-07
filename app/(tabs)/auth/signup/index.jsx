@@ -93,7 +93,7 @@ const Signup = () => {
         {serverError ? <Text style={styles.error}>{serverError}</Text> : null}
         {success ? (
           <Text style={styles.success}>
-            Account created successfully. You can now log in and get started.
+            A verification link has been sent to your email.
           </Text>
         ) : null}
 
