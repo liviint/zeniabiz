@@ -6,8 +6,13 @@ import { setUserDetails } from "../../../../store/features/userSlice";
 import { api } from "../../../../api";
 import { safeLocalStorage } from "../../../../utils/storage";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
+import { upsertLocalUser, createSession } from "../../../../src/db/usersDb";
+import { loadActiveContext } from "../../../../src/db/utils";
+import { useSQLiteContext } from "expo-sqlite";
+import { triggerSync } from "../../../../src/store/features/syncSlice";
 
 export default function VerifyEmail() {
+  const db = useSQLiteContext();
   const {globalStyles} = useThemeStyles()
   const dispatch = useDispatch();
   const router = useRouter();
@@ -27,15 +32,18 @@ export default function VerifyEmail() {
 
     const verifyEmail = () => {
       api.get(`/accounts/verify-email/?uid=${uid}&token=${token}`)
-      .then((res) => {
-        dispatch(setUserDetails(res.data));
-        api.defaults.headers.common.Authorization = `Bearer ${res.data.access}`;
-        return safeLocalStorage.setItem("token", res.data.access);
+      .then(async(response) => {
+            const { access, refresh, user, company_uuid } = response.data;
+            await upsertLocalUser(db, user);
+            await createSession(db, { user, access, refresh,company_uuid });
+            await loadActiveContext(db)
+            dispatch(triggerSync());
+            dispatch(setUserDetails(response.data));
       })
       .then(() => {
         setStatus("success");
         setMessage("Email verified and logged in! Redirecting...");
-        router.push("/profile");
+        router.push("/auth/profile");
       })
       .catch((err) => {
         setStatus("error");

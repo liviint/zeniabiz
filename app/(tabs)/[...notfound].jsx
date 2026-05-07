@@ -1,11 +1,17 @@
+import { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
 import { useThemeStyles } from '../../src/hooks/useThemeStyles';
 import { BodyText } from '../../src/components/ThemeProvider/components';
 
 export default function NotFound() {
   const router = useRouter();
   const { globalStyles } = useThemeStyles();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    console.log("Current page:", pathname);
+  }, [pathname]);
 
   return (
     <View style={{...globalStyles.container,...styles.container}}>
