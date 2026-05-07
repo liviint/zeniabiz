@@ -1,11 +1,5 @@
 export const DEFAULT_CATEGORIES = [
   {
-    id: "c1a1b111-0000-4000-8000-000000000001",
-    name: "Stock",
-    color: "#FF6B6B",
-    icon: "📦",
-  },
-  {
     id: "c1a1b111-0000-4000-8000-000000000002",
     name: "Rent",
     color: "#6BCB77",

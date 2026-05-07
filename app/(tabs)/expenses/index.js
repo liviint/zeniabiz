@@ -10,6 +10,7 @@ import ButtonLinks from "../../../src/components/common/ButtonLinks";
 import EmptyState from "../../../src/components/common/EmptyState";
 import TimeFilters from "../../../src/components/common/TimeFilters";
 import { getExpenses } from "../../../src/db/expensesDb"
+import { getCategories } from "../../../src/db/categoriesDb";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { dateFormat } from "../../../utils/dateFormat";
 import { groupDataIntoSections } from "../../../src/helpers";
@@ -20,20 +21,33 @@ export default function FinanceListPage() {
     const db = useSQLiteContext()
     const router = useRouter();
     const [expenses,setTransactions] = useState([])
+    const [categoriesMap,setCategoriesMap] = useState({})
     const [isLoading,setIsLoading] = useState(true)
     const isFocused = useIsFocused()
     const {globalStyles} = useThemeStyles()
     const [selectedMonth, setSelectedMonth] = useState(new Date());
     const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
 
+    const loadCategories = async () => {
+      const categories = await getCategories(db)
+      let map = {}
+      categories.map(cat => {
+        map[cat.id] = cat.name
+      })
+      setCategoriesMap(map)
+    };
+    
+
     let fetchExpenses = async() => {
         let expenses = await getExpenses(db, selectedMonth)
+        console.log(expenses,"hello expenses")
         setTransactions(expenses)
     }
 
     useEffect(() => {
       if (isFocused) {
         fetchExpenses()
+        loadCategories()
       }
         setIsLoading(false)
     },[isFocused, selectedMonth,lastSyncedAt])
@@ -66,7 +80,7 @@ export default function FinanceListPage() {
               numberOfLines={2}
               ellipsizeMode="tail"
             >
-              {item.category} • {dateFormat(item?.date)}
+              {categoriesMap[item.category_id]} • {dateFormat(item?.date)}
               {item.payee ? ` • ${item.payee}` : ""}
             </SecondaryText>
           </View>
