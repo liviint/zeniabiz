@@ -5,47 +5,54 @@ import {
   StyleSheet,
   TouchableOpacity,
   Modal,
-  TextInput,
   FlatList,
 } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
-import { BodyText } from "../../../src/components/ThemeProvider/components";
+import { BodyText, Card, CustomPicker,Input, FormLabel } from "../../../src/components/ThemeProvider/components";
 import { api } from "../../../api";
 import { Picker } from "@react-native-picker/picker";
+import { getActiveContextSync } from "../../../src/db/utils";
+import { useIsFocused } from "@react-navigation/native";
 
 const BusinessPage = () => {
   const db = useSQLiteContext();
   const { globalStyles } = useThemeStyles();
+  const isFocused = useIsFocused()
 
   const [company, setCompany] = useState(null);
   const [members, setMembers] = useState([]);
+  const [invites, setInvites] = useState([]);
   const [inviteModal, setInviteModal] = useState(false);
   const initialinviteFormData = { email:"",role:"Staff"}
   const [inviteFormData,setinviteFormData] = useState(initialinviteFormData)
-  const [roleDropDownOpen, setroleDropDownOpen] = useState(false);
+
 
   // --- fetch company + members ---
   const loadBusinessData = async () => {
+    const {company, user_id} =  await getActiveContextSync(db);
     try {
-      const companyRes = await db.getFirstAsync(
-        "SELECT * FROM companies LIMIT 1"
-      );
-      setCompany(companyRes);
+      // 1. COMPANY INFO
+      const companyRes = await api.get(`/core/companies/${company}`);
+      setCompany(companyRes.data);
 
-      const membersRes = await db.getAllAsync(
-        "SELECT * FROM company_members WHERE company = ? AND deleted_at IS NULL",
-        [companyRes?.uuid]
-      );
-      setMembers(membersRes);
+      const membersRes = await api.get(`/core/company-members`);
+      setMembers(membersRes.data.results);
+
+      // // 3. COMPANY INVITES
+      // const invitesRes = await api.get(`/core/company-invites/${company}`);
+      // setInvites(invitesRes.data);
+
+      console.log(membersRes.data.results,"hello invite data")
+
     } catch (err) {
-      console.log(err);
+      console.log("Failed to load business data:", err?.response?.data || err.message);
     }
   };
 
   useEffect(() => {
     loadBusinessData();
-  }, []);
+  }, [isFocused]);
 
   // --- invite (placeholder logic) ---
   const handleInvite = async () => {
@@ -63,18 +70,18 @@ const BusinessPage = () => {
 
   return (
     <View style={[globalStyles.container, styles.container]}>
-      <BodyText style={globalStyles.title}>My Business</BodyText>
+      <BodyText style={globalStyles.title}>{company?.name}</BodyText>
 
-      <View style={styles.card}>
-        <BodyText style={styles.sectionTitle}>Members</BodyText>
+      <Card >
+        <BodyText style={styles.sectionTitle}>Company Members</BodyText>
 
         <FlatList
           data={members}
-          keyExtractor={(item) => item.uuid}
+          keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={styles.memberRow}>
-              <Text style={styles.memberText}>{item.user_id}</Text>
-              <Text style={styles.role}>{item.role}</Text>
+              <BodyText style={styles.memberText}>{item.user_id}</BodyText>
+              <BodyText style={styles.role}>{item.role}</BodyText>
             </View>
           )}
         />
@@ -85,56 +92,71 @@ const BusinessPage = () => {
         >
           <Text style={styles.inviteText}>+ Invite Member</Text>
         </TouchableOpacity>
-      </View>
+      </Card>
+
+      <Card >
+        <BodyText style={styles.sectionTitle}>Invited Members</BodyText>
+
+        <FlatList
+          data={members}
+          keyExtractor={(item) => item.uuid}
+          renderItem={({ item }) => (
+            <View style={styles.memberRow}>
+              <BodyText style={styles.memberText}>{item.user_id}</BodyText>
+              <BodyText style={styles.role}>{item.role}</BodyText>
+            </View>
+          )}
+        />
+      </Card>
 
       {/* INVITE MODAL */}
       <Modal visible={inviteModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
-          <View style={styles.modal}>
+          <Card style={styles.modal}>
             <BodyText style={styles.sectionTitle}>Invite User</BodyText>
 
-            {/* Email */}
-            <TextInput
-              placeholder="Email address"
-              value={inviteFormData.email}
-              onChangeText={(val) => setinviteFormData(prev => ({...prev,email:val}))}
-              style={styles.input}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
+            <View style={globalStyles.formGroup}>
+              <FormLabel >Email address</FormLabel>
+              <Input
+                value={inviteFormData.email}
+                onChangeText={(val) => setinviteFormData(prev => ({...prev,email:val}))}
+                style={styles.input}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            </View>
+            
 
-            {/* Role */}
-            <BodyText style={{ marginTop: 10, marginBottom: 5 }}>
-              Select Role
-            </BodyText>
-
-            <Picker
-              selectedValue={inviteFormData.role}
-              onValueChange={(value) =>
-                setinviteFormData(prev => ({ ...prev, role: value }))
-              }
-            >
-              <Picker.Item label="Staff" value="staff" />
-              <Picker.Item label="Manager" value="manager" />
-            </Picker>
+            <View style={globalStyles.formGroup}>
+                <FormLabel >Select Role</FormLabel>
+                <CustomPicker
+                  selectedValue={inviteFormData.role}
+                  onValueChange={(value) =>
+                    setinviteFormData(prev => ({ ...prev, role: value }))
+                  }
+                >
+                  <Picker.Item label="Staff" value="staff" />
+                  <Picker.Item label="Manager" value="manager" />
+                </CustomPicker>
+            </View>
 
             {/* Actions */}
             <View style={styles.modalActions}>
               <TouchableOpacity
                 onPress={() => setInviteModal(false)}
-                style={styles.cancelBtn}
+                style={globalStyles.secondaryBtn}
               >
-                <Text>Cancel</Text>
+                <Text style={globalStyles.secondaryBtnText}>Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={handleInvite}
-                style={styles.sendBtn}
+                style={globalStyles.primaryBtn}
               >
-                <Text style={{ color: "#fff" }}>Send</Text>
+                <Text style={globalStyles.primaryBtnText}>Send</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </Card>
         </View>
       </Modal>
     </View>
@@ -146,13 +168,6 @@ export default BusinessPage;
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-  },
-
-  card: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
   },
 
   sectionTitle: {
@@ -209,8 +224,6 @@ const styles = StyleSheet.create({
   },
 
   modal: {
-    backgroundColor: "#fff",
-    padding: 20,
     borderRadius: 12,
   },
 
