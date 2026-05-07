@@ -17,8 +17,9 @@ import { Card, BodyText } from "../../../../src/components/ThemeProvider/compone
 import PageLoader from "../../../../src/components/common/PageLoader";
 import { useIsFocused } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
-import { getActiveContextSync } from "../../../../src/db/utils";
+import { getActiveContextSync, loadActiveContext } from "../../../../src/db/utils";
 import { debugActiveSession,  debugSessionIntegrity} from "../../../../src/db/testingDb";
+import { createSession } from "../../../../src/db/usersDb";
 
 const ProfileView = () => {
   const db = useSQLiteContext()
@@ -38,8 +39,10 @@ const handleLogoutOk = () => {
       data: { refresh: activeContext?.refresh_token },
     })
       .catch(error => console.log(error))
-      .finally(() => {
+      .finally(async() => {
         dispatch(clearUserDetails());
+        await createSession(db, {});
+        await loadActiveContext(db)
         router.push("/auth/profile");
       });
 }
