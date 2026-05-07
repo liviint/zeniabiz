@@ -26,6 +26,7 @@ const BusinessPage = () => {
   const [inviteModal, setInviteModal] = useState(false);
   const initialinviteFormData = { email:"",role:"Staff"}
   const [inviteFormData,setinviteFormData] = useState(initialinviteFormData)
+  const [refreshData,setRefreshData] = useState(0)
 
 
   // --- fetch company + members ---
@@ -51,7 +52,7 @@ const BusinessPage = () => {
 
   useEffect(() => {
     loadBusinessData();
-  }, [isFocused]);
+  }, [isFocused,refreshData]);
 
   // --- invite (placeholder logic) ---
   const handleInvite = async () => {
@@ -61,7 +62,7 @@ const BusinessPage = () => {
       await api.post("/core/company-invites/", inviteFormData);
       setinviteFormData(initialinviteFormData)
       setInviteModal(false);
-
+      setRefreshData(prev => prev + 1)
     } catch (err) {
       console.log("Invite error:", err?.response?.data || err.message);
     } 
