@@ -47,7 +47,7 @@ export default function TransactionTemplateDetailsScreen() {
   };
 
   const handleEdit = () => {
-    router.push(`expenses-templates/${id}/edit`);
+    router.push(`expenses/templates/${id}/edit`);
   };
 
   if (loading) {
@@ -72,11 +72,10 @@ export default function TransactionTemplateDetailsScreen() {
           template.type === "income" ? styles.income : styles.expense,
         ]}
       >
-        {template.type === "income" ? "+" : "-"} K {template.amount || "—"}
+        {template.amount || "—"}
       </Text>
 
       <Card style={styles.card}>
-        <DetailRow label="Type" value={template.type} />
         <DetailRow
           label="Category"
           value={template.category || "Uncategorized"}

@@ -43,7 +43,7 @@ export default function TransactionTemplatesListScreen() {
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
-      onPress={() => router.push(`expenses-templates/${item.id}`)}
+      onPress={() => router.push(`expenses/templates/${item.id}`)}
     >
       <Card>
         <View style={styles.row}>

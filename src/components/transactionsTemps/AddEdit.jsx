@@ -4,7 +4,6 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
     Alert,
-    Pressable,
     ScrollView,
     StyleSheet,
     TouchableOpacity,
@@ -88,7 +87,7 @@ export default function AddTransactionTemplateScreen() {
   return (
     <ScrollView style={globalStyles.container}>
       <BodyText style={globalStyles.title}>
-        {id ? "Edit Template" : "Add Template"}
+        {id ? "Edit Expense Template" : "Add Expense Template"}
       </BodyText>
       <Card>
         <View style={{ marginBottom: 16 }}>
@@ -114,44 +113,6 @@ export default function AddTransactionTemplateScreen() {
           form={form}
           handleCategoryChange={handleCategoryChange}
         />
-
-        <View style={styles.typeRow}>
-          <Pressable
-            disabled={form.category_id !== ""}
-            onPress={() => handleChange("type", "expense")}
-            style={[
-              styles.typeButton,
-              form.type === "expense" && styles.expenseActive,
-            ]}
-          >
-            <BodyText
-              style={[
-                styles.typeText,
-                form.type === "expense" && styles.activeText,
-              ]}
-            >
-              Expense
-            </BodyText>
-          </Pressable>
-
-          <Pressable
-            disabled={form.category_id !== ""}
-            onPress={() => handleChange("type", "income")}
-            style={[
-              styles.typeButton,
-              form.type === "income" && styles.incomeActive,
-            ]}
-          >
-            <BodyText
-              style={[
-                styles.typeText,
-                form.type === "income" && styles.activeText,
-              ]}
-            >
-              Income
-            </BodyText>
-          </Pressable>
-        </View>
 
         <View style={{ marginBottom: 16 }}>
           <FormLabel>Payee (Optional)</FormLabel>
