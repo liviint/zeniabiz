@@ -128,7 +128,7 @@ export async function createSession(db, { user, access, refresh, company_uuid = 
       VALUES (?, ?, ?, ?, ?, ?)
       `,
       [
-        localUser.uuid,   // MUST NEVER BE NULL
+        user?.uuid,   // MUST NEVER BE NULL
         companyUuid,
         access,
         refresh,
@@ -140,7 +140,7 @@ export async function createSession(db, { user, access, refresh, company_uuid = 
     console.log("✅ Session created successfully:", result);
 
     return {
-      user_uuid: localUser.uuid,
+      user_uuid: user.uuid,
       access,
       refresh
     };

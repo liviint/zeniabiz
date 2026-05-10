@@ -27,12 +27,11 @@ const BusinessPage = () => {
   const initialinviteFormData = { email:"",role:"Staff"}
   const [inviteFormData,setinviteFormData] = useState(initialinviteFormData)
   const [refreshData,setRefreshData] = useState(0)
-
+  const [isOwner,setIsOwner] = useState(false)
 
   // --- fetch company + members ---
   const loadBusinessData = async () => {
-    const {company } =  await getActiveContextSync(db);
-    console.log(company,"hello company")
+    const {company, user_id } =  await getActiveContextSync(db);
     try {
       // 1. COMPANY INFO
       const companyRes = await api.get(`/core/companies/${company}`);
@@ -44,8 +43,9 @@ const BusinessPage = () => {
       const invitesRes = await api.get(`/core/company-invites`);
       setInvites(invitesRes.data.results);
 
-      console.log(invitesRes.data.results,"hello invite data")
-
+      let owners = membersRes.data.results.filter(member => member.role === "owner")
+      let ownerObj = owners.find(owner => owner.user.uuid === user_id)
+      setIsOwner(!!ownerObj)
     } catch (err) {
       console.log("Failed to load business data:", err?.response?.data || err.message);
     }
@@ -87,12 +87,17 @@ const BusinessPage = () => {
           )}
         />
 
+        {
+        isOwner ? 
         <TouchableOpacity
           style={styles.inviteBtn}
           onPress={() => setInviteModal(true)}
         >
           <Text style={styles.inviteText}>+ Invite Member</Text>
         </TouchableOpacity>
+        : 
+        ""
+        }
       </Card>
 
       <Card >
