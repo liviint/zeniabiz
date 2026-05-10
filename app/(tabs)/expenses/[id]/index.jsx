@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useSelector } from "react-redux";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
@@ -19,7 +20,8 @@ export default function FinanceEntryViewPage() {
   const db = useSQLiteContext();
   const router = useRouter();
   const { globalStyles } = useThemeStyles();
-  const { id: uuid } = useLocalSearchParams();
+  const categoriesMap = useSelector(state => state.categories.categoriesMap);
+  let { id: uuid } = useLocalSearchParams();
   const [transaction, setTransaction] = useState(0);
   const [isExpense, setIsExpense] = useState(transaction.amount < 0);
 
@@ -43,14 +45,14 @@ export default function FinanceEntryViewPage() {
     getTransaction();
   }, []);
 
+  console.log(categoriesMap,"hello categories ma")
+
   return (
     <View style={globalStyles.container}>
       <BodyText style={globalStyles.title}>Expense Details</BodyText>
 
       <Card style={styles.amountCard}>
-        <SecondaryText style={styles.amountLabel}>
-          {isExpense ? "Expense" : "Income"}
-        </SecondaryText>
+
         <BodyText
           style={[styles.amount, styles.expense]}
         >
@@ -61,7 +63,7 @@ export default function FinanceEntryViewPage() {
 
       <Card style={styles.detailsCard}>
         <DetailRow label="Title" value={transaction.title} />
-        <DetailRow label="Category" value={transaction.category} />
+        <DetailRow label="Category" value={categoriesMap[transaction.category_id]} />
         {transaction.payee ? (
           <DetailRow label="Payee" value={transaction.payee} />
         ) : (

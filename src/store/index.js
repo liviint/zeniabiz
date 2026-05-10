@@ -5,6 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import userReducer from "./features/userSlice";
 import settingsReducer from "./features/settingsSlice";
 import syncReducer from "./features/syncSlice";
+import categoriesReducer from "./features/cetegoriesSlice";
 
 const userPersistConfig = {
   key: "user",
@@ -22,6 +23,7 @@ const rootReducer = combineReducers({
   user: persistReducer(userPersistConfig, userReducer),
   settings: persistReducer(settingsPersistConfig, settingsReducer),
   sync: syncReducer, 
+  categories:categoriesReducer,
 });
 
 export const store = configureStore({

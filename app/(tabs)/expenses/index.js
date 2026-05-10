@@ -1,5 +1,5 @@
 import { useIsFocused } from "@react-navigation/native";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
@@ -15,13 +15,15 @@ import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { dateFormat } from "../../../utils/dateFormat";
 import { groupDataIntoSections } from "../../../src/helpers";
 import { useManualSync } from "../../../src/hooks/useManualSync";
+import { setCategoriesMap } from "../../../src/store/features/cetegoriesSlice";
 
 export default function FinanceListPage() {
     const { onRefresh, refreshing } = useManualSync();
     const db = useSQLiteContext()
     const router = useRouter();
+    const dispatch = useDispatch()
     const [expenses,setTransactions] = useState([])
-    const [categoriesMap,setCategoriesMap] = useState({})
+    const [categoriesMap,setCategoriesMapLocal] = useState({})
     const [isLoading,setIsLoading] = useState(true)
     const isFocused = useIsFocused()
     const {globalStyles} = useThemeStyles()
@@ -34,7 +36,8 @@ export default function FinanceListPage() {
       categories.map(cat => {
         map[cat.id] = cat.name
       })
-      setCategoriesMap(map)
+      dispatch(setCategoriesMap(map))
+      setCategoriesMapLocal(map)
     };
     
 
@@ -63,7 +66,10 @@ export default function FinanceListPage() {
   ].filter(section => section.data.length > 0);
 
   const renderItem = ({ item }) => (
-    <Pressable onPress={() => router.push(`/expenses/${item.id}`)}>
+    <Pressable
+        onPress={() => router.push(`/expenses/${item.id}`)
+      }
+    >
       <Card>
         <View style={styles.row}>
           <View style={styles.left}>
