@@ -158,7 +158,8 @@ export const getCashFlow = async (db, timeState) => {
 };
 
 export const getExpensesBreakDown = async (db, timeState) => {
-  const { startDate, endDate } = normalizeRange(timeState)
+  const { startDate, endDate } = normalizeRange(timeState);
+
   if (!startDate || !endDate) {
     throw new Error("Invalid time range");
   }
@@ -166,13 +167,17 @@ export const getExpensesBreakDown = async (db, timeState) => {
   const result = await db.getAllAsync(
     `
     SELECT 
-      category, 
-      SUM(amount) as total
-    FROM expenses
-    WHERE deleted_at IS NULL
-      AND date >= ?
-      AND date < ?
-    GROUP BY category
+      ec.id as category_id,
+      ec.name as category,
+      SUM(e.amount) as total
+    FROM expenses e
+    LEFT JOIN expense_categories ec 
+      ON ec.id = e.category_id
+    WHERE e.deleted_at IS NULL
+      AND e.date >= ?
+      AND e.date < ?
+      AND ec.deleted_at IS NULL
+    GROUP BY ec.id, ec.name
     ORDER BY total DESC
     `,
     [startDate, endDate]
