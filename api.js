@@ -7,16 +7,23 @@ const baseURL = "https://api.zeniabiz.com/api"
 export let api = axios.create({baseURL})
 
 api.interceptors.request.use(
-  async(config) => {
-      const ctx = getActiveContextSync();
+  async (config) => {
+    const ctx = getActiveContextSync();
 
-      if (ctx?.access_token) {
-        config.headers.Authorization = `Bearer ${ctx.access_token}`;
-      }
+    if (ctx?.access_token) {
+      config.headers.Authorization = `Bearer ${ctx.access_token}`;
+    }
 
-      return config;
+    if (ctx?.company) {
+      config.params = {
+        ...config.params,
+        company: ctx.company,
+      };
+    }
+
+    return config;
   },
-  error => {
+  (error) => {
     return Promise.reject(error);
   }
 );
