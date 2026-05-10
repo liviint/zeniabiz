@@ -37,6 +37,7 @@ const MODEL_FIELDS = {
     "id",
     "company",
     "amount",
+    "payee",
     "title",
     "date",
     "category_id",

@@ -43,7 +43,6 @@ export default function FinanceListPage() {
 
     let fetchExpenses = async() => {
         let expenses = await getExpenses(db, selectedMonth)
-        console.log(expenses,"hello expenses")
         setTransactions(expenses)
     }
 
