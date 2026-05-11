@@ -18,10 +18,12 @@ import {
 } from "../../../../src/components/ThemeProvider/components";
 import { getTransactionTemplates } from "../../../../src/db/transactionsTempsDb";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
+import { useSelector } from "react-redux";
 
 export default function TransactionTemplatesListScreen() {
   const isFocused = useIsFocused();
   const { globalStyles } = useThemeStyles();
+  const categoriesMap = useSelector(state => state.categories.categoriesMap);
   const db = useSQLiteContext();
   const router = useRouter();
 
@@ -63,7 +65,7 @@ export default function TransactionTemplatesListScreen() {
 
         <View style={styles.metaRow}>
           <SecondaryText style={styles.category}>
-            {item.category || "Uncategorized"}
+            {item.category_id ? categoriesMap[item.category_id] : "Uncategorized"}
           </SecondaryText>
         </View>
 

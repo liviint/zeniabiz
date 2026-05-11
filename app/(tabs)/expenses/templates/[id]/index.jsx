@@ -1,4 +1,5 @@
 import { useIsFocused } from "@react-navigation/native";
+import { useSelector } from "react-redux";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
@@ -19,6 +20,7 @@ import { dateFormat } from "../../../../../utils/dateFormat";
 
 export default function TransactionTemplateDetailsScreen() {
   const { globalStyles } = useThemeStyles();
+  const categoriesMap = useSelector(state => state.categories.categoriesMap);
   const isFocused = useIsFocused();
   const { id } = useLocalSearchParams();
   const db = useSQLiteContext();
@@ -78,7 +80,7 @@ export default function TransactionTemplateDetailsScreen() {
       <Card style={styles.card}>
         <DetailRow
           label="Category"
-          value={template.category || "Uncategorized"}
+          value={template.category_id ? categoriesMap[template.category_id] : "Uncategorized"}
         />
         <DetailRow label="Payee" value={template.payee || "—"} />
         <DetailRow label="Note" value={template.note || "—"} />
