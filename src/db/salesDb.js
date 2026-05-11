@@ -1,5 +1,5 @@
 import uuid from "react-native-uuid";
-import { getMonthRange, getActiveContextSync } from "./utils";
+import { getMonthRange, getActiveContextSync, withTransaction } from "./utils";
 import { syncEvent } from "../cloudSync/syncEvent";
 
 const newUuid = () => uuid.v4();
@@ -131,6 +131,13 @@ export async function allocateFIFO(db, productId, requiredQty) {
       movement.updated_by,
     ]
   );
+
+  await syncEvent(db, {
+          model: "inventory_movements",
+          operation: "insert",
+          payload: movement,
+        });
+
 }
 
 
@@ -529,9 +536,8 @@ export async function deleteSale(db, sale_id) {
     throw new Error("sale_id is required");
   }
 
-  await db.runAsync("BEGIN TRANSACTION");
-
-  try {
+  return withTransaction(db, async() => {
+    try {
     // 1️⃣ get sale movements
     const movements = await db.getAllAsync(
       `
@@ -592,8 +598,6 @@ export async function deleteSale(db, sale_id) {
       [now, now, sale_id]
     );
 
-    await db.runAsync("COMMIT");
-
     // -------------------------
     // 🔥 SYNC SECTION
     // -------------------------
@@ -627,7 +631,7 @@ export async function deleteSale(db, sale_id) {
     }
 
   } catch (err) {
-    await db.runAsync("ROLLBACK");
     throw err;
   }
+  })
 }

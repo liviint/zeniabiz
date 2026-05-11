@@ -291,8 +291,6 @@ export async function deleteProduct(db, id) {
     throw new Error("Product id is required");
   }
 
-  await db.runAsync("BEGIN TRANSACTION");
-
   try {
     // 🗑 Soft delete product
     await db.runAsync(
@@ -304,7 +302,6 @@ export async function deleteProduct(db, id) {
       [now, now, id]
     );
 
-    await db.runAsync("COMMIT");
 
     // 🔥 SYNC EVENT (AFTER COMMIT)
     syncEvent(db, {
@@ -313,7 +310,8 @@ export async function deleteProduct(db, id) {
       payload: {
         id,
         company,
-        deleted_at: now
+        deleted_at: now,
+        updated_at:now
       }
     })
     .catch(err => {
@@ -321,7 +319,6 @@ export async function deleteProduct(db, id) {
 });
 
   } catch (error) {
-    await db.runAsync("ROLLBACK");
     throw error;
   }
 }

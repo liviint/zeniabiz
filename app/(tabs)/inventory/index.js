@@ -40,18 +40,18 @@ export default function ProductsListPage() {
   }, [isFocused, debouncedSearch, filter,lastSyncedAt]);
 
   const renderItem = ({ item }) => (
-    <Pressable onPress={() => router.push(`/inventory/${item.id}`)}>
+    <Pressable onPress={() => router.push(`/inventory/${item?.id}`)}>
       <Card>
         <View style={styles.row}>
           <View style={styles.left}>
-            <BodyText style={styles.title}>{item.name}</BodyText>
+            <BodyText style={styles.title}>{item?.name}</BodyText>
             <SecondaryText style={styles.meta}>
-              Stock: {item.stock_quantity}
+              Stock: {item?.stock_quantity}
             </SecondaryText>
           </View>
 
           <BodyText style={styles.price}>
-            {item.selling_price}
+            {item?.selling_price}
           </BodyText>
         </View>
       </Card>

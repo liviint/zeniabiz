@@ -25,7 +25,7 @@ export default function ProductViewPage() {
     if (!id) return;
     const getProduct = async() => {
       const data = await getProductById(db, id);
-      setProduct(data);
+      data && setProduct(data);
     }
 
     const getBatches = async() => {
@@ -48,9 +48,9 @@ export default function ProductViewPage() {
       <BodyText style={globalStyles.title}>Product Details</BodyText>
 
       <Card style={styles.card}>
-        <DetailRow label="Name" value={product.name} />
-        <DetailRow label="Stock" value={product.stock_quantity} />
-        <DetailRow label="Selling Price" value={product.selling_price} />
+        <DetailRow label="Name" value={product?.name} />
+        <DetailRow label="Stock" value={product?.stock_quantity} />
+        <DetailRow label="Selling Price" value={product?.selling_price} />
       </Card>
 
       {stockBatches.length > 0 && (
@@ -61,17 +61,17 @@ export default function ProductViewPage() {
       <Card key={batch.source_id} style={styles.batchCard}>
         <DetailRow
           label="Quantity"
-          value={batch.quantity_remaining}
+          value={batch?.quantity_remaining}
         />
 
         <DetailRow
           label="Cost Price"
-          value={batch.cost_price}
+          value={batch?.cost_price}
         />
 
         <DetailRow
           label="Selling Price"
-          value={batch.selling_price}
+          value={batch?.selling_price}
         />
 
         <DetailRow
