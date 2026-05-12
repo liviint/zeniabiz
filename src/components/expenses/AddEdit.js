@@ -1,4 +1,5 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useSelector } from "react-redux";
 import { useIsFocused } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
@@ -13,6 +14,7 @@ import { BodyText, Card, FormLabel, Input, SecondaryText, TextArea } from "../Th
 export default function AddEdit() {
   const isFocused = useIsFocused()
   const {id} = useLocalSearchParams()
+  const categoriesMap = useSelector(state => state.categories.categoriesMap);
   const {globalStyles} = useThemeStyles()
   const db = useSQLiteContext()
   const router = useRouter()
@@ -156,6 +158,7 @@ const isFormValid = () => {
         setShowTemplates={setShowTemplates}
         handleUseTemplate={handleUseTemplate}
         globalStyles={globalStyles}
+        categoriesMap={categoriesMap}
       />
         <View style={globalStyles.formGroup}>
           <FormLabel style={styles.label}>Title</FormLabel>
@@ -270,7 +273,7 @@ const isFormValid = () => {
   );
 }
 
-const UseTemplateComponent = ({id,templates, handleUseTemplate,showTemplates, setShowTemplates, globalStyles}) => {
+const UseTemplateComponent = ({id,templates, handleUseTemplate,showTemplates, setShowTemplates, globalStyles,categoriesMap}) => {
   const router = useRouter()
   return (
     <>
@@ -301,7 +304,7 @@ const UseTemplateComponent = ({id,templates, handleUseTemplate,showTemplates, se
           <Pressable
             onPress={() => {
               setShowTemplates(false);
-              router.push("/expenses-templates/add");
+              router.push("/expenses/templates/add");
             }}
             style={globalStyles.primaryBtn}
           >
@@ -327,7 +330,7 @@ const UseTemplateComponent = ({id,templates, handleUseTemplate,showTemplates, se
                   {tpl.title}
                 </BodyText>
                 <SecondaryText style={styles.templateMeta}>
-                  {tpl.category || "Uncategorized"}
+                  {tpl.category_id ? categoriesMap[tpl.category_id] : "Uncategorized"}
                 </SecondaryText>
               </Pressable>
             ))}

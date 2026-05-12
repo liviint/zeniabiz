@@ -122,6 +122,7 @@ export const getTransactionTemplateByid = async (db, id) => {
 };
 
 export const deleteTransactionTemplate = async (db, id) => {
+  const { company } = getActiveContextSync(db);
   const now = new Date().toISOString();
 
   await db.runAsync(
@@ -140,7 +141,9 @@ export const deleteTransactionTemplate = async (db, id) => {
     operation: "delete",
     payload: {
       id,
-      deleted_at: now
+      company,
+      deleted_at: now,
+      updated_at: now,
     }
   });
 };
