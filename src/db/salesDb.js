@@ -373,39 +373,58 @@ export async function createOrUpdateSale(
 }
 
 export async function getSales(db, selectedMonth) {
+  const { company } = getActiveContextSync();
+
   let sql = `
     SELECT *
     FROM sales
-    WHERE deleted_at IS NULL
+    WHERE company = ?
+      AND deleted_at IS NULL
   `;
-  const params = [];
+
+  const params = [company];
 
   if (selectedMonth) {
     const { startDate, endDate } = getMonthRange(selectedMonth);
 
     sql += `
-      AND created_at >= ?
-      AND created_at < ?
+      AND date >= ?
+      AND date < ?
     `;
+
     params.push(startDate, endDate);
   }
 
   sql += `
-    ORDER BY datetime(created_at) DESC
+    ORDER BY datetime(date) DESC
   `;
 
   return await db.getAllAsync(sql, params);
 }
 
 export async function getSaleItems(db, sale_id) {
+  const { company } = getActiveContextSync();
+
   return await db.getAllAsync(
     `
     SELECT si.*, p.name
     FROM sale_items si
-    JOIN products p ON p.id = si.product_id
+
+    JOIN sales s 
+      ON s.id = si.sale_id
+      AND s.company = ?
+      AND s.deleted_at IS NULL
+
+    JOIN products p 
+      ON p.id = si.product_id
+      AND p.company = ?
+      AND p.deleted_at IS NULL
+
     WHERE si.sale_id = ?
+      AND si.company = ?
+      AND si.deleted_at IS NULL
     `,
-    [sale_id]
+    [company, company, sale_id, company]
   );
 }
 
