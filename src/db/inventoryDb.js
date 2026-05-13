@@ -108,6 +108,7 @@ export async function getProducts(
     sort = "newest",
   } = {}
 ) {
+  const {company} = getActiveContextSync()
   let sql = `
     SELECT 
       p.id,
@@ -140,11 +141,13 @@ export async function getProducts(
     LEFT JOIN inventory_movements m
       ON m.product_id = p.id
       AND m.deleted_at IS NULL
+      AND m.company = ?
 
     WHERE p.deleted_at IS NULL
+    AND p.company = ?
   `;
 
-  const params = [];
+  const params = [company, company];
 
   // 📅 Month filter (applies to movements, not products)
   if (selectedMonth) {
@@ -221,6 +224,7 @@ export async function getProducts(
 }
 
 export async function getProductById(db, id) {
+  const {company} = getActiveContextSync()
   const product = await db.getFirstAsync(
     `
     SELECT 
@@ -254,14 +258,16 @@ export async function getProductById(db, id) {
     LEFT JOIN inventory_movements m
       ON m.product_id = p.id
       AND m.deleted_at IS NULL
+      AND m.company = ?
 
     WHERE p.id = ?
       AND p.deleted_at IS NULL
+      AND p.company = ?
 
     GROUP BY p.id
     LIMIT 1
     `,
-    [id]
+    [company,id,company]
   );
 
   return product;
