@@ -66,28 +66,34 @@ export async function syncDefaultCategories(db) {
     ["default_categories_synced", "1"]
   );
 }
+export const getCategoryById = async (db, id) => {
+  const { company } = getActiveContextSync();
 
-export const getCategories = async (db, id = null) => {
-  if (id) {
-    const rows = await db.getAllAsync(
-      `
-      SELECT *
-      FROM expense_categories
-      WHERE id = ? 
-      LIMIT 1
-      `,
-      [id]
-    );
-    return rows[0] || null;
-  }
+  return db.getFirstAsync(
+    `
+    SELECT *
+    FROM expense_categories
+    WHERE id = ?
+    AND company = ?
+    AND deleted_at IS NULL
+    LIMIT 1
+    `,
+    [id, company]
+  );
+};
+
+export const getCategories = async (db) => {
+  const { company } = getActiveContextSync();
 
   return db.getAllAsync(
     `
     SELECT *
     FROM expense_categories
-    WHERE deleted_at IS NULL
+    WHERE company = ?
+    AND deleted_at IS NULL
     ORDER BY name ASC
-    `
+    `,
+    [company]
   );
 };
 

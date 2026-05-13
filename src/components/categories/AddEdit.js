@@ -10,7 +10,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { BodyText, FormLabel, Input , Card } from "../ThemeProvider/components";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { getCategories, upsertCategory } from "../../db/categoriesDb";
+import { getCategoryById, upsertCategory } from "../../db/categoriesDb";
 import { COLORS } from "../../../utils/constants";
 
 export default function AddEdit() {
@@ -37,7 +37,7 @@ export default function AddEdit() {
         if (!categoryUuid) return;
 
         const fetchCategory = async () => {
-            const category = await getCategories(db, categoryUuid);
+            const category = await getCategoryById(db, categoryUuid);
 
             if (category) {
                 setForm((prev) => ({
