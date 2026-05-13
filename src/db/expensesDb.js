@@ -112,6 +112,7 @@ export async function upsertExpense(
 }
 
 export async function getExpenses(db, date = new Date()) {
+  const { company } = getActiveContextSync();
   const start = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
   const end = new Date(date.getFullYear(), date.getMonth() + 1, 1).toISOString();
 
@@ -120,12 +121,13 @@ export async function getExpenses(db, date = new Date()) {
     SELECT *
     FROM expenses
     WHERE 
-      date >= ?
-      AND date < ?
+      company = ?
+      AND date >= ?
+      AND date < ? 
       AND deleted_at is NULL
     ORDER BY datetime(date) DESC
     `,
-    [start, end]
+    [company,start, end]
   );
 }
 
@@ -141,7 +143,7 @@ export async function getTransactionById(db, id) {
 }
 
 export async function deleteExpense(db, id) {
-  const { company, user_id } = getActiveContextSync();
+  const { company } = getActiveContextSync();
   const now = new Date().toISOString();
 
   if (!id) {
