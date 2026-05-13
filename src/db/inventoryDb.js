@@ -481,6 +481,8 @@ export function buildFIFO(movements) {
 }
 
 export async function getTotalStockValue(db) {
+  const {company} = getActiveContextSync()
+
   const movements = await db.getAllAsync(
     `
     SELECT m.*
@@ -488,9 +490,11 @@ export async function getTotalStockValue(db) {
     INNER JOIN products p
       ON p.id = m.product_id
     WHERE m.deleted_at IS NULL
+      AND m.company = ?
       AND p.deleted_at IS NULL
+      AND p.company = ?
     ORDER BY m.product_id, m.date ASC, m.created_at ASC
-    `
+    `,[company,company]
   );
 
   const grouped = {};

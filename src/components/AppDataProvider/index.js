@@ -245,8 +245,8 @@ const migrateDbIfNeeded = async (db) => {
     FOREIGN KEY (product_id) REFERENCES products(id)
   );
 
-  CREATE INDEX IF NOT EXISTS idx_movements_company_product
-  ON inventory_movements(company, product_id);
+  CREATE INDEX IF NOT EXISTS idx_movements_company_product_date
+  ON inventory_movements(company, product_id, date, created_at);
 
   CREATE TABLE IF NOT EXISTS sales (
     id TEXT PRIMARY KEY,

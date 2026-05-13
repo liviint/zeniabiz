@@ -1,53 +1,65 @@
 import { normalizeRange } from "../utils/timeNavigatorHelpers";
 import { getTotalStockValue } from "./inventoryDb";
+import { getActiveContextSync } from "./utils";
 
 export const getCashFlow = async (db, timeState) => {
-  const { startDate, endDate } = normalizeRange(timeState)
+  const { company } = getActiveContextSync();
+  const { startDate, endDate } = normalizeRange(timeState);
 
   const result = await db.getAllAsync(
-  `
-  SELECT 
-    d.date,
-    COALESCE(s.revenue, 0) - COALESCE(e.expenses, 0) as net
-  FROM (
-    SELECT DATE(date) as date FROM sales
-    WHERE date >= ? AND date < ?
+    `
+    SELECT 
+      d.date,
+      COALESCE(s.revenue, 0) - COALESCE(e.expenses, 0) as net
+    FROM (
+      SELECT DATE(date) as date 
+      FROM sales
+      WHERE date >= ?
+        AND date < ?
+        AND company = ?
+        AND deleted_at IS NULL
 
-    UNION
+      UNION
 
-    SELECT DATE(date) as date FROM expenses
-    WHERE date >= ? AND date < ?
-      AND deleted_at IS NULL
-  ) d
+      SELECT DATE(date) as date 
+      FROM expenses
+      WHERE date >= ?
+        AND date < ?
+        AND company = ?
+        AND deleted_at IS NULL
+    ) d
 
-  LEFT JOIN (
-    SELECT DATE(date) as date, SUM(amount) as revenue
-    FROM sales
-    WHERE date >= ? AND date < ?
-    GROUP BY DATE(date)
-  ) s ON s.date = d.date
+    LEFT JOIN (
+      SELECT DATE(date) as date, SUM(amount) as revenue
+      FROM sales
+      WHERE date >= ?
+        AND date < ?
+        AND company = ?
+        AND deleted_at IS NULL
+      GROUP BY DATE(date)
+    ) s ON s.date = d.date
 
-  LEFT JOIN (
-    SELECT DATE(date) as date, SUM(amount) as expenses
-    FROM expenses
-    WHERE date >= ? AND date < ?
-      AND deleted_at IS NULL
-    GROUP BY DATE(date)
-  ) e ON e.date = d.date
+    LEFT JOIN (
+      SELECT DATE(date) as date, SUM(amount) as expenses
+      FROM expenses
+      WHERE date >= ?
+        AND date < ?
+        AND company = ?
+        AND deleted_at IS NULL
+      GROUP BY DATE(date)
+    ) e ON e.date = d.date
 
-  ORDER BY d.date ASC
-  `,
-  [
-    startDate, endDate,
-    startDate, endDate,
-    startDate, endDate,
-    startDate, endDate,
-  ]
-);
+    ORDER BY d.date ASC
+    `,
+    [
+      startDate, endDate, company,
+      startDate, endDate, company,
+      startDate, endDate, company,
+      startDate, endDate, company,
+    ]
+  );
 
-  // -------------------------------
-  // 🔥 NORMALIZE DATA (IMPORTANT)
-  // -------------------------------
+  //NORMALIZE DATA
 
   const dataMap = {};
 
@@ -158,6 +170,8 @@ export const getCashFlow = async (db, timeState) => {
 };
 
 export const getExpensesBreakDown = async (db, timeState) => {
+  const { company } = getActiveContextSync();
+
   const { startDate, endDate } = normalizeRange(timeState);
 
   if (!startDate || !endDate) {
@@ -170,23 +184,36 @@ export const getExpensesBreakDown = async (db, timeState) => {
       ec.id as category_id,
       ec.name as category,
       SUM(e.amount) as total
+
     FROM expenses e
+
     LEFT JOIN expense_categories ec 
       ON ec.id = e.category_id
+      AND ec.company = ?
+      AND ec.deleted_at IS NULL
+
     WHERE e.deleted_at IS NULL
+      AND e.company = ?
       AND e.date >= ?
       AND e.date < ?
-      AND ec.deleted_at IS NULL
+
     GROUP BY ec.id, ec.name
+
     ORDER BY total DESC
     `,
-    [startDate, endDate]
+    [
+      company,
+      company,
+      startDate,
+      endDate
+    ]
   );
 
   return result;
 };
 
 export async function getFinancialStats(db, timeState) {
+  const {company} = getActiveContextSync()
   const { startDate, endDate } = normalizeRange(timeState)
 
   if (!startDate || !endDate) {
@@ -197,19 +224,26 @@ export async function getFinancialStats(db, timeState) {
   // 1. Revenue & Cost
   // -------------------------
   
-  const revenueAndCost = await db.getFirstAsync(
-    `
-    SELECT 
-      COALESCE(SUM(si.price * si.quantity), 0) AS revenue,
-      COALESCE(SUM(si.cost_price * si.quantity), 0) AS cost
-    FROM sale_items si
-    JOIN sales s ON s.id = si.sale_id
-    WHERE s.deleted_at IS NULL
-      AND s.date >= ?
-      AND s.date < ?
-    `,
-    [startDate, endDate]
-  );
+ const revenueAndCost = await db.getFirstAsync(
+  `
+  SELECT 
+    COALESCE(SUM(si.price * si.quantity), 0) AS revenue,
+    COALESCE(SUM(si.cost_price * si.quantity), 0) AS cost
+
+  FROM sale_items si
+
+  JOIN sales s 
+    ON s.id = si.sale_id
+    AND s.company = ?
+    AND s.deleted_at IS NULL
+
+  WHERE si.company = ?
+    AND si.deleted_at IS NULL
+    AND s.date >= ?
+    AND s.date < ?
+  `,
+  [company, company, startDate, endDate]
+);
 
 
   // -------------------------
@@ -220,10 +254,11 @@ export async function getFinancialStats(db, timeState) {
     SELECT COALESCE(SUM(amount), 0) AS expenses
     FROM expenses
     WHERE deleted_at IS NULL
+      AND company = ?
       AND date >= ?
       AND date < ?
     `,
-    [startDate, endDate]
+    [company, startDate, endDate]
   );
 
   // -------------------------
