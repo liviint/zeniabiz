@@ -30,6 +30,8 @@ const migrateDbIfNeeded = async (db) => {
 
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
+    PRAGMA foreign_keys = ON;
+
     CREATE TABLE IF NOT EXISTS companies (
       uuid TEXT PRIMARY KEY,
 
@@ -57,7 +59,7 @@ const migrateDbIfNeeded = async (db) => {
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
     deleted_at TEXT,
 
-    FOREIGN KEY (company) REFERENCES companies(id)
+    FOREIGN KEY (company) REFERENCES companies(uuid)
   );
 
   CREATE TABLE IF NOT EXISTS local_user (
@@ -90,8 +92,6 @@ const migrateDbIfNeeded = async (db) => {
     updated_at TEXT
   );
 
-  CREATE UNIQUE INDEX IF NOT EXISTS idx_single_session ON app_session(id);
-
   CREATE INDEX IF NOT EXISTS idx_company_members_company 
   ON company_members(company);
 
@@ -122,8 +122,8 @@ const migrateDbIfNeeded = async (db) => {
   CREATE INDEX IF NOT EXISTS idx_expenses_category 
   ON expenses(category_id);
 
-  CREATE INDEX IF NOT EXISTS idx_expenses_company 
-  ON expenses(company);
+  CREATE INDEX IF NOT EXISTS idx_expenses_company_date
+  ON expenses(company, date DESC);
 
   CREATE TABLE IF NOT EXISTS expense_categories (
     id TEXT PRIMARY KEY,
@@ -171,6 +171,9 @@ const migrateDbIfNeeded = async (db) => {
     deleted_at TEXT
   );
 
+  CREATE INDEX IF NOT EXISTS idx_templates_company
+  ON expense_templates(company);
+
   CREATE TABLE IF NOT EXISTS products (
     id TEXT PRIMARY KEY,
 
@@ -188,8 +191,8 @@ const migrateDbIfNeeded = async (db) => {
     deleted_at TEXT
   );
 
-  CREATE INDEX IF NOT EXISTS idx_products_company 
-  ON products(company);
+  CREATE INDEX IF NOT EXISTS idx_products_company_created
+  ON products(company, created_at DESC);
 
   CREATE TABLE IF NOT EXISTS inventory_batches (
     id TEXT PRIMARY KEY,
@@ -212,11 +215,8 @@ const migrateDbIfNeeded = async (db) => {
     FOREIGN KEY (product_id) REFERENCES products(id)
   );
 
-  CREATE INDEX IF NOT EXISTS idx_batches_product 
-  ON inventory_batches(product_id, created_at, quantity_remaining);
-
-  CREATE INDEX IF NOT EXISTS idx_batches_company 
-  ON inventory_batches(company);
+  CREATE INDEX IF NOT EXISTS idx_batches_company_product
+  ON inventory_batches(company, product_id);
 
   CREATE TABLE IF NOT EXISTS inventory_movements (
     id TEXT PRIMARY KEY,
@@ -245,11 +245,8 @@ const migrateDbIfNeeded = async (db) => {
     FOREIGN KEY (product_id) REFERENCES products(id)
   );
 
-  CREATE INDEX IF NOT EXISTS idx_movements_product 
-  ON inventory_movements(product_id);
-
-  CREATE INDEX IF NOT EXISTS idx_movements_company 
-  ON inventory_movements(company);
+  CREATE INDEX IF NOT EXISTS idx_movements_company_product
+  ON inventory_movements(company, product_id);
 
   CREATE TABLE IF NOT EXISTS sales (
     id TEXT PRIMARY KEY,
@@ -269,8 +266,8 @@ const migrateDbIfNeeded = async (db) => {
     deleted_at TEXT
   );
 
-  CREATE INDEX IF NOT EXISTS idx_sales_company 
-  ON sales(company);
+  CREATE INDEX IF NOT EXISTS idx_sales_company_date
+  ON sales(company, date DESC);
 
   CREATE TABLE IF NOT EXISTS sale_items (
     id TEXT PRIMARY KEY,
@@ -302,6 +299,9 @@ const migrateDbIfNeeded = async (db) => {
   CREATE INDEX IF NOT EXISTS idx_sale_items_product 
   ON sale_items(product_id);
 
+  CREATE INDEX IF NOT EXISTS idx_sale_items_company
+  ON sale_items(company);
+
 
   CREATE TABLE IF NOT EXISTS app_settings (
     key TEXT PRIMARY KEY,
@@ -330,6 +330,9 @@ const migrateDbIfNeeded = async (db) => {
 
   CREATE INDEX IF NOT EXISTS idx_sync_model 
   ON sync_queue(model);
+
+  CREATE INDEX IF NOT EXISTS idx_sync_pending
+  ON sync_queue(status, next_retry_at);
 
   CREATE TABLE IF NOT EXISTS sync_state (
     model TEXT PRIMARY KEY,
