@@ -102,22 +102,28 @@ export const upsertExpenseTemplate = async (db, template) => {
 };
 
 export const getTransactionTemplates = async (db) => {
+  const {company} = getActiveContextSync()
   return await db.getAllAsync(`
     SELECT *
     FROM expense_templates
-    WHERE deleted_at IS NULL
+    WHERE company = ?
+    AND deleted_at IS NULL
     ORDER BY usage_count DESC, updated_at DESC
-  `);
+  `,[company]);
 };
 
 export const getTransactionTemplateByid = async (db, id) => {
+  const { company } = getActiveContextSync();
+
   return await db.getFirstAsync(
     `
     SELECT *
     FROM expense_templates
     WHERE id = ?
+      AND company = ?
+      AND deleted_at IS NULL
     `,
-    [id]
+    [id, company]
   );
 };
 

@@ -171,8 +171,8 @@ const migrateDbIfNeeded = async (db) => {
     deleted_at TEXT
   );
 
-  CREATE INDEX IF NOT EXISTS idx_templates_company
-  ON expense_templates(company);
+  CREATE INDEX IF NOT EXISTS idx_templates_company_usage
+  ON expense_templates(company, usage_count DESC, updated_at DESC);
 
   CREATE TABLE IF NOT EXISTS products (
     id TEXT PRIMARY KEY,
