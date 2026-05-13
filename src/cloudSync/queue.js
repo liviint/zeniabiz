@@ -1,15 +1,17 @@
+import { getActiveContextSync } from "../db/utils";
 import {getNextRetryTime} from "./utils"
 
 export async function addToQueue(db, event) {
   console.log(event.payload.company,"hello event payload")
   await db.runAsync(
     `INSERT INTO sync_queue 
-    (id, model, operation, payload, client_request_id, status, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    (id, model, operation,company, payload, client_request_id, status, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       event.id,
       event.model,
       event.operation,
+      event.payload.company,
       JSON.stringify(event.payload),
       event.client_request_id,
       event.status,
@@ -20,15 +22,17 @@ export async function addToQueue(db, event) {
 }
 
 export async function getPendingItems(db) {
+  const {company} = getActiveContextSync()
   const rows = await db.getAllAsync(`
     SELECT * FROM sync_queue 
     WHERE status = 'pending'
+    AND company = ?
     AND (
       next_retry_at IS NULL 
       OR datetime(next_retry_at) <= datetime('now')
     )
     ORDER BY created_at ASC
-  `)
+  `,[company])
 
   return rows.map(row => ({
     ...row,

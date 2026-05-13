@@ -312,6 +312,7 @@ const migrateDbIfNeeded = async (db) => {
     id TEXT PRIMARY KEY,
     model TEXT NOT NULL,
     operation TEXT,
+    company TEXT,
 
     payload TEXT NOT NULL,
     client_request_id TEXT UNIQUE,
