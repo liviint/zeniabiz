@@ -7,6 +7,7 @@ const newUuid = () => uuid.v4();
 
 export const seedCategoriesIfEmpty = async (db) => {
   const {company} = getActiveContextSync()
+  const now = new Date().toISOString();
   try {
     const result = await db.getFirstAsync(
       `SELECT COUNT(*) AS count 
@@ -17,60 +18,44 @@ export const seedCategoriesIfEmpty = async (db) => {
 
     if (result.count > 0) return;
 
-
-    await db.runAsync("BEGIN TRANSACTION");
-
+    let id
     for (const cat of DEFAULT_CATEGORIES) {
+      id = newUuid()
       await db.runAsync(
         `INSERT INTO expense_categories 
           (id, name,company, color, icon, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
         [
-          newUuid(),   
+          id,   
           cat.name,
           company,
           cat.color,
           cat.icon,
         ]
       );
+
+      await syncEvent(db, {
+        model: "expense_categories",
+        operation: "upsert",
+        payload: {
+          id: id,
+          name: cat.name,
+          color: cat.color,
+          icon: cat.icon,
+          company: getActiveContextSync().company,
+          created_at: now,
+          updated_at: now,
+        }
+      });
     }
 
-    await db.runAsync("COMMIT");
     console.log("✅ Default categories seeded");
   } catch (error) {
-    await db.runAsync("ROLLBACK");
     console.error("❌ Failed to seed categories:", error);
   }
 };
 
-export async function syncDefaultCategories(db) {
-  const alreadySynced = await db.getFirstAsync(
-    `SELECT value FROM app_settings WHERE key = 'default_categories_synced'`
-  );
 
-  if (alreadySynced) return;
-  const now = new Date().toISOString();
-  for (const cat of DEFAULT_CATEGORIES) {
-    await syncEvent(db, {
-      model: "expense_categories",
-      operation: "upsert",
-      payload: {
-        id: cat.id,
-        name: cat.name,
-        color: cat.color,
-        icon: cat.icon,
-        company: getActiveContextSync().company,
-        created_at: now,
-        updated_at: now,
-      }
-    });
-  }
-
-  await db.runAsync(
-    `INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)`,
-    ["default_categories_synced", "1"]
-  );
-}
 export const getCategoryById = async (db, id) => {
   const { company } = getActiveContextSync();
 

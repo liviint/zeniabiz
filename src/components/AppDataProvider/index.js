@@ -30,7 +30,6 @@ const migrateDbIfNeeded = async (db) => {
 
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
-    PRAGMA foreign_keys = ON;
 
     CREATE TABLE IF NOT EXISTS companies (
       uuid TEXT PRIMARY KEY,
@@ -141,7 +140,9 @@ const migrateDbIfNeeded = async (db) => {
 
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-    deleted_at TEXT
+    deleted_at TEXT,
+
+    UNIQUE(company, name)
   );
 
   CREATE INDEX IF NOT EXISTS idx_categories_company 

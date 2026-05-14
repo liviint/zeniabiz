@@ -45,8 +45,6 @@ export default function FinanceEntryViewPage() {
     getTransaction();
   }, []);
 
-  console.log(categoriesMap,"hello categories ma")
-
   return (
     <View style={globalStyles.container}>
       <BodyText style={globalStyles.title}>Expense Details</BodyText>

@@ -4,113 +4,137 @@ import { api } from "@/api";
 // -------------------------
 // MODEL FIELD WHITELIST
 // -------------------------
-const MODEL_FIELDS = {
-  sales: [
-    "id",
-    "company",
-    "title",
-    "note",
-    "amount",
-    "date",
-    "created_at",
-    "updated_at",
-    "deleted_at",
-  ],
-  sale_items: [
-    "id",
-    "company",
-    "created_by",
-    "updated_by",
+const MODEL_CONFIG = {
+  sales: {
+    fields: [
+      "id",
+      "company",
+      "title",
+      "note",
+      "amount",
+      "date",
+      "created_at",
+      "updated_at",
+      "deleted_at",
+    ],
+    conflictKeys: ["id"],
+  },
 
-    "sale_id",
-    "product_id",
+  sale_items: {
+    fields: [
+      "id",
+      "company",
+      "created_by",
+      "updated_by",
+      "sale_id",
+      "product_id",
+      "quantity",
+      "price",
+      "cost_price",
+      "created_at",
+      "updated_at",
+      "deleted_at",
+    ],
+    conflictKeys: ["id"],
+  },
 
-    "quantity",
-    "price",
-    "cost_price",
+  expenses: {
+    fields: [
+      "id",
+      "company",
+      "amount",
+      "payee",
+      "title",
+      "date",
+      "category_id",
+      "created_at",
+      "updated_at",
+      "deleted_at",
+    ],
+    conflictKeys: ["id"],
+  },
 
-    "created_at",
-    "updated_at",
-    "deleted_at",
-  ],
-  expenses: [
-    "id",
-    "company",
-    "amount",
-    "payee",
-    "title",
-    "date",
-    "category_id",
-    "created_at",
-    "updated_at",
-    "deleted_at",
-  ],
-  products: [
-    "id",
-    "company",
-    "name",
-    "selling_price",
-    "cost_price",
-    "created_at",
-    "updated_at",
-    "deleted_at",
-  ],
-  expense_categories: [
-    "id",
-    "company",
-    "name",
-    "color",
-    "icon",
-    "created_at",
-    "updated_at",
-    "deleted_at",
-  ],
-  expense_templates: [
-    "id",
-    "company",
-    "created_by",
-    "updated_by",
+  products: {
+    fields: [
+      "id",
+      "company",
+      "name",
+      "selling_price",
+      "cost_price",
+      "created_at",
+      "updated_at",
+      "deleted_at",
+    ],
+    conflictKeys: ["id"],
+  },
 
-    "title",
-    "amount",
-    "type",
+  expense_categories: {
+    fields: [
+      "id",
+      "company",
+      "name",
+      "color",
+      "icon",
+      "created_at",
+      "updated_at",
+      "deleted_at",
+    ],
+    conflictKeys: ["company", "name"]
+  },
 
-    "category",
-    "category_id",
-    "usage_count",
+  expense_templates: {
+    fields: [
+      "id",
+      "company",
+      "created_by",
+      "updated_by",
+      "title",
+      "amount",
+      "type",
+      "category",
+      "category_id",
+      "usage_count",
+      "payee",
+      "note",
+      "created_at",
+      "updated_at",
+      "deleted_at",
+    ],
+    conflictKeys: ["id"],
+  },
 
-    "payee",
-    "note",
+  inventory_batches: {
+    fields: [
+      "id",
+      "company",
+      "product_id",
+      "quantity_remaining",
+      "cost_price",
+      "selling_price",
+      "date",
+      "created_at",
+      "updated_at",
+      "deleted_at",
+    ],
+    conflictKeys: ["id"],
+  },
 
-    "created_at",
-    "updated_at",
-    "deleted_at",
-  ],
-  inventory_batches: [
-    "id",
-    "company",
-    "product_id",
-    "quantity_remaining",
-    "cost_price",
-    "selling_price",
-    "date",
-    "created_at",
-    "updated_at",
-    "deleted_at",
-  ],
-  inventory_movements: [
-    "id",
-    "company",
-    "product_id",
-    "unit_cost",
-    "quantity",
-    "type",
-    "reference_id",
-    "date",
-    "created_at",
-    "updated_at",
-    "deleted_at",
-  ],
+  inventory_movements: {
+    fields: [
+      "id",
+      "company",
+      "product_id",
+      "unit_cost",
+      "quantity",
+      "type",
+      "reference_id",
+      "date",
+      "created_at",
+      "updated_at",
+      "deleted_at",
+    ],
+    conflictKeys: ["id"],
+  },
 };
 
 // -------------------------
@@ -119,27 +143,45 @@ const MODEL_FIELDS = {
 export async function pullServerChanges(db, model, endpoint) {
   const state = await getSyncCursor(db, model);
 
+  // const currentCursor = state?.cursor || 0;
+  const currentCursor =  0;
+
+  if (model === "expenses") {
+    console.log(currentCursor, "hello current cursor");
+  }
+
   const res = await api.get(endpoint, {
     params: {
-      cursor: state.cursor ? JSON.stringify(state.cursor) : null,
-      version: state.version,
+      cursor: currentCursor,
     },
   });
 
-  // console.log(res.data,"hello res.data")
+  if (!res.data) {
+    return false;
+  }
 
-  if (!res.data) return false;
+  let {
+    data,
+    cursor: nextCursor,
+    has_more,
+  } = res.data;
 
-  const { data, cursor: nextCursor, has_more } = res.data;
 
-  await applyServerChanges(db, model, data || []);
+  // 🔥 apply incoming events
+  await applyServerChanges(db, model, data|| []);
 
-  if (nextCursor) {
+  // 🔥 save latest revision cursor
+  if (nextCursor !== undefined && nextCursor !== null) {
     await saveSyncCursor(db, model, nextCursor);
   }
 
+  // 🔥 continue pulling until exhausted
   if (has_more) {
-    return pullServerChanges(db, model, endpoint);
+    return await pullServerChanges(
+      db,
+      model,
+      endpoint
+    );
   }
 
   return true;
@@ -149,16 +191,17 @@ export async function pullServerChanges(db, model, endpoint) {
 // APPLY SERVER CHANGES
 // -------------------------
 export async function applyServerChanges(db, model, items) {
-  const fields = MODEL_FIELDS[model];
+  const config = MODEL_CONFIG[model];
 
-  if (!fields) {
+  if (!config) {
     throw new Error(`No schema defined for model: ${model}`);
   }
 
-  for (const item of items) {
-    // -------------------------
-    // DELETE SYNC
-    // -------------------------
+  const { fields, conflictKeys = ["id"] } = config;
+
+  for (const event of items) {
+    const item = event.payload ?? event;
+
     if (item.deleted_at) {
       await db.runAsync(
         `UPDATE ${model} SET deleted_at = ? WHERE id = ?`,
@@ -167,9 +210,6 @@ export async function applyServerChanges(db, model, items) {
       continue;
     }
 
-    // -------------------------
-    // FILTER SAFE FIELDS ONLY
-    // -------------------------
     const filtered = {};
     for (const f of fields) {
       filtered[f] = item[f] ?? null;
@@ -179,26 +219,19 @@ export async function applyServerChanges(db, model, items) {
     const placeholders = Object.keys(filtered).map(() => "?").join(", ");
     const values = Object.values(filtered);
 
-    // -------------------------
-    // UPSERT WITH CONFLICT SAFETY
-    // -------------------------
+    const updateClause = Object.keys(filtered)
+      .filter((k) => !conflictKeys.includes(k))
+      .map((k) => `${k} = excluded.${k}`)
+      .join(", ");
+
+    const conflictClause = `(${conflictKeys.join(", ")})`;
+
     await db.runAsync(
       `
       INSERT INTO ${model} (${columns})
       VALUES (${placeholders})
-      ON CONFLICT(id) DO UPDATE SET
-        ${Object.keys(filtered)
-          .filter((k) => k !== "id")
-          .map(
-            (k) => `
-              ${k} = CASE 
-                WHEN excluded.updated_at >= ${model}.updated_at 
-                THEN excluded.${k} 
-                ELSE ${model}.${k} 
-              END
-            `
-          )
-          .join(", ")}
+      ON CONFLICT ${conflictClause} DO UPDATE SET
+        ${updateClause}
       `,
       values
     );

@@ -47,7 +47,7 @@ export default function AcceptInviteScreen() {
       );
 
       setInvite(response.data);
-
+      
     } catch (err) {
       console.log(err);
 
@@ -88,7 +88,7 @@ export default function AcceptInviteScreen() {
       });
       await loadActiveContext(db)
 
-      // router.push("/auth/profile");
+      router.push("/auth/profile");
 
     } catch (err) {
       console.log(err);
