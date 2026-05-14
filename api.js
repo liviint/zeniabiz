@@ -1,8 +1,8 @@
 import axios from "axios";
 import { getActiveContextSync } from "./src/db/utils";
 
-// const baseURL = "http://192.168.8.95:8000/api"
-const baseURL = "https://api.zeniabiz.com/api"
+const baseURL = "http://192.168.8.95:8000/api"
+// const baseURL = "https://api.zeniabiz.com/api"
 
 export let api = axios.create({baseURL})
 

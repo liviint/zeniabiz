@@ -94,10 +94,6 @@ export async function createSession(db, { user, access, refresh, company_uuid = 
   const now = new Date().toISOString();
 
   try {
-    console.log("🔐 createSession START");
-    console.log("👤 User payload:", user);
-    console.log("🔑 Access token exists:", !!access);
-
     const localUser = await db.getFirstAsync(
       `SELECT uuid FROM local_user LIMIT 1`
     );
@@ -140,7 +136,7 @@ export async function createSession(db, { user, access, refresh, company_uuid = 
     console.log("✅ Session created successfully:", result);
 
     return {
-      user_uuid: user.uuid,
+      user_uuid: user?.uuid,
       access,
       refresh
     };
