@@ -210,6 +210,9 @@ export async function applyServerChanges(db, model, items) {
     if (model === "sale_items") {
       item.sale_id = item.sale_id ?? item.sale;
     }
+    if (model === "expenses") {
+      item.category_id = item.category_id ?? item.category;
+    }
     const filtered = {};
     for (const f of fields) {
       filtered[f] = item[f] ?? null;
