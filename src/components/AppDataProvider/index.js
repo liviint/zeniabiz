@@ -1,10 +1,8 @@
 import { SQLiteProvider } from "expo-sqlite";
-import CategoriesProvider from "./CategoriesProvider";
 import SessionProvider from "./SessionProvider"
 import SyncProvider from "./SyncProvider"
 
 const migrateDbIfNeeded = async (db) => {
-  
   /* 
   await db.execAsync(`DROP TABLE IF EXISTS companies;`);
   await db.execAsync(`DROP TABLE IF EXISTS company_members;`);
@@ -351,7 +349,6 @@ export default function AppDataProvider({ children }) {
     <SQLiteProvider databaseName="zeniabiz.db" onInit={migrateDbIfNeeded}>
       <SessionProvider>
         <SyncProvider>
-          <CategoriesProvider />
           {children}
         </SyncProvider>
       </SessionProvider>

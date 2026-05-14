@@ -1,60 +1,8 @@
 import uuid from "react-native-uuid";
-import { DEFAULT_CATEGORIES } from "../../utils/categoriesSeeder";
 import {syncEvent} from "../cloudSync/syncEvent"
 import { getActiveContextSync } from "./utils";
 
 const newUuid = () => uuid.v4();
-
-export const seedCategoriesIfEmpty = async (db) => {
-  const {company} = getActiveContextSync()
-  const now = new Date().toISOString();
-  try {
-    const result = await db.getFirstAsync(
-      `SELECT COUNT(*) AS count 
-        FROM expense_categories 
-        WHERE company = ?`,
-      [company]
-    );
-
-    if (result.count > 0) return;
-
-    let id
-    for (const cat of DEFAULT_CATEGORIES) {
-      id = newUuid()
-      await db.runAsync(
-        `INSERT INTO expense_categories 
-          (id, name,company, color, icon, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-        [
-          id,   
-          cat.name,
-          company,
-          cat.color,
-          cat.icon,
-        ]
-      );
-
-      await syncEvent(db, {
-        model: "expense_categories",
-        operation: "upsert",
-        payload: {
-          id: id,
-          name: cat.name,
-          color: cat.color,
-          icon: cat.icon,
-          company: getActiveContextSync().company,
-          created_at: now,
-          updated_at: now,
-        }
-      });
-    }
-
-    console.log("✅ Default categories seeded");
-  } catch (error) {
-    console.error("❌ Failed to seed categories:", error);
-  }
-};
-
 
 export const getCategoryById = async (db, id) => {
   const { company } = getActiveContextSync();
