@@ -143,8 +143,7 @@ const MODEL_CONFIG = {
 export async function pullServerChanges(db, model, endpoint) {
   const state = await getSyncCursor(db, model);
 
-  // const currentCursor = state?.cursor || 0;
-  const currentCursor =  0;
+  const currentCursor = state?.cursor || 0;
 
   const res = await api.get(endpoint, {
     params: {
