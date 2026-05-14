@@ -5,13 +5,17 @@ import { getActiveContextSync } from "./utils";
 
 const newUuid = () => uuid.v4();
 
-export const seedCategoriesIfEmpty = async (db, apiData = []) => {
+export const seedCategoriesIfEmpty = async (db) => {
+  const {company} = getActiveContextSync()
   try {
-    const rows = await db.getAllAsync(
-      "SELECT COUNT(*) AS count FROM expense_categories"
+    const result = await db.getFirstAsync(
+      `SELECT COUNT(*) AS count 
+        FROM expense_categories 
+        WHERE company = ?`,
+      [company]
     );
 
-    if (rows[0].count > 0) return;
+    if (result.count > 0) return;
 
 
     await db.runAsync("BEGIN TRANSACTION");
@@ -19,11 +23,12 @@ export const seedCategoriesIfEmpty = async (db, apiData = []) => {
     for (const cat of DEFAULT_CATEGORIES) {
       await db.runAsync(
         `INSERT INTO expense_categories 
-          (id, name, color, icon, created_at, updated_at)
-          VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))`,
+          (id, name,company, color, icon, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
         [
-          cat.id,   
+          newUuid(),   
           cat.name,
+          company,
           cat.color,
           cat.icon,
         ]
