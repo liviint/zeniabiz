@@ -146,10 +146,6 @@ export async function pullServerChanges(db, model, endpoint) {
   // const currentCursor = state?.cursor || 0;
   const currentCursor =  0;
 
-  if (model === "expenses") {
-    console.log(currentCursor, "hello current cursor");
-  }
-
   const res = await api.get(endpoint, {
     params: {
       cursor: currentCursor,
@@ -192,7 +188,7 @@ export async function pullServerChanges(db, model, endpoint) {
 // APPLY SERVER CHANGES
 // -------------------------
 export async function applyServerChanges(db, model, items) {
-  if(model === "inventory_movements") console.log(items, "hello current cursor");
+  if(model === "sale_items") console.log(items, "hello  sale items current cursor");
   const config = MODEL_CONFIG[model];
 
   if (!config) {
@@ -212,6 +208,9 @@ export async function applyServerChanges(db, model, items) {
       continue;
     }
 
+    if (model === "sale_items") {
+      item.sale_id = item.sale_id ?? item.sale;
+    }
     const filtered = {};
     for (const f of fields) {
       filtered[f] = item[f] ?? null;
