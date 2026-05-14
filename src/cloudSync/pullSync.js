@@ -168,6 +168,7 @@ export async function pullServerChanges(db, model, endpoint) {
 
 
   // 🔥 apply incoming events
+  
   await applyServerChanges(db, model, data|| []);
 
   // 🔥 save latest revision cursor
@@ -191,6 +192,7 @@ export async function pullServerChanges(db, model, endpoint) {
 // APPLY SERVER CHANGES
 // -------------------------
 export async function applyServerChanges(db, model, items) {
+  if(model === "inventory_movements") console.log(items, "hello current cursor");
   const config = MODEL_CONFIG[model];
 
   if (!config) {
@@ -226,14 +228,21 @@ export async function applyServerChanges(db, model, items) {
 
     const conflictClause = `(${conflictKeys.join(", ")})`;
 
-    await db.runAsync(
-      `
-      INSERT INTO ${model} (${columns})
-      VALUES (${placeholders})
-      ON CONFLICT ${conflictClause} DO UPDATE SET
-        ${updateClause}
-      `,
-      values
-    );
+    try {
+      await db.runAsync(
+        `
+        INSERT INTO ${model} (${columns})
+        VALUES (${placeholders})
+        ON CONFLICT ${conflictClause} DO UPDATE SET
+          ${updateClause}
+        `,
+        values
+      );
+  
+    } catch (error) {
+      console.log(error,"hello apply server changes error")
+    }
+
   }
+
 }
