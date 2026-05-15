@@ -71,7 +71,7 @@ export default function AddEdit() {
 
 const isFormValid = () => {
   if (!form.title.trim()) {
-    Alert.alert("Missing title", "Please enter a title for the transaction.");
+    Alert.alert("Missing title", "Please enter a title for the expense.");
     return false;
   }
 
