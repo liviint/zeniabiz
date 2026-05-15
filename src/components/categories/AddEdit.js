@@ -21,7 +21,7 @@ export default function AddEdit() {
     const initialForm = {
         name: "",
         color: COLORS[1],
-        icon: "🛒",
+        icon: "",
         id: "",
     };
     const [form,setForm] = useState(initialForm)
@@ -83,7 +83,7 @@ export default function AddEdit() {
                 <Input
                     value={form.name}
                     onChangeText={(value) => handleFormChange("name",value)}
-                    placeholder="e.g. Food"
+                    placeholder="e.g. Rent"
                 />
             </View>
 
@@ -95,7 +95,7 @@ export default function AddEdit() {
                     onChangeText={(text) => {
                     handleFormChange("icon",text.slice(0, 2))
                     }}
-                    placeholder="e.g. 🍔"
+                    placeholder="e.g. 🏠"
                     maxLength={2}
                 />
             </View>
