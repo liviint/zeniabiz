@@ -48,7 +48,9 @@
       "@react-native-community/datetimepicker",
       "@react-native-firebase/app",
       "@react-native-firebase/crashlytics",
-      "expo-web-browser"
+      "expo-web-browser",
+      "@react-native-google-signin/google-signin",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
