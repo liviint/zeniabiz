@@ -7,7 +7,7 @@ const FILE_NAME = "ZeniBiz_Backup.json";
 export const configureGoogleDrive = () => {
   GoogleSignin.configure({
     scopes: ["https://www.googleapis.com/auth/drive.file"],
-    webClientId: "YOUR_WEB_CLIENT_ID",
+    webClientId: "28706889001-ab7rmk5a8t678ebijhnmsmioj17p629p.apps.googleusercontent.com",
     offlineAccess: true,
   });
 };
