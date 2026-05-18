@@ -7,6 +7,7 @@ import { BackHandler } from 'react-native';
 import ThemeProvider from "../src/components/ThemeProvider"
 import AppDataProvider from "../src/components/AppDataProvider/index"
 import AppLockProvider from "../src/components/AppDataProvider/AppLockProvider"
+import GoogleBackUpProvider from "../src/components/AppDataProvider/GoogleBackUpProvider"
 // import DonateProvider from "../src/components/AppDataProvider/DonateProvider"
 
 export const unstable_settings = {
@@ -50,6 +51,7 @@ export default function RootLayout() {
                   }}
                 />
               </Stack>
+              <GoogleBackUpProvider />
            {/*  </DonateProvider> */}
           </AppLockProvider>
         </AppDataProvider>

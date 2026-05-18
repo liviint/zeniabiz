@@ -7,6 +7,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { getSetting, setSetting } from "@/src/db/settingsDb";
 import * as LocalAuthentication from "expo-local-authentication";
+import GoogleBakUp from "@/src/components/settings/GoogleBakUp"
 
 const SettingsPage = () => {
   const dispatch = useDispatch();
@@ -78,6 +79,7 @@ const SettingsPage = () => {
         </BodyText>
       </Card>
       
+      <GoogleBakUp />
     </View>
   );
 };
