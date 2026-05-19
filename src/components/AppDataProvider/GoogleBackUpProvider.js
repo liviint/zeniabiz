@@ -7,6 +7,7 @@ import {
   uploadBackup,
   restoreBackup,
 } from "@/src/utils/googleDriveBackupService";
+import { loadActiveContext } from "../../../src/db/utils";
 
 
 const GoogleBackupProvider = ({ children }) => {
@@ -46,7 +47,7 @@ const GoogleBackupProvider = ({ children }) => {
                 onPress: async () => {
                   try {
                     await restoreBackup(db);
-
+                    await loadActiveContext(db);
                     Alert.alert(
                       "Success",
                       "Backup restored successfully"
