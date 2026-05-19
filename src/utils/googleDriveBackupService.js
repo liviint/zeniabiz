@@ -2,7 +2,7 @@ import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { exportDatabase, importDatabase } from "../db/googleDriveDb";
 import { getSetting, setSetting } from "../db/settingsDb";
 
-const FILE_NAME = "ZeniBiz_Backup.json";
+const FILE_NAME = "ZeniaBiz_Backup.json";
 
 export const configureGoogleDrive = () => {
   GoogleSignin.configure({
@@ -23,6 +23,7 @@ export const getAccessToken = async () => {
 };
 
 export const getStoredFileId = async (db) => {
+    console.log(getSetting(db, "gdrive_backup_file_id"),"hello getSetting(db, gdrive_backup_file_id)")
   return await getSetting(db, "gdrive_backup_file_id");
 };
 
@@ -106,14 +107,34 @@ export const uploadBackup = async (db) => {
 export const restoreBackup = async (db) => {
   const accessToken = await getAccessToken();
 
-  const fileId = await getStoredFileId(db);
+  // ALWAYS search Drive during restore
+  const searchResponse = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=name='${FILE_NAME}'&spaces=drive`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
 
-  if (!fileId) {
+  if (!searchResponse.ok) {
+    throw new Error("Failed to search backups");
+  }
+
+  const searchResult = await searchResponse.json();
+
+  const file = searchResult.files?.[0];
+
+  if (!file) {
     throw new Error("No backup found");
   }
 
+  // Save fileId again locally
+  await saveFileId(db, file.id);
+
+  // Download backup
   const response = await fetch(
-    `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+    `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`,
     {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -122,14 +143,193 @@ export const restoreBackup = async (db) => {
   );
 
   if (!response.ok) {
-    throw new Error("Failed to restore backup");
+    throw new Error("Failed to download backup");
   }
 
   const backup = await response.json();
 
+  // Backup version validation
   if (backup.version !== 1) {
     throw new Error("Unsupported backup version");
   }
 
   await importDatabase(db, backup.data);
+};
+
+
+/**
+ * Checks whether local DB has meaningful data
+ * Customize this for your app
+ */
+export const hasLocalData = async (db) => {
+  try {
+    // Example:
+    // Replace with your actual tables
+    const products = await db.getFirstAsync(
+      `SELECT COUNT(*) as count FROM products`
+    );
+
+    const expenses = await db.getFirstAsync(
+      `SELECT COUNT(*) as count FROM expenses`
+    );
+
+    const sales = await db.getFirstAsync(
+      `SELECT COUNT(*) as count FROM sales`
+    );
+
+    return products.count > 0 || expenses.count > 0 || sales.count > 0;
+  } catch (error) {
+    console.log("Local data check failed:", error);
+    return false;
+  }
+};
+
+/**
+ * Gets local DB last modified time
+ */
+export const getLocalLastModified = async (db) => {
+  return await getSetting(db, "last_backup_date");
+};
+
+export const findBackupFile = async (accessToken) => {
+  try {
+    const response = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=name='${FILE_NAME}'&spaces=drive&fields=files(id,name,modifiedTime)`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to search backup file");
+    }
+
+    const result = await response.json();
+
+    // No backup found
+    if (!result.files || result.files.length === 0) {
+      return null;
+    }
+
+    // If multiple backups exist,
+    // use the most recently modified one
+    const sortedFiles = result.files.sort(
+      (a, b) =>
+        new Date(b.modifiedTime).getTime() -
+        new Date(a.modifiedTime).getTime()
+    );
+
+    return sortedFiles[0];
+  } catch (error) {
+    console.log("findBackupFile error:", error);
+    throw error;
+  }
+};
+
+export const determineSyncAction = async (db) => {
+  try {
+    const accessToken = await getAccessToken();
+
+    // 1. Check local state
+    const localHasData = await hasLocalData(db);
+
+    const localLastModified =
+      await getLocalLastModified(db);
+
+    // 2. Check cloud backup
+    const cloudFile =
+      await findBackupFile(accessToken);
+
+    // CASE: No cloud backup
+    if (!cloudFile) {
+      if (localHasData) {
+        return {
+          action: "UPLOAD",
+          reason: "No cloud backup exists",
+        };
+      }
+
+      return {
+        action: "NOTHING",
+        reason: "No local or cloud data",
+      };
+    }
+
+    // 3. Download cloud metadata
+    const response = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${cloudFile.id}?alt=media`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch cloud backup");
+    }
+
+    const cloudBackup = await response.json();
+
+    const cloudLastModified =
+      cloudBackup.timestamp;
+
+    // CASE: Fresh install/reset
+    if (!localHasData && cloudBackup) {
+      return {
+        action: "PROMPT_RESTORE",
+        reason: "Cloud backup exists but local DB empty",
+        cloudBackup,
+      };
+    }
+
+    // CASE: Local exists but cloud missing timestamp
+    if (!cloudLastModified) {
+      return {
+        action: "UPLOAD",
+        reason: "Cloud backup invalid",
+      };
+    }
+
+    // 4. Compare timestamps
+    const localTime = new Date(
+      localLastModified || 0
+    ).getTime();
+
+    const cloudTime = new Date(
+      cloudLastModified
+    ).getTime();
+
+    // CASE: Local newer
+    if (localTime > cloudTime) {
+      return {
+        action: "UPLOAD",
+        reason: "Local data newer",
+      };
+    }
+
+    // CASE: Cloud newer
+    if (cloudTime > localTime) {
+      return {
+        action: "PROMPT_RESTORE",
+        reason: "Cloud backup newer",
+        cloudBackup,
+      };
+    }
+
+    // CASE: Same
+    return {
+      action: "NOTHING",
+      reason: "Already synced",
+    };
+  } catch (error) {
+    console.log("Sync decision failed:", error);
+
+    return {
+      action: "ERROR",
+      reason: error.message,
+    };
+  }
 };

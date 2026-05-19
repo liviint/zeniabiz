@@ -6,6 +6,7 @@ import userReducer from "./features/userSlice";
 import settingsReducer from "./features/settingsSlice";
 import syncReducer from "./features/syncSlice";
 import categoriesReducer from "./features/cetegoriesSlice";
+import googleDriveSyncReducer from "./features/googleDriveSyncSlice";
 
 const userPersistConfig = {
   key: "user",
@@ -24,6 +25,7 @@ const rootReducer = combineReducers({
   settings: persistReducer(settingsPersistConfig, settingsReducer),
   sync: syncReducer, 
   categories:categoriesReducer,
+  googleDriveSync: googleDriveSyncReducer,
 });
 
 export const store = configureStore({

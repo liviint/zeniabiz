@@ -1,88 +1,77 @@
-import { useEffect, useRef, useState } from "react";
-import NetInfo from "@react-native-community/netinfo";
+import { useEffect } from "react";
+import { Alert } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
+import { useSelector } from "react-redux";
 import {
-  configureGoogleDrive,
+  determineSyncAction,
   uploadBackup,
-  shouldBackupToday,
-  getAccessToken,
-} from "@/src/utils/googleDriveBackupService";;
-import { getSetting } from "@/src/db/settingsDb";
+  restoreBackup,
+} from "@/src/utils/googleDriveBackupService";
 
-const isOnline = async () => {
-  const state = await NetInfo.fetch();
-  return state.isConnected;
-};
 
 const GoogleBackupProvider = ({ children }) => {
   const db = useSQLiteContext();
+  const syncRequested = useSelector(
+    (state) => state.googleDriveSync.syncRequested
+  );
 
-  const [isConnected, setIsConnected] = useState(false);
-  const [autoBackupEnabled, setAutoBackupEnabled] = useState(true);
-
-  const hasRunRef = useRef(false);
-
-  // 1. Configure once
   useEffect(() => {
-    configureGoogleDrive();
-  }, []);
+    if (!syncRequested) return;
+    const initializeSync = async () => {
+      const result =
+        await determineSyncAction(db);
 
-  // 2. Load settings
-  useEffect(() => {
-    const loadSettings = async () => {
-      const auto = await getSetting(db, "auto_backup_enabled");
+      console.log(result, "SYNC RESULT");
 
-      if (auto === null) {
-        setAutoBackupEnabled(true);
-      } else {
-        setAutoBackupEnabled(auto === "true");
+      switch (result.action) {
+        case "UPLOAD":
+          try {
+            await uploadBackup(db);
+          } catch (error) {
+            console.log(error);
+          }
+          break;
+
+        case "PROMPT_RESTORE":
+          Alert.alert(
+            "Restore Backup",
+            "We found a newer cloud backup. Restore it?",
+            [
+              {
+                text: "Skip",
+                style: "cancel",
+              },
+              {
+                text: "Restore",
+                onPress: async () => {
+                  try {
+                    await restoreBackup(db);
+
+                    Alert.alert(
+                      "Success",
+                      "Backup restored successfully"
+                    );
+                  } catch (error) {
+                    console.log(error);
+                  }
+                },
+              },
+            ]
+          );
+          break;
+
+        case "NOTHING":
+          console.log("Already synced");
+          break;
+
+        case "ERROR":
+          console.log(result.reason);
+          break;
       }
     };
 
-    loadSettings();
-  }, [db]);
-
-  // 3. Check Google connection
-  const checkConnection = async () => {
-    try {
-      await getAccessToken();
-      setIsConnected(true);
-    } catch {
-      setIsConnected(false);
-    }
-  };
-
-  useEffect(() => {
-    checkConnection();
-  }, []);
-
-  // 4. Daily backup runner
-  const runDailyBackup = async () => {
-    if (hasRunRef.current) return;
-    if (!autoBackupEnabled) return;
-
-    const online = await isOnline();
-    if (!online) return;
-
-    try {
-      const shouldRun = await shouldBackupToday(db);
-
-      if (!shouldRun) return;
-
-      hasRunRef.current = true;
-
-      await uploadBackup(db);
-    } catch (error) {
-      console.log("Auto backup failed:", error);
-    }
-  };
-
-  // 5. Trigger when ready
-  useEffect(() => {
-    if (isConnected && autoBackupEnabled) {
-      runDailyBackup();
-    }
-  }, [isConnected, autoBackupEnabled]);
+    initializeSync();
+  }, [syncRequested]);
 
   return children;
 };

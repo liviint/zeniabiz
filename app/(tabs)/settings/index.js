@@ -1,4 +1,4 @@
-import { View, StyleSheet, Switch, Alert } from "react-native";
+import { View, StyleSheet, Switch, Alert,ScrollView } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleTheme } from "@/store/features/settingsSlice";
 import { useThemeStyles } from "@/src/hooks/useThemeStyles";
@@ -48,7 +48,7 @@ const SettingsPage = () => {
 
 
   return (
-    <View style={globalStyles.container}>
+    <ScrollView style={globalStyles.container}>
       <Card style={styles.card}>
         <BodyText style={styles.title}>Appearance</BodyText>
 
@@ -80,7 +80,7 @@ const SettingsPage = () => {
       </Card>
       
       <GoogleBakUp />
-    </View>
+    </ScrollView>
   );
 };
 

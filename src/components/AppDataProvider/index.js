@@ -3,6 +3,7 @@ import SessionProvider from "./SessionProvider"
 import SyncProvider from "./SyncProvider"
 
 const migrateDbIfNeeded = async (db) => {
+  
   /* 
   await db.execAsync(`DROP TABLE IF EXISTS companies;`);
   await db.execAsync(`DROP TABLE IF EXISTS company_members;`);

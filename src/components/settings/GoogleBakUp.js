@@ -6,12 +6,12 @@ import {
   Switch,
   View,
 } from "react-native";
-
+import { useDispatch } from "react-redux";
 import { Card, BodyText } from "@/src/components/ThemeProvider/components";
 import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
 import * as SecureStore from "expo-secure-store";
 import { useSQLiteContext } from "expo-sqlite";
-
+import { setGoogleConnected, requestSync } from "../../store/features/googleDriveSyncSlice";
 import {
   configureGoogleDrive,
   uploadBackup,
@@ -23,7 +23,7 @@ import { getSetting, setSetting } from "../../db/settingsDb";
 
 const GoogleBackUp = () => {
   const db = useSQLiteContext();
-
+  const dispatch = useDispatch()
   const [isConnected, setIsConnected] = useState(false);
   const [lastBackup, setLastBackup] = useState(null);
   const [autoBackupEnabled, setAutoBackupEnabled] = useState(true);
@@ -95,6 +95,9 @@ const GoogleBackUp = () => {
         await SecureStore.setItemAsync("gdrive_token", accessToken);
         setIsConnected(true);
 
+        dispatch(setGoogleConnected(true));
+        dispatch(requestSync());
+        
         Alert.alert(
           "Connected",
           `Signed in as ${userInfo?.data?.user?.email}`
