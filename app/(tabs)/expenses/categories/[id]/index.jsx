@@ -45,7 +45,7 @@ export default function CategoryDetailsScreen() {
 
     if (loading) {
         return (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <View style={{ ...globalStyles.container, flex: 1, justifyContent: "center", alignItems: "center" }}>
             <ActivityIndicator />
         </View>
         );
@@ -53,7 +53,7 @@ export default function CategoryDetailsScreen() {
 
     if (!category) {
         return (
-        <View style={{ padding: 20 }}>
+        <View style={{...globalStyles.container, padding: 20 }}>
             <Text>Category not found.</Text>
         </View>
         );
@@ -72,8 +72,6 @@ export default function CategoryDetailsScreen() {
                 {category.name}
             </BodyText>
 
-            <Info label="Type" value={category.type} />
-            <Info label="Spending Type" value={category.spendingType} />
             <Info label="Created" value={dateFormat(category.created_at)} />
             <Info label="Updated" value={dateFormat(category.updated_at)} />
 

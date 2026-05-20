@@ -68,14 +68,16 @@ export const upsertCategory = async (db, { id, name, color, icon }) => {
         color,
         icon,
         created_at,
-        updated_at
+        updated_at,
+        deleted_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(company, name) DO UPDATE SET
         name = excluded.name,
         color = excluded.color,
         icon = excluded.icon,
-        updated_at = excluded.updated_at
+        updated_at = excluded.updated_at,
+        deleted_at = excluded.deleted_at
       `,
       [
         categoryId,
@@ -85,6 +87,7 @@ export const upsertCategory = async (db, { id, name, color, icon }) => {
         icon,
         now,
         now,
+        null
       ]
     );
 
