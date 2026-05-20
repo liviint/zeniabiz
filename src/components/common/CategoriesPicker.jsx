@@ -52,7 +52,7 @@ export default function CategoriesPicker({
         onValueChange={(value) => handleSelect(value)}
       >
         {/* Default placeholder */}
-        <Picker.Item label="Select category" value={null} />
+        <Picker.Item label="Select category" />
 
         {/* Categories */}
         {categories.map((cat) => (
