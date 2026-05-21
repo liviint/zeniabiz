@@ -1,6 +1,7 @@
 import { SQLiteProvider } from "expo-sqlite";
 import SessionProvider from "./SessionProvider"
 import SyncProvider from "./SyncProvider"
+import GoogleBackUpProvider from "./GoogleBackUpProvider"
 
 const migrateDbIfNeeded = async (db) => {
   
@@ -350,7 +351,9 @@ export default function AppDataProvider({ children }) {
     <SQLiteProvider databaseName="zeniabiz.db" onInit={migrateDbIfNeeded}>
       <SessionProvider>
         <SyncProvider>
-          {children}
+          <GoogleBackUpProvider>
+            {children}
+          </GoogleBackUpProvider>
         </SyncProvider>
       </SessionProvider>
     </SQLiteProvider>
