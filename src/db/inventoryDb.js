@@ -121,6 +121,7 @@ export async function getProducts(
       p.sku,
       p.selling_price,
       p.cost_price,
+      p.minimum_quantity,
       p.created_at,
 
       -- STOCK (pure ledger calculation)
@@ -185,11 +186,10 @@ export async function getProducts(
   // 🧱 GROUPING
   sql += ` GROUP BY p.id`;
 
-  // 🎯 FILTERS
   if (filter === "low_stock") {
     sql += `
       HAVING stock_quantity > 0
-      AND stock_quantity <= 5
+      AND stock_quantity <= minimum_quantity
     `;
   } else if (filter === "out_of_stock") {
     sql += `
