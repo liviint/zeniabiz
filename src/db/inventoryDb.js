@@ -12,6 +12,7 @@ export async function upsertProduct(
     cost_price = 0,
     selling_price = 0,
     stock_quantity = 0,
+    minimum_quantity = 5,
     created_at,
   }
 ) {
@@ -40,16 +41,18 @@ export async function upsertProduct(
           name,
           selling_price,
           cost_price,
+          minimum_quantity,
           created_at,
           updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
           selling_price = excluded.selling_price,
           cost_price = excluded.cost_price,
           updated_at = excluded.updated_at,
+          minimum_quantity = excluded.minimum_quantity,
           updated_by = excluded.updated_by
         `,
         [
@@ -60,6 +63,7 @@ export async function upsertProduct(
           name,
           sellPrice,
           unitCost,
+          minimum_quantity,
           created_at,
           now,
         ]
@@ -87,6 +91,7 @@ export async function upsertProduct(
           name,
           selling_price: sellPrice,
           cost_price: unitCost,
+          minimum_quantity:minimum_quantity,
           created_at,
           updated_at: now,
           deleted_at: null,
