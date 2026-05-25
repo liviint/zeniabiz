@@ -25,6 +25,7 @@ export default function ProductViewPage() {
     if (!id) return;
     const getProduct = async() => {
       const data = await getProductById(db, id);
+      console.log(data,"hellod data")
       data && setProduct(data);
     }
 
@@ -49,8 +50,9 @@ export default function ProductViewPage() {
 
       <Card style={styles.card}>
         <DetailRow label="Name" value={product?.name} />
-        <DetailRow label="Stock" value={product?.stock_quantity} />
         <DetailRow label="Selling Price" value={product?.selling_price} />
+        <DetailRow label="Stock" value={product?.stock_quantity} />
+        <DetailRow label="Minimum Quantity" value={product?.minimum_quantity} />
       </Card>
 
       {stockBatches.length > 0 && (

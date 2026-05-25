@@ -64,6 +64,7 @@ const MODEL_CONFIG = {
       "created_at",
       "updated_at",
       "deleted_at",
+      "minimum_quantity",
     ],
     conflictKeys: ["id"],
   },

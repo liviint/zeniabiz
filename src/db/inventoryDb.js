@@ -233,6 +233,7 @@ export async function getProductById(db, id) {
       p.sku,
       p.cost_price,
       p.selling_price,
+      p.minimum_quantity,
       p.created_at,
 
       -- STOCK = purchases - sales +/- adjustments

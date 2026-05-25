@@ -2,6 +2,7 @@ import { SQLiteProvider } from "expo-sqlite";
 import SessionProvider from "./SessionProvider"
 import SyncProvider from "./SyncProvider"
 import GoogleBackUpProvider from "./GoogleBackUpProvider"
+import { applyInventoryMigrationsV1 } from "../../db/migrations/inventory"
 
 const migrateDbIfNeeded = async (db) => {
   
@@ -186,6 +187,7 @@ const migrateDbIfNeeded = async (db) => {
     sku TEXT,
     selling_price REAL NOT NULL,
     cost_price REAL DEFAULT 0,
+    minimum_quantity INTEGER NOT NULL DEFAULT 5,
 
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -344,6 +346,7 @@ const migrateDbIfNeeded = async (db) => {
   );
 
 `);
+  await applyInventoryMigrationsV1(db);
 };
 
 export default function AppDataProvider({ children }) {

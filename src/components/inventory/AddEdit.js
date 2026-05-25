@@ -17,6 +17,7 @@ export default function AddProduct() {
     cost_price: "",
     selling_price: "",
     stock_quantity: "",
+    minimum_quantity:"",
     created_at:"",
   });
 
@@ -27,12 +28,7 @@ export default function AddProduct() {
   const handleSave = async () => {
     if (!form.name) return Alert.alert("Name required");
     try {
-        await upsertProduct(db, {
-          ...form,
-          cost_price: form.cost_price,
-          selling_price: form.selling_price,
-          stock_quantity: form.stock_quantity,
-        })
+        await upsertProduct(db, { ...form })
     } catch (error) {
       console.log(error,"hello restock error")
     }
@@ -78,9 +74,22 @@ export default function AddProduct() {
           :
           <View style={globalStyles.formGroup}>
             <FormLabel>Stock Quantity</FormLabel>
-            <Input value={String(form.stock_quantity)} keyboardType="numeric" onChangeText={(v) => handleChange("stock_quantity", v)} />
+            <Input 
+              value={String(form.stock_quantity)} 
+              keyboardType="numeric" onChangeText={(v) => handleChange("stock_quantity", v)} 
+            />
           </View>
         }
+
+        <View style={globalStyles.formGroup}>
+          <FormLabel>Minimum Quantity</FormLabel>
+          <Input 
+            value={String(form.minimum_quantity)} 
+            keyboardType="numeric" 
+            onChangeText={(v) => handleChange("minimum_quantity", v)} 
+          />
+        </View>
+
         {id && (
           <SecondaryText style={{marginTop:5, marginBottom:10,fontSize:14}}>
             Stock and cost are managed through restocking.
