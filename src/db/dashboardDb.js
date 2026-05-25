@@ -6,6 +6,12 @@ export const getCashFlow = async (db, timeState) => {
   const { company } = getActiveContextSync();
   const { startDate, endDate } = normalizeRange(timeState);
 
+  const today = new Date()
+  today.setHours(0,0,0,0)
+  today.setDate(today.getDate() + 1)
+  const nomalizedEnd = new Date(endDate)
+  const finalEndDate = nomalizedEnd > today ? today.toISOString() : endDate
+
   const result = await db.getAllAsync(
     `
     SELECT 
@@ -52,10 +58,10 @@ export const getCashFlow = async (db, timeState) => {
     ORDER BY d.date ASC
     `,
     [
-      startDate, endDate, company,
-      startDate, endDate, company,
-      startDate, endDate, company,
-      startDate, endDate, company,
+      startDate, finalEndDate, company,
+      startDate, finalEndDate, company,
+      startDate, finalEndDate, company,
+      startDate, finalEndDate, company,
     ]
   );
 
@@ -75,7 +81,7 @@ export const getCashFlow = async (db, timeState) => {
   // -------------------------------
 
   const start = new Date(startDate);
-  const end = new Date(endDate);
+  const end = new Date(finalEndDate);
 
   const msPerDay = 1000 * 60 * 60 * 24;
   const totalDays = Math.max(
