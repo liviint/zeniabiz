@@ -13,9 +13,10 @@ import { getSales } from "../../../src/db/salesDb";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { AddButton } from "../../../src/components/common/AddButton";
 import EmptyState from "../../../src/components/common/EmptyState";
-import TimeFilters from "../../../src/components/common/TimeFilters";
 import { groupDataIntoSections } from "../../../src/helpers";
 import { useManualSync } from "../../../src/hooks/useManualSync";
+import TimeNavigator from "../../../src/components/common/TimeNavigator"
+import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 
 export default function SalesList() {
   const { onRefresh, refreshing } = useManualSync();
@@ -26,18 +27,18 @@ export default function SalesList() {
 
   const [sales, setSales] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [timeState, setTimeState] = useState(createRange("month"));
   const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
 
   useEffect(() => {
     if (!db) return;
     (async () => {
       setIsLoading(true);
-      const data = await getSales(db, selectedMonth);
+      const data = await getSales(db, timeState);
       setSales(data.sort((a, b) => new Date(b.date) - new Date(a.date)));
       setIsLoading(false);
     })();
-  }, [isFocused, selectedMonth,lastSyncedAt]);
+  }, [isFocused, timeState,lastSyncedAt]);
 
   const formatDate = (date) => {
     if (!date) return "";
@@ -65,9 +66,9 @@ export default function SalesList() {
       <RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>
       <BodyText style={globalStyles.title}>My Sales</BodyText>
 
-      <TimeFilters 
-        selectedMonth={selectedMonth}
-        onMonthChange={setSelectedMonth}
+      <TimeNavigator
+          state={timeState}
+          onChange={setTimeState}
       />
 
       

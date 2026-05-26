@@ -8,7 +8,6 @@ import { BodyText, Card, SecondaryText } from "../../../src/components/ThemeProv
 import { AddButton } from "../../../src/components/common/AddButton";
 import ButtonLinks from "../../../src/components/common/ButtonLinks";
 import EmptyState from "../../../src/components/common/EmptyState";
-import TimeFilters from "../../../src/components/common/TimeFilters";
 import { getExpenses } from "../../../src/db/expensesDb"
 import { getCategories } from "../../../src/db/categoriesDb";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
@@ -16,6 +15,8 @@ import { dateFormat } from "../../../utils/dateFormat";
 import { groupDataIntoSections } from "../../../src/helpers";
 import { useManualSync } from "../../../src/hooks/useManualSync";
 import { setCategoriesMap } from "../../../src/store/features/cetegoriesSlice";
+import TimeNavigator from "../../../src/components/common/TimeNavigator"
+import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 
 export default function FinanceListPage() {
     const { onRefresh, refreshing } = useManualSync();
@@ -27,7 +28,7 @@ export default function FinanceListPage() {
     const [isLoading,setIsLoading] = useState(true)
     const isFocused = useIsFocused()
     const {globalStyles} = useThemeStyles()
-    const [selectedMonth, setSelectedMonth] = useState(new Date());
+    const [timeState, setTimeState] = useState(createRange("month"));
     const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
 
     const loadCategories = async () => {
@@ -42,7 +43,7 @@ export default function FinanceListPage() {
     
 
     let fetchExpenses = async() => {
-        let expenses = await getExpenses(db, selectedMonth)
+        let expenses = await getExpenses(db, timeState)
         setTransactions(expenses)
     }
 
@@ -52,7 +53,7 @@ export default function FinanceListPage() {
         loadCategories()
       }
         setIsLoading(false)
-    },[isFocused, selectedMonth,lastSyncedAt])
+    },[isFocused, timeState,lastSyncedAt])
 
   let grouped = groupDataIntoSections(expenses)
 
@@ -121,8 +122,8 @@ export default function FinanceListPage() {
         )}
         ListHeaderComponent={
           <ListHeader
-            selectedMonth={selectedMonth}
-            onMonthChange={setSelectedMonth}
+            timeState={timeState}
+            setTimeState={setTimeState}
           />
         }
         ListEmptyComponent={
@@ -146,12 +147,12 @@ export default function FinanceListPage() {
   )
 }
 
-const ListHeader = ({ stats, selectedMonth, onMonthChange}) => {
+const ListHeader = ({ stats, timeState,setTimeState}) => {
   return <>
-    <TimeFilters 
-      selectedMonth={selectedMonth}
-      onMonthChange={onMonthChange}
-    />
+    <TimeNavigator
+          state={timeState}
+          onChange={setTimeState}
+      /> 
 
     <ButtonLinks 
       links={[

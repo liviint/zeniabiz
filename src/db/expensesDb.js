@@ -1,6 +1,7 @@
 import uuid from "react-native-uuid";
 import { syncEvent } from "../cloudSync/syncEvent";
 import { getActiveContextSync } from "./utils";
+import { normalizeRange } from "../utils/timeNavigatorHelpers";
 
 const newUuid = () => uuid.v4();
 
@@ -111,11 +112,9 @@ export async function upsertExpense(
   }
 }
 
-export async function getExpenses(db, date = new Date()) {
+export async function getExpenses(db, timeState) {
   const { company } = getActiveContextSync();
-  const start = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
-  const end = new Date(date.getFullYear(), date.getMonth() + 1, 1).toISOString();
-
+  const { startDate, endDate } = normalizeRange(timeState);
   return await db.getAllAsync(
     `
     SELECT *
@@ -127,7 +126,7 @@ export async function getExpenses(db, date = new Date()) {
       AND deleted_at is NULL
     ORDER BY datetime(date) DESC
     `,
-    [company,start, end]
+    [company,startDate, endDate]
   );
 }
 

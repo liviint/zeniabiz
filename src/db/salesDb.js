@@ -1,5 +1,6 @@
 import uuid from "react-native-uuid";
-import { getMonthRange, getActiveContextSync, withTransaction } from "./utils";
+import { getActiveContextSync, withTransaction } from "./utils";
+import { normalizeRange } from "../utils/timeNavigatorHelpers";
 import { syncEvent } from "../cloudSync/syncEvent";
 
 const newUuid = () => uuid.v4();
@@ -372,7 +373,7 @@ export async function createOrUpdateSale(
   }
 }
 
-export async function getSales(db, selectedMonth) {
+export async function getSales(db, timeState) {
   const { company } = getActiveContextSync();
 
   let sql = `
@@ -384,8 +385,8 @@ export async function getSales(db, selectedMonth) {
 
   const params = [company];
 
-  if (selectedMonth) {
-    const { startDate, endDate } = getMonthRange(selectedMonth);
+  if (timeState) {
+    const { startDate, endDate } = normalizeRange(timeState);
 
     sql += `
       AND date >= ?
