@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import {
   View,
   StyleSheet,
@@ -7,12 +8,14 @@ import {
   Pressable,
   Alert,
   Modal,
+  TouchableOpacity
 } from "react-native";
 import {
   Card,
   BodyText,
   SecondaryText,
   Input,
+  FormLabel
 } from "../../../src/components/ThemeProvider/components";
 import { useSQLiteContext } from "expo-sqlite";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -36,8 +39,12 @@ export default function SellPage() {
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState([]);
   const [title, setTitle] = useState("");
+
+  const [date,setDate] = useState(new Date())
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
   const [category, setCategory] = useState(null);
-  const [batches, setBatches] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -68,6 +75,7 @@ export default function SellPage() {
     if (!id) return;
     (async () => {
       const t = await getSaleById(db, id);
+      setDate(new Date(t.date))
       setTitle(t?.title);
     })();
   }, [isFocused]);
@@ -87,15 +95,6 @@ export default function SellPage() {
       setCategory(cat);
     })();
   }, []);
-
-  useEffect(() => {
-    if (!selectedItem) return;
-
-    (async () => {
-      const data = await getProductBatches(db, selectedItem.product_id);
-      setBatches(data);
-    })();
-  }, [selectedItem]);
 
   const addToCart = (product) => {
     setCart((prev) => {
@@ -145,15 +144,37 @@ export default function SellPage() {
     0
   );
 
+   const handleDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      const updated = new Date(date);
+      updated.setFullYear(selectedDate.getFullYear());
+      updated.setMonth(selectedDate.getMonth());
+      updated.setDate(selectedDate.getDate());
+      setDate(updated);
+    }
+  };
+
+  const handleTimeChange = (event, selectedTime) => {
+    setShowTimePicker(false);
+    if (selectedTime) {
+      const updated = new Date(date);
+      updated.setHours(selectedTime.getHours());
+      updated.setMinutes(selectedTime.getMinutes());
+      updated.setSeconds(selectedTime.getSeconds());
+      setDate(updated);
+    }
+  };
+
   const handleSave = async () => {
     if (cart.length === 0) return Alert.alert("Add items first");
-    console.log(cart,"hello cart 123...")
     await createOrUpdateSale(db, {
       items: cart,
       sale_id: id,
       title,
       category: category?.name,
       category_id: category?.id || null,
+      date:date,
     });
     Alert.alert("Success", "Sale recorded");
     router.push("/sales");
@@ -264,79 +285,118 @@ export default function SellPage() {
           <Card style={styles.modalCard}>
             <BodyText>Edit Item</BodyText>
 
-            <SecondaryText>Price</SecondaryText>
-            <Input
-              keyboardType="numeric"
-              value={String(selectedItem?.price || "")}
-              onChangeText={(v) =>
-                setSelectedItem({
-                  ...selectedItem,
-                  price: parseFloat(v) || 0,
-                })
-              }
-            />
+            <View style={globalStyles.formGroup}>
+              <FormLabel>Price</FormLabel>
+              <Input
+                keyboardType="numeric"
+                value={String(selectedItem?.price || "")}
+                onChangeText={(v) =>
+                  setSelectedItem({
+                    ...selectedItem,
+                    price: parseFloat(v) || 0,
+                  })
+                }
+              />
+            </View>
+            
 
-            <SecondaryText>Quantity</SecondaryText>
-            <Input
-              keyboardType="numeric"
-              value={String(selectedItem?.quantity || "")}
-              onChangeText={(v) =>
-                setSelectedItem({
-                  ...selectedItem,
-                  quantity: parseFloat(v) || 0,
-                })
-              }
-            />
+            <View style={globalStyles.formGroup}>
+              <FormLabel>Quantity</FormLabel>
+              <Input
+                keyboardType="numeric"
+                value={String(selectedItem?.quantity || "")}
+                onChangeText={(v) =>
+                  setSelectedItem({
+                    ...selectedItem,
+                    quantity: parseFloat(v) || 0,
+                  })
+                }
+              />
+            </View>
 
-            <SecondaryText>Select Batch (optional)</SecondaryText>
-
-            <FlatList
-              data={batches}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <Pressable
+            <View style={globalStyles.formGroup}>
+              <FormLabel>Date & Time</FormLabel>
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <TouchableOpacity
+                  onPress={() => setShowDatePicker(true)}
                   style={{
-                    padding: 10,
-                    borderWidth: 1,
-                    borderColor:
-                      selectedItem?.batch === item.id ? "green" : "#ccc",
-                    borderRadius: 8,
-                    marginBottom: 6,
+                    flex: 1,
+                    paddingVertical: 8,
+                    paddingHorizontal: 4,
+                    alignItems: "center",
+                    ...globalStyles.formBorder
                   }}
-                  onPress={() =>{
-                    if (item.quantity_remaining <= 0) return null;
-                    setSelectedItem({
-                      ...selectedItem,
-                      batch: item.id,
-                      price: item.selling_price,
-                    })}
-                  }
+                >
+                  <BodyText>{date?.toDateString()}</BodyText>
+                </TouchableOpacity>
+
+                {/* Time Button */}
+                <TouchableOpacity
+                  onPress={() => setShowTimePicker(true)}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 8,
+                    paddingHorizontal: 4,
+                    borderRadius: 14,
+                    alignItems: "center",
+                    justifyContent:"center",
+                    ...globalStyles.formBorder
+                  }}
                 >
                   <BodyText>
-                    {item.quantity_remaining} left @ {item.selling_price}
+                    {date?.getHours().toString().padStart(2, "0")}:
+                    {date?.getMinutes().toString().padStart(2, "0")}
                   </BodyText>
-                  <SecondaryText>
-                    Cost: {item.cost_price}
-                  </SecondaryText>
-                </Pressable>
-              )}
-            />
+                </TouchableOpacity>
+              </View>
 
-            <Pressable
-              style={globalStyles.primaryBtn}
-              onPress={() => {
-                updateItem(selectedItem);
-                setModalVisible(false);
-              }}
+          {showDatePicker && (
+            <DateTimePicker
+              value={date}
+              mode="date"
+              display="calendar"
+              onChange={handleDateChange}
+              maximumDate={new Date()} 
+            />
+          )}
+
+          {showTimePicker && (
+            <DateTimePicker
+              value={date}
+              mode="time"
+              display="spinner"
+              onChange={handleTimeChange}
+            />
+          )}
+        </View>
+            
+            <View style={globalStyles.formGroup}>
+              <Pressable
+                style={globalStyles.primaryBtn}
+                onPress={() => {
+                  updateItem(selectedItem);
+                  setModalVisible(false);
+                }}
             >
               <BodyText style={globalStyles.primaryBtnText}>
                 Save
               </BodyText>
             </Pressable>
-
-            <Pressable onPress={() => setModalVisible(false)}>
-              <BodyText>Cancel</BodyText>
+            </View>
+            
+            <View style={globalStyles.formGroup}>
+              <Pressable 
+                style={globalStyles.secondaryBtn}
+                onPress={() => setModalVisible(false)}
+              >
+              <BodyText
+                style={globalStyles.secondaryBtnText}
+              >
+                Cancel
+              </BodyText>
             </Pressable>
+            </View>
+            
           </Card>
         </View>
       </Modal>

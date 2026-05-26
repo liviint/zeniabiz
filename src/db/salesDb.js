@@ -24,6 +24,7 @@ export async function restoreFIFO(db, purchaseId, qty) {
 }
 
 export async function allocateFIFO(db, productId, requiredQty) {
+  console.log(requiredQty,"hello required qty")
   let remaining = requiredQty;
   const allocations = [];
 
@@ -34,10 +35,12 @@ export async function allocateFIFO(db, productId, requiredQty) {
     FROM inventory_movements
     WHERE product_id = ?
       AND deleted_at IS NULL
-    ORDER BY date ASC, created_at ASC
+    ORDER BY created_at ASC
     `,
     [productId]
   );
+
+  console.log(movements,"hello movements")
 
   // 2️⃣ Rebuild FIFO state in-memory
   const fifo = [];
@@ -142,9 +145,16 @@ export async function allocateFIFO(db, productId, requiredQty) {
 }
 
 
-export async function reverseSale(db, saleId, { company, user_id }) {
+export async function reverseSale(
+  db,
+  saleId,
+  { company, user_id }
+) {
   const now = new Date().toISOString();
 
+  // -------------------------
+  // 1️⃣ Load existing sale movements
+  // -------------------------
   const saleMovements = await db.getAllAsync(
     `
     SELECT *
@@ -158,53 +168,125 @@ export async function reverseSale(db, saleId, { company, user_id }) {
 
   if (!saleMovements.length) return;
 
-  await db.runAsync("BEGIN TRANSACTION");
-
   try {
-    for (const m of saleMovements) {
-      // 🔁 create compensating movement (append-only reversal)
-      const reversal = {
-        id: newUuid(),
-        product_id: m.product_id,
-        company,
-        unit_cost: m.unit_cost,
-        quantity: Math.abs(m.quantity), // restore stock
-        type: "reversal",
-        reference_id: saleId,
-        date: now,
-        created_by: user_id,
-        updated_by: user_id,
-        created_at: now,
-        updated_at: now,
-        deleted_at: null,
-      };
+    // -------------------------
+    // 2️⃣ Soft delete inventory movements
+    // -------------------------
+    for (const movement of saleMovements) {
+      await db.runAsync(
+        `
+        UPDATE inventory_movements
+        SET
+          deleted_at = ?,
+          updated_at = ?,
+          updated_by = ?
+        WHERE id = ?
+        `,
+        [
+          now,
+          now,
+          user_id,
+          movement.id,
+        ]
+      );
 
-      await insertMovementAndApply(db, reversal);
+      // 🔥 SYNC inventory movement deletion
+      await syncEvent(db, {
+        model: "inventory_movements",
+        operation: "update",
+        payload: {
+          ...movement,
+          deleted_at: now,
+          updated_at: now,
+          updated_by: user_id,
+        },
+      });
+    }
 
-      // mark original as logically reversed (NOT deleted)
+    // -------------------------
+    // 3️⃣ Load sale items
+    // -------------------------
+    const saleItems = await db.getAllAsync(
+      `
+      SELECT *
+      FROM sale_items
+      WHERE sale_id = ?
+        AND deleted_at IS NULL
+      `,
+      [saleId]
+    );
+
+    // -------------------------
+    // 4️⃣ Soft delete sale items
+    // -------------------------
+    for (const item of saleItems) {
       await db.runAsync(
         `
         UPDATE sale_items
-        SET deleted_at = ?, updated_at = ?
-        WHERE sale_id = ? AND product_id = ?
+        SET
+          deleted_at = ?,
+          updated_at = ?
+        WHERE id = ?
         `,
-        [now, now, saleId, m.product_id]
+        [now, now, item.id]
       );
+
+      // 🔥 SYNC sale item deletion
+      await syncEvent(db, {
+        model: "sale_items",
+        operation: "update",
+        payload: {
+          ...item,
+          deleted_at: now,
+          updated_at: now,
+        },
+      });
     }
 
-    await db.runAsync(
+    // -------------------------
+    // 5️⃣ Soft delete sale
+    // -------------------------
+    const existingSale = await db.getFirstAsync(
       `
-      UPDATE sales
-      SET deleted_at = ?, updated_at = ?
+      SELECT *
+      FROM sales
       WHERE id = ?
       `,
-      [now, now, saleId]
+      [saleId]
     );
 
-    await db.runAsync("COMMIT");
+    // if (existingSale) {
+    //   await db.runAsync(
+    //     `
+    //     UPDATE sales
+    //     SET
+    //       deleted_at = ?,
+    //       updated_at = ?,
+    //       updated_by = ?
+    //     WHERE id = ?
+    //     `,
+    //     [
+    //       now,
+    //       now,
+    //       user_id,
+    //       saleId,
+    //     ]
+    //   );
+
+    //   // 🔥 SYNC sale deletion
+    //   await syncEvent(db, {
+    //     model: "sales",
+    //     operation: "update",
+    //     payload: {
+    //       ...existingSale,
+    //       deleted_at: now,
+    //       updated_at: now,
+    //       updated_by: user_id,
+    //     },
+    //   });
+    // }
 
   } catch (err) {
-    await db.runAsync("ROLLBACK");
     throw err;
   }
 }
