@@ -505,7 +505,7 @@ export async function getTotalStockValue(db) {
       AND m.company = ?
       AND p.deleted_at IS NULL
       AND p.company = ?
-    ORDER BY m.product_id, m.date ASC, m.created_at ASC
+    ORDER BY m.product_id, m.created_at ASC
     `,[company,company]
   );
 
