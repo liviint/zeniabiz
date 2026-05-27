@@ -17,6 +17,8 @@ export default function SummaryCards({ isSyncing,timeState }) {
   const [stats, setStats] = useState({
     revenue: 0,
     expenses: 0,
+    cashCollected:0,
+    outstandingCredit:0,
     cost: 0,
     grossProfit: 0,
     netProfit: 0,
@@ -68,7 +70,7 @@ export default function SummaryCards({ isSyncing,timeState }) {
         <StatCard
           label="Revenue"
           value={formatNumber(stats.revenue)}
-          subText="Total income"
+          subText="Sales made"
           color="#2E8B8B"
         />
 
@@ -92,6 +94,20 @@ export default function SummaryCards({ isSyncing,timeState }) {
           label="Expenses"
           value={formatNumber(stats.expenses)}
           subText="Business expenses"
+          color="#FF6B6B"
+        />
+      </View>
+      <View style={styles.row}>
+        <StatCard
+          label="Cash Collected"
+          value={formatNumber(stats.cashCollected)}
+          subText="Payments received"
+          color="#2E8B8B"
+        />
+        <StatCard
+          label="Outstanding Credit"
+          value={formatNumber(stats.outstandingCredit)}
+          subText="Customer balances"
           color="#FF6B6B"
         />
       </View>

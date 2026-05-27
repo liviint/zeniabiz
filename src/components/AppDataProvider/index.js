@@ -3,32 +3,11 @@ import SessionProvider from "./SessionProvider"
 import SyncProvider from "./SyncProvider"
 import GoogleBackUpProvider from "./GoogleBackUpProvider"
 import { applyInventoryMigrationsV1 } from "../../db/migrations/inventory"
+import {migrateSalesCreditFieldsV1, migratePaymentsFromSalesV1} from "../../db/migrations/credit"
 
 const migrateDbIfNeeded = async (db) => {
+
   
-  /* 
-  await db.execAsync(`DROP TABLE IF EXISTS companies;`);
-  await db.execAsync(`DROP TABLE IF EXISTS company_members;`);
-  await db.execAsync(`DROP TABLE IF EXISTS local_user;`);
-  await db.execAsync(`DROP TABLE IF EXISTS app_session;`);
-
-  await db.execAsync(`DROP TABLE IF EXISTS expenses;`);
-  await db.execAsync(`DROP TABLE IF EXISTS expense_categories;`);
-  await db.execAsync(`DROP TABLE IF EXISTS expense_templates;`);
-
-  await db.execAsync(`DROP TABLE IF EXISTS products;`);
-  await db.execAsync(`DROP TABLE IF EXISTS inventory_batches;`);
-  await db.execAsync(`DROP TABLE IF EXISTS inventory_movements;`);
-
-  await db.execAsync(`DROP TABLE IF EXISTS sales;`); 
-  await db.execAsync(`DROP TABLE IF EXISTS sale_items;`);
-  
-  await db.execAsync(`DROP TABLE IF EXISTS sync_queue;`);
-  await db.execAsync(`DROP TABLE IF EXISTS sync_state;`);
-  await db.execAsync(`DROP TABLE IF EXISTS app_settings;`);
-   */
-  
-
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
 
@@ -261,6 +240,14 @@ const migrateDbIfNeeded = async (db) => {
     title TEXT,
     note TEXT,
     amount REAL,
+    customer_id TEXT,
+
+    total_amount REAL NOT NULL DEFAULT 0,
+    amount_paid REAL NOT NULL DEFAULT 0,
+    balance_due REAL NOT NULL DEFAULT 0,
+
+    payment_status TEXT NOT NULL DEFAULT 'PAID',
+    due_date TEXT,
 
     date TEXT NOT NULL,
 
@@ -305,6 +292,54 @@ const migrateDbIfNeeded = async (db) => {
   CREATE INDEX IF NOT EXISTS idx_sale_items_company
   ON sale_items(company);
 
+  CREATE TABLE IF NOT EXISTS payments (
+    id TEXT PRIMARY KEY,
+
+    company TEXT,
+    created_by TEXT,
+    updated_by TEXT,
+
+    sale_id TEXT NOT NULL,
+    customer_id TEXT,
+    payment_type TEXT,
+
+    amount REAL NOT NULL,
+
+    payment_method TEXT,
+    note TEXT,
+
+    date TEXT NOT NULL,
+
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    deleted_at TEXT
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_payments_sale_id
+  ON payments(sale_id);
+
+  CREATE INDEX IF NOT EXISTS idx_payments_customer_id
+  ON payments(customer_id);
+
+  CREATE INDEX IF NOT EXISTS idx_payments_company
+  ON payments(company);
+
+  CREATE TABLE IF NOT EXISTS customers (
+    id TEXT PRIMARY KEY,
+
+    company TEXT NOT NULL,
+
+    name TEXT NOT NULL,
+    phone TEXT,
+
+    note TEXT,
+
+    created_by TEXT,
+
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    deleted_at TEXT
+  );
 
   CREATE TABLE IF NOT EXISTS app_settings (
     key TEXT PRIMARY KEY,
@@ -347,6 +382,8 @@ const migrateDbIfNeeded = async (db) => {
 
 `);
   await applyInventoryMigrationsV1(db);
+  await migrateSalesCreditFieldsV1(db);
+  await migratePaymentsFromSalesV1(db);
 };
 
 export default function AppDataProvider({ children }) {

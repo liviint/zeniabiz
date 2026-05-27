@@ -219,8 +219,9 @@ export const getExpensesBreakDown = async (db, timeState) => {
 };
 
 export async function getFinancialStats(db, timeState) {
-  const {company} = getActiveContextSync()
-  const { startDate, endDate } = normalizeRange(timeState)
+  const { company } = getActiveContextSync();
+
+  const { startDate, endDate } = normalizeRange(timeState);
 
   if (!startDate || !endDate) {
     throw new Error("Invalid time range");
@@ -229,36 +230,79 @@ export async function getFinancialStats(db, timeState) {
   // -------------------------
   // 1. Revenue & Cost
   // -------------------------
-  
- const revenueAndCost = await db.getFirstAsync(
-  `
-  SELECT 
-    COALESCE(SUM(si.price * si.quantity), 0) AS revenue,
-    COALESCE(SUM(si.cost_price * si.quantity), 0) AS cost
 
-  FROM sale_items si
+  const revenueAndCost = await db.getFirstAsync(
+    `
+    SELECT 
+      COALESCE(SUM(si.price * si.quantity), 0) AS revenue,
 
-  JOIN sales s 
-    ON s.id = si.sale_id
-    AND s.company = ?
-    AND s.deleted_at IS NULL
+      COALESCE(SUM(si.cost_price * si.quantity), 0) AS cost
 
-  WHERE si.company = ?
-    AND si.deleted_at IS NULL
-    AND s.date >= ?
-    AND s.date < ?
-  `,
-  [company, company, startDate, endDate]
-);
+    FROM sale_items si
 
+    JOIN sales s 
+      ON s.id = si.sale_id
+      AND s.company = ?
+      AND s.deleted_at IS NULL
+
+    WHERE si.company = ?
+      AND si.deleted_at IS NULL
+      AND s.date >= ?
+      AND s.date < ?
+    `,
+    [company, company, startDate, endDate]
+  );
 
   // -------------------------
-  // 2. Expenses
+  // 2. Cash Collected
   // -------------------------
+
+  const paymentsResult = await db.getFirstAsync(
+    `
+    SELECT 
+      COALESCE(SUM(amount), 0) AS cashCollected
+
+    FROM payments
+
+    WHERE company = ?
+      AND deleted_at IS NULL
+      AND date >= ?
+      AND date < ?
+    `,
+    [company, startDate, endDate]
+  );
+
+  console.log(paymentsResult,"hello cash collected")
+
+  // -------------------------
+  // 3. Outstanding Credit
+  // -------------------------
+
+  const outstandingResult = await db.getFirstAsync(
+    `
+    SELECT
+      COALESCE(SUM(balance_due), 0) AS outstandingCredit
+
+    FROM sales
+
+    WHERE company = ?
+      AND deleted_at IS NULL
+      AND balance_due > 0
+    `,
+    [company]
+  );
+
+  // -------------------------
+  // 4. Expenses
+  // -------------------------
+
   const expenseResult = await db.getFirstAsync(
     `
-    SELECT COALESCE(SUM(amount), 0) AS expenses
+    SELECT 
+      COALESCE(SUM(amount), 0) AS expenses
+
     FROM expenses
+
     WHERE deleted_at IS NULL
       AND company = ?
       AND date >= ?
@@ -268,29 +312,53 @@ export async function getFinancialStats(db, timeState) {
   );
 
   // -------------------------
-  // 3. Stock (NOT time-based)
+  // 5. Stock Value
   // -------------------------
 
-  
-  const stockResult = await getTotalStockValue(db) 
+  const stockResult = await getTotalStockValue(db);
 
   // -------------------------
-  // 4. Safe extraction
+  // 6. Safe extraction
   // -------------------------
+
   const revenue = revenueAndCost?.revenue || 0;
+
   const cost = revenueAndCost?.cost || 0;
+
+  const cashCollected =
+    paymentsResult?.cashCollected || 0;
+
+  const outstandingCredit =
+    outstandingResult?.outstandingCredit || 0;
+
   const expenses = expenseResult?.expenses || 0;
-  const stockValue = stockResult?.stock_value || 0;
+
+  const stockValue =
+    stockResult?.stock_value || 0;
+
+  // -------------------------
+  // 7. Profit Calculations
+  // -------------------------
 
   const grossProfit = revenue - cost;
+
   const netProfit = grossProfit - expenses;
 
+  // -------------------------
+  // 8. Return
+  // -------------------------
+  
   return {
     revenue,
+    cashCollected,
+    outstandingCredit,
+
     cost,
     expenses,
+
     grossProfit,
     netProfit,
+
     stockValue,
   };
 }
