@@ -294,7 +294,15 @@ export async function reverseSale(
 
 export async function createOrUpdateSale(
   db,
-  { sale_id = null, items = [], note = null, date, title }
+  {
+    sale_id = null,
+    items = [],
+    note = null,
+    date,
+    title,
+    discount = 0,
+    amount_paid = 0,
+  }
 ) {
   const { company, user_id } = getActiveContextSync(db);
 
@@ -304,7 +312,10 @@ export async function createOrUpdateSale(
   const isEdit = !!sale_id;
   const id = sale_id || newUuid();
 
-  const total = items.reduce(
+  // -------------------------
+  // 1. CALCULATIONS
+  // -------------------------
+  const subtotal = items.reduce(
     (sum, i) => sum + Number(i.price) * Number(i.quantity),
     0
   );
@@ -314,15 +325,25 @@ export async function createOrUpdateSale(
     0
   );
 
+  const total_amount = Math.max(subtotal - (discount || 0), 0);
+  const balance_due = total_amount - (amount_paid || 0);
+
+  const payment_status =
+    balance_due === 0
+      ? "PAID"
+      : amount_paid > 0
+      ? "PARTIAL"
+      : "UNPAID";
+
   const finalTitle =
     title?.trim() ||
-    `Sold ${totalItems} item${totalItems > 1 ? "s" : ""} - ${total}`;
+    `Sold ${totalItems} item${totalItems > 1 ? "s" : ""} - ${total_amount}`;
 
   await db.runAsync("BEGIN");
 
   try {
     // -------------------------
-    // 1️⃣ EDIT FLOW (reverse first)
+    // 2. EDIT FLOW
     // -------------------------
     if (isEdit) {
       await reverseSale(db, id, { company, user_id });
@@ -330,29 +351,61 @@ export async function createOrUpdateSale(
       await db.runAsync(
         `
         UPDATE sales
-        SET title = ?, note = ?, date = ?, amount = ?, updated_at = ?
+        SET title = ?, note = ?, date = ?, amount = ?,
+            total_amount = ?, amount_paid = ?, balance_due = ?,
+            updated_at = ?
         WHERE id = ?
         `,
-        [finalTitle, note ?? null, saleDate, total, now, id]
+        [
+          finalTitle,
+          note ?? null,
+          saleDate,
+          subtotal,
+          total_amount,
+          amount_paid,
+          balance_due,
+          now,
+          id,
+        ]
       );
     }
 
     // -------------------------
-    // 2️⃣ CREATE FLOW
+    // 3. CREATE FLOW
     // -------------------------
     else {
       await db.runAsync(
         `
         INSERT INTO sales
-        (id, company, title, note, date, amount, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        (
+          id, company, title, note, date,
+          amount, total_amount, amount_paid, balance_due,
+          payment_status,
+          created_at, updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
-        [id, company, finalTitle, note ?? null, saleDate, total, now, now]
+        [
+          id,
+          company,
+          finalTitle,
+          note ?? null,
+          saleDate,
+
+          subtotal,
+          total_amount,
+          amount_paid,
+          balance_due,
+          payment_status,
+
+          now,
+          now,
+        ]
       );
     }
 
     // -------------------------
-    // 3️⃣ FIFO PROCESSING (deterministic allocation)
+    // 4. INVENTORY + SALE ITEMS (UNCHANGED)
     // -------------------------
     for (const item of items) {
       const allocations = await allocateFIFO(
@@ -362,7 +415,6 @@ export async function createOrUpdateSale(
       );
 
       for (const alloc of allocations) {
-        // 1️⃣ create sale movement (stock reduction)
         const movement = {
           id: newUuid(),
           product_id: item.product_id,
@@ -381,8 +433,8 @@ export async function createOrUpdateSale(
 
         await insertMovementAndApply(db, movement);
 
-        // 2️⃣ sale item (financial record)
         const saleItemId = newUuid();
+
         await db.runAsync(
           `
           INSERT INTO sale_items
@@ -397,11 +449,10 @@ export async function createOrUpdateSale(
             alloc.quantity,
             item.price,
             alloc.cost_price,
-            alloc.purchase_id
+            alloc.purchase_id,
           ]
         );
 
-        // 🔥 SYNC SALE ITEM
         await syncEvent(db, {
           model: "sale_items",
           operation: "insert",
@@ -419,15 +470,66 @@ export async function createOrUpdateSale(
             deleted_at: null,
           },
         });
-
-        
       }
     }
 
-    await db.runAsync("COMMIT");
+    // -------------------------
+    // 5. PAYMENT CREATION (NEW)
+    // -------------------------
+    if ((amount_paid || 0) > 0) {
+      const paymentId = newUuid();
+
+      await db.runAsync(
+        `
+        INSERT INTO payments
+        (
+          id, company, created_by, updated_by,
+          sale_id, customer_id, payment_type,
+          amount, payment_method, note,
+          date, created_at, updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+        [
+          paymentId,
+          company,
+          user_id,
+          user_id,
+          id,
+          null,
+          "INITIAL",
+          amount_paid,
+          "cash",
+          "Auto-created from sale",
+          saleDate,
+          now,
+          now,
+        ]
+      );
+
+      await syncEvent(db, {
+        model: "payments",
+        operation: "insert",
+        payload: {
+          id: paymentId,
+          sale_id: id,
+          company,
+          created_by: user_id,
+          updated_by: user_id,
+          amount: amount_paid,
+          payment_type: "INITIAL",
+          payment_method: "cash",
+          note: "Auto-created from sale",
+          date: saleDate,
+          created_at: now,
+          updated_at: now,
+          deleted_at: null,
+        },
+      });
+    }
 
     // -------------------------
-    // 4️⃣ SYNC
+    // 6. SYNC SALE
     // -------------------------
     await syncEvent(db, {
       model: "sales",
@@ -440,15 +542,22 @@ export async function createOrUpdateSale(
         title: finalTitle,
         note,
         date: saleDate,
-        amount: total,
+
+        amount: subtotal,
+        total_amount,
+        amount_paid,
+        balance_due,
+        payment_status,
+
         created_at: now,
         updated_at: now,
         deleted_at: null,
       },
     });
 
-    return id;
+    await db.runAsync("COMMIT");
 
+    return id;
   } catch (err) {
     await db.runAsync("ROLLBACK");
     throw err;

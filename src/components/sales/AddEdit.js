@@ -174,18 +174,49 @@ export default function SellPage() {
   };
 
   const handleSave = async () => {
-    if (cart.length === 0) return Alert.alert("Add items first");
-    await createOrUpdateSale(db, {
+  try {
+    if (cart.length === 0) {
+      return Alert.alert("Add items first");
+    }
+
+    const subtotal = cart.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+
+    const totalAfterDiscount = subtotal - (discount || 0);
+    const credit = totalAfterDiscount - (paymentsForm.amountPaid || 0);
+
+    const saleData = {
       items: cart,
       sale_id: id,
+
       title,
       category: category?.name,
       category_id: category?.id || null,
-      date:date,
-    });
+
+      date,
+
+      // NEW FINANCIAL FIELDS
+      subtotal,
+      discount: discount || 0,
+      total_amount: totalAfterDiscount,
+      amount_paid: paymentsForm.amountPaid || 0,
+      balance_due: credit,
+      payment_status:
+        credit === 0 ? "PAID" : paymentsForm.amountPaid > 0 ? "PARTIAL" : "UNPAID",
+    };
+
+    await createOrUpdateSale(db, saleData);
+
     Alert.alert("Success", "Sale recorded");
+
     router.push("/sales");
-  };
+  } catch (error) {
+    console.log(error);
+    Alert.alert("Error", "Failed to save sale");
+  }
+};
 
   return (
     <View style={globalStyles.container}>
