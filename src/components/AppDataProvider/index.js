@@ -246,6 +246,9 @@ const migrateDbIfNeeded = async (db) => {
     amount_paid REAL NOT NULL DEFAULT 0,
     balance_due REAL NOT NULL DEFAULT 0,
 
+    discount REAL NOT NULL DEFAULT 0,
+    discount_type TEXT DEFAULT 'fixed',
+
     payment_status TEXT NOT NULL DEFAULT 'PAID',
     due_date TEXT,
 

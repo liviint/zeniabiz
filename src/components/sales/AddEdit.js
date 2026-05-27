@@ -55,6 +55,7 @@ export default function SellPage() {
     amountPaid:0,
     paymentMethod:"",
   })
+  const [discount,setDiscount] = useState(0)
 
   // Fetch products
   useEffect(() => {
@@ -445,6 +446,15 @@ export default function SellPage() {
                 {(total - paymentsForm.amountPaid).toFixed(2)}
               </BodyText>
             </View>
+
+            <View style={globalStyles.formGroup}>
+                <FormLabel>Discount</FormLabel>
+                <Input
+                  keyboardType="numeric"
+                  value={String(discount)}
+                  onChangeText={(v) => setDiscount(parseFloat(v) || 0)}
+                />
+              </View>
 
             {/* PAYMENT METHOD */}
             <View style={globalStyles.formGroup}>
