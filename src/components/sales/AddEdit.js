@@ -47,8 +47,14 @@ export default function SellPage() {
   const [category, setCategory] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [checkoutModalVisible, setCheckoutModalVisible] = useState(false);
 
   const [cartExpanded, setCartExpanded] = useState(true);
+
+  const [paymentsForm,setPaymentsForm] = useState({
+    amountPaid:0,
+    paymentMethod:"",
+  })
 
   // Fetch products
   useEffect(() => {
@@ -271,7 +277,16 @@ export default function SellPage() {
         />
       )}
 
-      {/* FOOTER */}
+      <View style={styles.footer}>
+        <Pressable
+          style={globalStyles.primaryBtn}
+          onPress={() => setCheckoutModalVisible(true)}
+        >
+          <BodyText style={globalStyles.primaryBtnText}>
+            Checkout
+          </BodyText>
+        </Pressable>
+      </View>
       <View style={styles.footer}>
         <Pressable style={globalStyles.primaryBtn} onPress={handleSave}>
           <BodyText style={globalStyles.primaryBtnText}>
@@ -400,6 +415,68 @@ export default function SellPage() {
           </Card>
         </View>
       </Modal>
+
+      <Modal visible={checkoutModalVisible} transparent animationType="slide">
+        <View style={styles.modalContainer}>
+          <Card style={styles.modalCard}>
+
+            <BodyText>Checkout</BodyText>
+
+            {/* TOTAL */}
+            <View style={globalStyles.formGroup}>
+              <FormLabel>Total</FormLabel>
+              <BodyText>{total.toFixed(2)}</BodyText>
+            </View>
+
+            {/* AMOUNT PAID */}
+            <View style={globalStyles.formGroup}>
+              <FormLabel>Amount Paid</FormLabel>
+              <Input
+                keyboardType="numeric"
+                value={String(paymentsForm.amountPaid)}
+                onChangeText={(v) => setPaymentsForm(prev => ({...prev,amountPaid:parseFloat(v) || 0}))}
+              />
+            </View>
+
+            {/* CREDIT */}
+            <View style={globalStyles.formGroup}>
+              <FormLabel>Balance (Credit)</FormLabel>
+              <BodyText style={{ color: "#FF6B6B" }}>
+                {(total - paymentsForm.amountPaid).toFixed(2)}
+              </BodyText>
+            </View>
+
+            {/* PAYMENT METHOD */}
+            <View style={globalStyles.formGroup}>
+              <FormLabel>Payment Method</FormLabel>
+              <Input
+                value={paymentsForm.paymentMethod}
+                onChangeText={(val) => setPaymentsForm(prev => ({...prev,paymentMethod:val}))}
+              />
+            </View>
+
+            {/* CONFIRM */}
+            <Pressable
+              style={globalStyles.primaryBtn}
+              onPress={handleSave}
+            >
+              <BodyText style={globalStyles.primaryBtnText}>
+                Complete Sale
+              </BodyText>
+            </Pressable>
+
+            {/* CANCEL */}
+            <Pressable
+              style={globalStyles.secondaryBtn}
+              onPress={() => setCheckoutModalVisible(false)}
+            >
+              <BodyText>Cancel</BodyText>
+            </Pressable>
+
+          </Card>
+        </View>
+      </Modal>
+
     </View>
   );
 }
