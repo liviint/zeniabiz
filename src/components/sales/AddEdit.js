@@ -1,25 +1,21 @@
 import { useEffect, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import {
   View,
   StyleSheet,
   FlatList,
   Pressable,
   Alert,
-  Modal,
-  TouchableOpacity
 } from "react-native";
 import {
   Card,
   BodyText,
   SecondaryText,
   Input,
-  FormLabel
 } from "../../../src/components/ThemeProvider/components";
 import { useSQLiteContext } from "expo-sqlite";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { getProducts, getProductBatches } from "../../../src/db/inventoryDb";
+import { getProducts } from "../../../src/db/inventoryDb";
 import {
   createOrUpdateSale,
   getSaleItems,
@@ -27,6 +23,8 @@ import {
 } from "../../../src/db/salesDb";
 import { getCategories } from "../../../src/db/categoriesDb";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import CreditDiscountForm from "./CreditDiscountForm";
+import EditSaleForm from "./EditSaleForm";
 
 export default function SellPage() {
   const db = useSQLiteContext();
@@ -41,12 +39,10 @@ export default function SellPage() {
   const [title, setTitle] = useState("");
 
   const [date,setDate] = useState(new Date())
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
 
   const [category, setCategory] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [editSaleModalVisible, setEditSaleModalVisible] = useState(false);
   const [checkoutModalVisible, setCheckoutModalVisible] = useState(false);
 
   const [cartExpanded, setCartExpanded] = useState(true);
@@ -54,8 +50,8 @@ export default function SellPage() {
   const [paymentsForm,setPaymentsForm] = useState({
     amountPaid:0,
     paymentMethod:"",
+    discount:"",
   })
-  const [discount,setDiscount] = useState(0)
 
   // Fetch products
   useEffect(() => {
@@ -138,40 +134,10 @@ export default function SellPage() {
     );
   };
 
-  const updateItem = (updatedItem) => {
-    setCart((prev) =>
-      prev.map((c) =>
-        c.product_id === updatedItem.product_id ? updatedItem : c
-      )
-    );
-  };
-
   const total = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-
-   const handleDateChange = (event, selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      const updated = new Date(date);
-      updated.setFullYear(selectedDate.getFullYear());
-      updated.setMonth(selectedDate.getMonth());
-      updated.setDate(selectedDate.getDate());
-      setDate(updated);
-    }
-  };
-
-  const handleTimeChange = (event, selectedTime) => {
-    setShowTimePicker(false);
-    if (selectedTime) {
-      const updated = new Date(date);
-      updated.setHours(selectedTime.getHours());
-      updated.setMinutes(selectedTime.getMinutes());
-      updated.setSeconds(selectedTime.getSeconds());
-      setDate(updated);
-    }
-  };
 
   const handleSave = async () => {
   try {
@@ -184,7 +150,7 @@ export default function SellPage() {
       0
     );
 
-    const totalAfterDiscount = subtotal - (discount || 0);
+    const totalAfterDiscount = subtotal - (paymentsForm.discount || 0);
     const credit = totalAfterDiscount - (paymentsForm.amountPaid || 0);
 
     const saleData = {
@@ -199,7 +165,7 @@ export default function SellPage() {
 
       // NEW FINANCIAL FIELDS
       subtotal,
-      discount: discount || 0,
+      discount: paymentsForm.discount || 0,
       total_amount: totalAfterDiscount,
       amount_paid: paymentsForm.amountPaid || 0,
       balance_due: credit,
@@ -275,7 +241,7 @@ export default function SellPage() {
               <Pressable
                 onPress={() => {
                   setSelectedItem(item);
-                  setModalVisible(true);
+                  setEditSaleModalVisible(true);
                 }}
               >
                 <BodyText>{item.name}</BodyText>
@@ -310,16 +276,6 @@ export default function SellPage() {
       )}
 
       <View style={styles.footer}>
-        <Pressable
-          style={globalStyles.primaryBtn}
-          onPress={() => setCheckoutModalVisible(true)}
-        >
-          <BodyText style={globalStyles.primaryBtnText}>
-            Checkout
-          </BodyText>
-        </Pressable>
-      </View>
-      <View style={styles.footer}>
         <Pressable style={globalStyles.primaryBtn} onPress={handleSave}>
           <BodyText style={globalStyles.primaryBtnText}>
             Complete Sale
@@ -327,196 +283,37 @@ export default function SellPage() {
         </Pressable>
       </View>
 
-      <Modal visible={modalVisible} transparent animationType="slide">
-        <View style={styles.modalContainer}>
-          <Card style={styles.modalCard}>
-            <BodyText>Edit Item</BodyText>
+      <View style={styles.footer}>
+        <Pressable
+          style={globalStyles.secondaryBtn}
+          onPress={() => setCheckoutModalVisible(true)}
+        >
+          <BodyText style={globalStyles.secondaryBtnText}>
+            Credit / Discount
+          </BodyText>
+        </Pressable>
+      </View>
 
-            <View style={globalStyles.formGroup}>
-              <FormLabel>Price</FormLabel>
-              <Input
-                keyboardType="numeric"
-                value={String(selectedItem?.price || "")}
-                onChangeText={(v) =>
-                  setSelectedItem({
-                    ...selectedItem,
-                    price: parseFloat(v) || 0,
-                  })
-                }
-              />
-            </View>
-            
+      <EditSaleForm 
+        styles={styles}
+        modalVisible={editSaleModalVisible}
+        setModalVisible={setEditSaleModalVisible}
+        setCart={setCart}
+        selectedItem={selectedItem}
+        setSelectedItem={setSelectedItem}
+        date={date}
+        setDate={setDate}
+      />
 
-            <View style={globalStyles.formGroup}>
-              <FormLabel>Quantity</FormLabel>
-              <Input
-                keyboardType="numeric"
-                value={String(selectedItem?.quantity || "")}
-                onChangeText={(v) =>
-                  setSelectedItem({
-                    ...selectedItem,
-                    quantity: parseFloat(v) || 0,
-                  })
-                }
-              />
-            </View>
-
-            <View style={globalStyles.formGroup}>
-              <FormLabel>Date & Time</FormLabel>
-              <View style={{ flexDirection: "row", gap: 12 }}>
-                <TouchableOpacity
-                  onPress={() => setShowDatePicker(true)}
-                  style={{
-                    flex: 1,
-                    paddingVertical: 8,
-                    paddingHorizontal: 4,
-                    alignItems: "center",
-                    ...globalStyles.formBorder
-                  }}
-                >
-                  <BodyText>{date?.toDateString()}</BodyText>
-                </TouchableOpacity>
-
-                {/* Time Button */}
-                <TouchableOpacity
-                  onPress={() => setShowTimePicker(true)}
-                  style={{
-                    flex: 1,
-                    paddingVertical: 8,
-                    paddingHorizontal: 4,
-                    borderRadius: 14,
-                    alignItems: "center",
-                    justifyContent:"center",
-                    ...globalStyles.formBorder
-                  }}
-                >
-                  <BodyText>
-                    {date?.getHours().toString().padStart(2, "0")}:
-                    {date?.getMinutes().toString().padStart(2, "0")}
-                  </BodyText>
-                </TouchableOpacity>
-              </View>
-
-          {showDatePicker && (
-            <DateTimePicker
-              value={date}
-              mode="date"
-              display="calendar"
-              onChange={handleDateChange}
-              maximumDate={new Date()} 
-            />
-          )}
-
-          {showTimePicker && (
-            <DateTimePicker
-              value={date}
-              mode="time"
-              display="spinner"
-              onChange={handleTimeChange}
-            />
-          )}
-        </View>
-            
-            <View style={globalStyles.formGroup}>
-              <Pressable
-                style={globalStyles.primaryBtn}
-                onPress={() => {
-                  updateItem(selectedItem);
-                  setModalVisible(false);
-                }}
-            >
-              <BodyText style={globalStyles.primaryBtnText}>
-                Save
-              </BodyText>
-            </Pressable>
-            </View>
-            
-            <View style={globalStyles.formGroup}>
-              <Pressable 
-                style={globalStyles.secondaryBtn}
-                onPress={() => setModalVisible(false)}
-              >
-              <BodyText
-                style={globalStyles.secondaryBtnText}
-              >
-                Cancel
-              </BodyText>
-            </Pressable>
-            </View>
-            
-          </Card>
-        </View>
-      </Modal>
-
-      <Modal visible={checkoutModalVisible} transparent animationType="slide">
-        <View style={styles.modalContainer}>
-          <Card style={styles.modalCard}>
-
-            <BodyText>Checkout</BodyText>
-
-            {/* TOTAL */}
-            <View style={globalStyles.formGroup}>
-              <FormLabel>Total</FormLabel>
-              <BodyText>{total.toFixed(2)}</BodyText>
-            </View>
-
-            {/* AMOUNT PAID */}
-            <View style={globalStyles.formGroup}>
-              <FormLabel>Amount Paid</FormLabel>
-              <Input
-                keyboardType="numeric"
-                value={String(paymentsForm.amountPaid)}
-                onChangeText={(v) => setPaymentsForm(prev => ({...prev,amountPaid:parseFloat(v) || 0}))}
-              />
-            </View>
-
-            {/* CREDIT */}
-            <View style={globalStyles.formGroup}>
-              <FormLabel>Balance (Credit)</FormLabel>
-              <BodyText style={{ color: "#FF6B6B" }}>
-                {(total - paymentsForm.amountPaid).toFixed(2)}
-              </BodyText>
-            </View>
-
-            <View style={globalStyles.formGroup}>
-                <FormLabel>Discount</FormLabel>
-                <Input
-                  keyboardType="numeric"
-                  value={String(discount)}
-                  onChangeText={(v) => setDiscount(parseFloat(v) || 0)}
-                />
-              </View>
-
-            {/* PAYMENT METHOD */}
-            <View style={globalStyles.formGroup}>
-              <FormLabel>Payment Method</FormLabel>
-              <Input
-                value={paymentsForm.paymentMethod}
-                onChangeText={(val) => setPaymentsForm(prev => ({...prev,paymentMethod:val}))}
-              />
-            </View>
-
-            {/* CONFIRM */}
-            <Pressable
-              style={globalStyles.primaryBtn}
-              onPress={handleSave}
-            >
-              <BodyText style={globalStyles.primaryBtnText}>
-                Complete Sale
-              </BodyText>
-            </Pressable>
-
-            {/* CANCEL */}
-            <Pressable
-              style={globalStyles.secondaryBtn}
-              onPress={() => setCheckoutModalVisible(false)}
-            >
-              <BodyText>Cancel</BodyText>
-            </Pressable>
-
-          </Card>
-        </View>
-      </Modal>
+      <CreditDiscountForm 
+        total={total}
+        styles={styles}
+        handleSave={handleSave}
+        checkoutModalVisible={checkoutModalVisible}
+        setCheckoutModalVisible={setCheckoutModalVisible}
+        paymentsForm={paymentsForm}
+        setPaymentsForm={setPaymentsForm}
+      />
 
     </View>
   );
