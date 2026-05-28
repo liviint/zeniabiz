@@ -1,18 +1,21 @@
+import { useState } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
-
 import {
-  BodyText,
-  Card,
-  SecondaryText,
+    BodyText,
+    Card,
+    SecondaryText,
 } from "../../../src/components/ThemeProvider/components";
+import RecordPaymentModal from "./RecordPaymentModal";
 
 export function CreditActionsCard({
   credit,
-  onAddPayment,
   onMarkPaid,
+  setRefreshCredit,
 }) {
   const router = useRouter();
+  const [paymentModalVisible, setPaymentModalVisible] =
+  useState(false);
 
   const remainingBalance = Math.max(
     Number(credit.balance_due || 0),
@@ -50,7 +53,7 @@ export function CreditActionsCard({
         {/* Record Payment */}
         <Pressable
           style={[styles.button, styles.primaryButton]}
-          onPress={onAddPayment}
+          onPress={() => setPaymentModalVisible(true)}
         >
           <BodyText style={styles.primaryButtonText}>
             Record Payment
@@ -85,6 +88,14 @@ export function CreditActionsCard({
           </Pressable>
         )}
       </View>
+
+      <RecordPaymentModal
+        visible={paymentModalVisible}
+        onClose={() => setPaymentModalVisible(false)}
+        credit={credit}
+        onSuccess={() => setRefreshCredit(prev => prev + 1)}
+        />
+
     </Card>
   );
 }

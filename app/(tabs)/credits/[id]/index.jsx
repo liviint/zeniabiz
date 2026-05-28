@@ -27,6 +27,7 @@ export default function CreditDetailPage() {
   const { globalStyles } = useThemeStyles();
 
   const [credit, setCredit] = useState(null);
+  const [refreshCredit,setRefreshCredit] = useState(0)
 
   const loadCredit = async () => {
     const data = await getCreditById(db, id);
@@ -35,7 +36,7 @@ export default function CreditDetailPage() {
 
   useEffect(() => {
     loadCredit();
-  }, [id]);
+  }, [id,refreshCredit]);
 
   if (!credit) {
     return (
@@ -175,13 +176,11 @@ export default function CreditDetailPage() {
 
       <CreditActionsCard
           credit={credit}
-          onAddPayment={() =>
-            router.push(`/credits/${credit.id}/payment`)
-          }
           onMarkPaid={async () => {
             await offsetCreditBalance(db, credit.id);
             loadCredit();
           }}
+          setRefreshCredit={setRefreshCredit}
         />
 
       {/* Payments */}
