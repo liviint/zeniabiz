@@ -299,6 +299,10 @@ export async function createOrUpdateSale(
     title,
     discount = 0,
     amount_paid = 0,
+    subtotal,
+    balance_due,
+    payment_status,
+    total_amount
   }
 ) {
   const { company, user_id } = getActiveContextSync(db);
@@ -309,29 +313,13 @@ export async function createOrUpdateSale(
   const isEdit = !!sale_id;
   const id = sale_id || newUuid();
 
-  // -------------------------
-  // 1. CALCULATIONS
-  // -------------------------
-  const subtotal = items.reduce(
-    (sum, i) => sum + Number(i.price) * Number(i.quantity),
-    0
-  );
+
 
   const totalItems = items.reduce(
     (sum, i) => sum + Number(i.quantity),
     0
   );
-
-  const total_amount = Math.max(subtotal - (discount || 0), 0);
-  const balance_due = total_amount - (amount_paid || 0);
-
-  const payment_status =
-    balance_due === 0
-      ? "PAID"
-      : amount_paid > 0
-      ? "PARTIAL"
-      : "UNPAID";
-
+  
   const finalTitle =
     title?.trim() ||
     `Sold ${totalItems} item${totalItems > 1 ? "s" : ""} - ${total_amount}`;

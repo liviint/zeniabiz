@@ -154,7 +154,14 @@ export default function SellPage() {
       subtotal - (paymentsForm.discount || 0),
       0
     );
-    const credit = totalAfterDiscount - (paymentsForm.amountPaid || 0);
+    const rawCredit =
+      totalAfterDiscount -
+      (paymentsForm.amountPaid || 0);
+
+    const credit = Math.max(
+      Number(rawCredit.toFixed(2)),
+      0
+    );
 
     const saleData = {
       items: cart,
