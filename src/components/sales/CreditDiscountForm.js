@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
     View,
     Pressable,
@@ -22,9 +21,6 @@ const CreditDiscountForm = ({
     setPaymentsForm
 }) => {
     const { globalStyles } = useThemeStyles();
-
-    
-    const [discount,setDiscount] = useState(0)
 
     return (
 
