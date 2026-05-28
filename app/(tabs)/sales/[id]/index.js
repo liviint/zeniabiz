@@ -66,164 +66,164 @@ export default function SaleDetails() {
   };
 
   return (
-    <ScrollView
-      style={globalStyles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Header */}
+    <View style={globalStyles.container}>
       <View style={styles.header}>
-        <BodyText style={globalStyles.title}>
-          Sale Details
-        </BodyText>
-
-        <SecondaryText>
-          {dateFormat(sale?.date)}
-        </SecondaryText>
-      </View>
-
-      {/* Summary */}
-      <Card style={styles.summaryCard}>
-        <View style={styles.summaryRow}>
-          <SecondaryText>Total</SecondaryText>
-
-          <BodyText style={styles.totalAmount}>
-            KES{" "}
-            {Number(
-              sale?.total_amount || 0
-            ).toLocaleString()}
-          </BodyText>
-        </View>
-
-        <View style={styles.summaryRow}>
-          <SecondaryText>Paid</SecondaryText>
-
-          <BodyText style={styles.paid}>
-            KES{" "}
-            {Number(
-              sale?.amount_paid || 0
-            ).toLocaleString()}
-          </BodyText>
-        </View>
-
-        <View style={styles.summaryRow}>
-          <SecondaryText>Balance</SecondaryText>
-
-          <BodyText style={styles.balance}>
-            KES{" "}
-            {Number(
-              sale?.balance_due || 0
-            ).toLocaleString()}
-          </BodyText>
-        </View>
-
-        {!!sale?.discount && (
-          <View style={styles.summaryRow}>
-            <SecondaryText>Discount</SecondaryText>
-
-            <BodyText style={styles.discount}>
-              -KES{" "}
-              {Number(
-                sale?.discount || 0
-              ).toLocaleString()}
-            </BodyText>
-          </View>
-        )}
-
-        <View style={styles.statusContainer}>
-          <View
-            style={[
-              styles.statusBadge,
-
-              sale?.payment_status === "PAID"
-                ? styles.paidBadge
-                : sale?.payment_status === "PARTIAL"
-                ? styles.partialBadge
-                : styles.unpaidBadge,
-            ]}
-          >
-            <Text style={styles.statusText}>
-              {sale?.payment_status}
-            </Text>
-          </View>
-        </View>
-      </Card>
-
-      {/* Items */}
-      <View style={styles.sectionHeader}>
-        <BodyText style={styles.sectionTitle}>
-          Items
-        </BodyText>
-
-        <SecondaryText>
-          {items.length} item
-          {items.length !== 1 ? "s" : ""}
-        </SecondaryText>
-      </View>
-
-      {items.map((item) => {
-        const total =
-          Number(item.quantity || 0) *
-          Number(item.price || 0);
-
-        return (
-          <Card
-            key={item.id}
-            style={styles.itemCard}
-          >
-            <View style={styles.itemTop}>
-              <BodyText
-                style={styles.itemName}
-                numberOfLines={2}
-              >
-                {item.name}
-              </BodyText>
-
-              <BodyText style={styles.itemTotal}>
-                KES {total.toLocaleString()}
-              </BodyText>
-            </View>
-
-            <SecondaryText>
-              {item.quantity} × KES{" "}
-              {Number(item.price).toLocaleString()}
-            </SecondaryText>
-          </Card>
-        );
-      })}
-
-      {/* Notes */}
-      {!!sale?.note && (
-        <Card style={styles.noteCard}>
-          <BodyText style={styles.noteTitle}>
-            Note
+          <BodyText style={globalStyles.title}>
+            Sale Details
           </BodyText>
 
           <SecondaryText>
-            {sale.note}
+            {dateFormat(sale?.date)}
           </SecondaryText>
+        </View>
+      <ScrollView        
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+
+        {/* Summary */}
+        <Card style={styles.summaryCard}>
+          <View style={styles.summaryRow}>
+            <SecondaryText>Total</SecondaryText>
+
+            <BodyText style={styles.totalAmount}>
+              KES{" "}
+              {Number(
+                sale?.total_amount || 0
+              ).toLocaleString()}
+            </BodyText>
+          </View>
+
+          <View style={styles.summaryRow}>
+            <SecondaryText>Paid</SecondaryText>
+
+            <BodyText style={styles.paid}>
+              KES{" "}
+              {Number(
+                sale?.amount_paid || 0
+              ).toLocaleString()}
+            </BodyText>
+          </View>
+
+          <View style={styles.summaryRow}>
+            <SecondaryText>Balance</SecondaryText>
+
+            <BodyText style={styles.balance}>
+              KES{" "}
+              {Number(
+                sale?.balance_due || 0
+              ).toLocaleString()}
+            </BodyText>
+          </View>
+
+          {!!sale?.discount && (
+            <View style={styles.summaryRow}>
+              <SecondaryText>Discount</SecondaryText>
+
+              <BodyText style={styles.discount}>
+                -KES{" "}
+                {Number(
+                  sale?.discount || 0
+                ).toLocaleString()}
+              </BodyText>
+            </View>
+          )}
+
+          <View style={styles.statusContainer}>
+            <View
+              style={[
+                styles.statusBadge,
+
+                sale?.payment_status === "PAID"
+                  ? styles.paidBadge
+                  : sale?.payment_status === "PARTIAL"
+                  ? styles.partialBadge
+                  : styles.unpaidBadge,
+              ]}
+            >
+              <Text style={styles.statusText}>
+                {sale?.payment_status}
+              </Text>
+            </View>
+          </View>
         </Card>
-      )}
 
-      {/* Actions */}
-      <View style={styles.actions}>
-        <TouchableOpacity
-          onPress={() =>
-            router.push(`/sales/${sale_id}/edit`)
-          }
-          style={globalStyles.editBtn}
-        >
-          <Text style={globalStyles.editBtnText}>
-            Edit Sale
-          </Text>
-        </TouchableOpacity>
+        {/* Items */}
+        <View style={styles.sectionHeader}>
+          <BodyText style={styles.sectionTitle}>
+            Items
+          </BodyText>
 
-        <DeleteButton
-          handleOk={handleDelete}
-          item="sale"
-        />
-      </View>
-    </ScrollView>
+          <SecondaryText>
+            {items.length} item
+            {items.length !== 1 ? "s" : ""}
+          </SecondaryText>
+        </View>
+
+        {items.map((item) => {
+          const total =
+            Number(item.quantity || 0) *
+            Number(item.price || 0);
+
+          return (
+            <Card
+              key={item.id}
+              style={styles.itemCard}
+            >
+              <View style={styles.itemTop}>
+                <BodyText
+                  style={styles.itemName}
+                  numberOfLines={2}
+                >
+                  {item.name}
+                </BodyText>
+
+                <BodyText style={styles.itemTotal}>
+                  KES {total.toLocaleString()}
+                </BodyText>
+              </View>
+
+              <SecondaryText>
+                {item.quantity} × KES{" "}
+                {Number(item.price).toLocaleString()}
+              </SecondaryText>
+            </Card>
+          );
+        })}
+
+        {/* Notes */}
+        {!!sale?.note && (
+          <Card style={styles.noteCard}>
+            <BodyText style={styles.noteTitle}>
+              Note
+            </BodyText>
+
+            <SecondaryText>
+              {sale.note}
+            </SecondaryText>
+          </Card>
+        )}
+
+        {/* Actions */}
+        <View style={styles.actions}>
+          <TouchableOpacity
+            onPress={() =>
+              router.push(`/sales/${sale_id}/edit`)
+            }
+            style={globalStyles.editBtn}
+          >
+            <Text style={globalStyles.editBtnText}>
+              Edit Sale
+            </Text>
+          </TouchableOpacity>
+
+          <DeleteButton
+            handleOk={handleDelete}
+            item="sale"
+          />
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
