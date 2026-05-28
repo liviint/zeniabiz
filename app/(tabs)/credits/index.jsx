@@ -19,7 +19,6 @@ import {
 
 import EmptyState from "../../../src/components/common/EmptyState";
 import TimeNavigator from "../../../src/components/common/TimeNavigator";
-import ButtonLinks from "../../../src/components/common/ButtonLinks";
 
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { useManualSync } from "../../../src/hooks/useManualSync";
@@ -164,23 +163,12 @@ export default function CreditsListPage() {
 const ListHeader = ({ timeState, setTimeState }) => {
   return (
     <>
+
       <TimeNavigator
         state={timeState}
         onChange={setTimeState}
       />
 
-      <ButtonLinks
-        links={[
-          {
-            name: "Overdue Credits",
-            route: "/credits/overdue",
-          },
-          {
-            name: "Customers",
-            route: "/customers",
-          },
-        ]}
-      />
     </>
   );
 };
