@@ -303,7 +303,7 @@ export async function createOrUpdateSale(
     balance_due,
     payment_status,
     total_amount,
-    customer_id
+    customer_id,
   }
 ) {
   const { company, user_id } = getActiveContextSync(db);
@@ -339,6 +339,7 @@ export async function createOrUpdateSale(
         UPDATE sales
         SET title = ?, note = ?, date = ?, amount = ?,
           discount = ?,
+          customer_id = ?,
           total_amount = ?, amount_paid = ?, balance_due = ?,
           payment_status = ?,
           updated_at = ?
@@ -351,6 +352,7 @@ export async function createOrUpdateSale(
           subtotal,
 
           discount,
+          customer_id,
 
           total_amount,
           amount_paid,
@@ -374,6 +376,7 @@ export async function createOrUpdateSale(
             id, company, title, note, date,
             amount,
             discount,
+            customer_id,
             total_amount,
             amount_paid,
             balance_due,
@@ -381,7 +384,7 @@ export async function createOrUpdateSale(
             created_at,
             updated_at
           )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
           id,
@@ -393,6 +396,7 @@ export async function createOrUpdateSale(
           subtotal,
 
           discount,
+          customer_id,
 
           total_amount,
           amount_paid,
@@ -550,6 +554,7 @@ export async function createOrUpdateSale(
         balance_due,
         payment_status,
         discount,
+        customer_id,
 
         created_at: now,
         updated_at: now,

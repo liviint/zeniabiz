@@ -24,7 +24,7 @@ const CreditDiscountForm = ({
     const { globalStyles } = useThemeStyles();
 
     const handleCustomerChange = (customer) => {
-        paymentsForm((prev) => ({
+        setPaymentsForm((prev) => ({
             ...prev,
             customer_id: customer?.id || null,
         }));

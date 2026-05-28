@@ -1,3 +1,5 @@
+import { newUuid, getActiveContextSync } from "./utils";
+
 export async function getCustomers(db) {
   return await db.getAllAsync(
     `
@@ -7,4 +9,48 @@ export async function getCustomers(db) {
     ORDER BY name ASC
     `
   );
+}
+
+export async function createCustomer(
+  db,
+  {
+    name,
+    phone = null,
+    note = null,
+  }
+) {
+  const { company, user_id } =
+    getActiveContextSync(db);
+
+  const now = new Date().toISOString();
+
+  const id = newUuid();
+
+  await db.runAsync(
+    `
+    INSERT INTO customers (
+      id,
+      company,
+      name,
+      phone,
+      note,
+      created_by,
+      created_at,
+      updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      id,
+      company,
+      name,
+      phone,
+      note,
+      user_id,
+      now,
+      now,
+    ]
+  );
+
+  return id;
 }

@@ -55,7 +55,7 @@ export default function CustomersPicker({
 
   const handleSelect = (value) => {
     if (value === ADD_CUSTOMER_VALUE) {
-      router.push("/customers/add/modal");
+      router.push("/customers/add");
 
       return;
     }
