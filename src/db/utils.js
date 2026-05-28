@@ -1,3 +1,7 @@
+import uuid from "react-native-uuid";
+
+export const newUuid = () => uuid.v4();
+
 export function getMonthRange(date = new Date()) {
   const start = new Date(date.getFullYear(), date.getMonth(), 1);
   const end = new Date(date.getFullYear(), date.getMonth() + 1, 1);
@@ -95,3 +99,5 @@ export async function withTransaction(db, fn) {
     throw e;
   }
 }
+
+

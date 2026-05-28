@@ -1,5 +1,4 @@
-import uuid from "react-native-uuid";
-const newUuid = () => uuid.v4();
+import { newUuid } from "./utils";
 
 export async function ensureLocalUser(db) {
   const existing = await db.getFirstAsync(

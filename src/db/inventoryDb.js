@@ -1,8 +1,5 @@
-import uuid from "react-native-uuid";
 import { syncEvent } from "../cloudSync/syncEvent";
-import { getMonthRange , getActiveContextSync, withTransaction} from "./utils";
-
-const newUuid = () => uuid.v4();
+import { getMonthRange , getActiveContextSync, withTransaction, newUuid} from "./utils";
 
 export async function upsertProduct(
   db,

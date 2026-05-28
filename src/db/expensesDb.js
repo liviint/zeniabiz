@@ -1,9 +1,6 @@
-import uuid from "react-native-uuid";
 import { syncEvent } from "../cloudSync/syncEvent";
-import { getActiveContextSync } from "./utils";
+import { getActiveContextSync, newUuid } from "./utils";
 import { normalizeRange } from "../utils/timeNavigatorHelpers";
-
-const newUuid = () => uuid.v4();
 
 export async function upsertExpense(
   db,

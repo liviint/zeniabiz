@@ -1,9 +1,6 @@
-import uuid from "react-native-uuid";
-import { getActiveContextSync, withTransaction } from "./utils";
+import { getActiveContextSync, withTransaction, newUuid } from "./utils";
 import { normalizeRange } from "../utils/timeNavigatorHelpers";
 import { syncEvent } from "../cloudSync/syncEvent";
-
-const newUuid = () => uuid.v4();
 
 export async function restoreFIFO(db, purchaseId, qty) {
   const row = await db.getFirstAsync(

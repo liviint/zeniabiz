@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -15,11 +15,12 @@ import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 
 import { dateFormat } from "../../../../utils/dateFormat";
 
-import { getCreditById } from "../../../../src/db/creditsDb";
+import { getCreditById, offsetCreditBalance } from "../../../../src/db/creditsDb";
 import { CreditActionsCard } from "../../../../src/components/credit/CreditActionsCard";
 
 export default function CreditDetailPage() {
   const db = useSQLiteContext();
+  const router = useRouter();
 
   const { id } = useLocalSearchParams();
 
@@ -179,7 +180,6 @@ export default function CreditDetailPage() {
           }
           onMarkPaid={async () => {
             await offsetCreditBalance(db, credit.id);
-
             loadCredit();
           }}
         />

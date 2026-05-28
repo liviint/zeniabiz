@@ -1,8 +1,5 @@
-import uuid from "react-native-uuid";
 import { syncEvent } from "../cloudSync/syncEvent";
-import { getActiveContextSync } from "./utils";
-
-const newUuid = () => uuid.v4();
+import { getActiveContextSync , newUuid} from "./utils";
 
 export const upsertExpenseTemplate = async (db, template) => {
   const {

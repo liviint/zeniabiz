@@ -1,3 +1,4 @@
+import { newUuid } from "./utils";
 export async function getCredits(db, timeState) {
   const result = await db.getAllAsync(
     `
@@ -74,4 +75,86 @@ export async function getCreditById(db, id) {
     ...credit,
     payments,
   };
+}
+
+export async function offsetCreditBalance(db, saleId) {
+  const sale = await db.getFirstAsync(
+    `
+    SELECT *
+    FROM sales
+    WHERE id = ?
+    `,
+    [saleId]
+  );
+
+  if (!sale) {
+    throw new Error("Sale not found");
+  }
+
+  const remainingBalance = Math.max(
+    Number(sale.balance_due || 0),
+    0
+  );
+
+  if (remainingBalance <= 0) {
+    return;
+  }
+
+  const now = new Date().toISOString();
+
+  await db.runAsync("BEGIN");
+
+  try {
+    // Create payment record
+    await db.runAsync(
+      `
+      INSERT INTO payments (
+        id,
+        company,
+        sale_id,
+        customer_id,
+        payment_type,
+        amount,
+        payment_method,
+        note,
+        date,
+        created_at,
+        updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        newUuid(),
+        sale.company,
+        sale.id,
+        sale.customer_id,
+        "OFFSET",
+        remainingBalance,
+        "cash",
+        "Balance offset",
+        now,
+        now,
+        now,
+      ]
+    );
+
+    // Update sale
+    await db.runAsync(
+      `
+      UPDATE sales
+      SET
+        amount_paid = total_amount,
+        balance_due = 0,
+        payment_status = 'PAID',
+        updated_at = ?
+      WHERE id = ?
+      `,
+      [now, sale.id]
+    );
+
+    await db.runAsync("COMMIT");
+  } catch (err) {
+    await db.runAsync("ROLLBACK");
+    throw err;
+  }
 }
