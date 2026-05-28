@@ -7,9 +7,10 @@ import {
     Card,
     BodyText,
     Input,
-    FormLabel
+    FormLabel,
 } from "../../../src/components/ThemeProvider/components";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import CustomersPicker from "../credit/CustomersPicker";
 
 const CreditDiscountForm = ({
     total,
@@ -21,6 +22,13 @@ const CreditDiscountForm = ({
     setPaymentsForm
 }) => {
     const { globalStyles } = useThemeStyles();
+
+    const handleCustomerChange = (customer) => {
+        paymentsForm((prev) => ({
+            ...prev,
+            customer_id: customer?.id || null,
+        }));
+    };
 
     return (
 
@@ -73,6 +81,11 @@ const CreditDiscountForm = ({
                 onChangeText={(val) => setPaymentsForm(prev => ({...prev,paymentMethod:val}))}
                 />
             </View>
+
+            <CustomersPicker
+                form={paymentsForm}
+                handleCustomerChange={handleCustomerChange}
+            />
 
             {/* CONFIRM */}
             <Pressable

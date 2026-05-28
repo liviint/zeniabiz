@@ -302,7 +302,8 @@ export async function createOrUpdateSale(
     subtotal,
     balance_due,
     payment_status,
-    total_amount
+    total_amount,
+    customer_id
   }
 ) {
   const { company, user_id } = getActiveContextSync(db);
@@ -319,7 +320,7 @@ export async function createOrUpdateSale(
     (sum, i) => sum + Number(i.quantity),
     0
   );
-  
+
   const finalTitle =
     title?.trim() ||
     `Sold ${totalItems} item${totalItems > 1 ? "s" : ""} - ${total_amount}`;
@@ -496,7 +497,7 @@ export async function createOrUpdateSale(
           user_id,
           user_id,
           id,
-          null,
+          customer_id,
           "INITIAL",
           amount_paid,
           "cash",

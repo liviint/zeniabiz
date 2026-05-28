@@ -51,6 +51,7 @@ export default function SellPage() {
     amountPaid:0,
     paymentMethod:"",
     discount:"",
+    customer_id:null,
   })
 
   // Fetch products
@@ -174,6 +175,7 @@ export default function SellPage() {
       date,
 
       subtotal,
+      customer_id: paymentsForm.customer_id,
       discount: paymentsForm.discount || 0,
       total_amount: totalAfterDiscount,
       amount_paid: paymentsForm.amountPaid || 0,
