@@ -253,6 +253,21 @@ export async function getFinancialStats(db, timeState) {
     [company, company, startDate, endDate]
   );
 
+
+  const discountResult = await db.getFirstAsync(
+    `
+    SELECT
+      COALESCE(SUM(discount), 0) AS discounts
+
+    FROM sales
+
+    WHERE company = ?
+      AND deleted_at IS NULL
+      AND date >= ?
+      AND date < ?
+    `,
+    [company, startDate, endDate]
+  );
   // -------------------------
   // 2. Cash Collected
   // -------------------------
@@ -321,7 +336,7 @@ export async function getFinancialStats(db, timeState) {
   // 6. Safe extraction
   // -------------------------
 
-  const revenue = revenueAndCost?.revenue || 0;
+  const revenue = (revenueAndCost?.revenue - discountResult?.discounts) || 0 ;
 
   const cost = revenueAndCost?.cost || 0;
 

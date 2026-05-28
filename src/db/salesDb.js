@@ -349,8 +349,10 @@ export async function createOrUpdateSale(
         `
         UPDATE sales
         SET title = ?, note = ?, date = ?, amount = ?,
-            total_amount = ?, amount_paid = ?, balance_due = ?,
-            updated_at = ?
+          discount = ?,
+          total_amount = ?, amount_paid = ?, balance_due = ?,
+          payment_status = ?,
+          updated_at = ?
         WHERE id = ?
         `,
         [
@@ -358,9 +360,14 @@ export async function createOrUpdateSale(
           note ?? null,
           saleDate,
           subtotal,
+
+          discount,
+
           total_amount,
           amount_paid,
           balance_due,
+          payment_status,
+
           now,
           id,
         ]
@@ -374,13 +381,18 @@ export async function createOrUpdateSale(
       await db.runAsync(
         `
         INSERT INTO sales
-        (
-          id, company, title, note, date,
-          amount, total_amount, amount_paid, balance_due,
-          payment_status,
-          created_at, updated_at
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          (
+            id, company, title, note, date,
+            amount,
+            discount,
+            total_amount,
+            amount_paid,
+            balance_due,
+            payment_status,
+            created_at,
+            updated_at
+          )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
           id,
@@ -390,6 +402,9 @@ export async function createOrUpdateSale(
           saleDate,
 
           subtotal,
+
+          discount,
+
           total_amount,
           amount_paid,
           balance_due,
@@ -545,6 +560,7 @@ export async function createOrUpdateSale(
         amount_paid,
         balance_due,
         payment_status,
+        discount,
 
         created_at: now,
         updated_at: now,

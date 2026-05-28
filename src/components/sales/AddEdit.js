@@ -150,7 +150,10 @@ export default function SellPage() {
       0
     );
 
-    const totalAfterDiscount = subtotal - (paymentsForm.discount || 0);
+    const totalAfterDiscount = Math.max(
+      subtotal - (paymentsForm.discount || 0),
+      0
+    );
     const credit = totalAfterDiscount - (paymentsForm.amountPaid || 0);
 
     const saleData = {
@@ -163,7 +166,6 @@ export default function SellPage() {
 
       date,
 
-      // NEW FINANCIAL FIELDS
       subtotal,
       discount: paymentsForm.discount || 0,
       total_amount: totalAfterDiscount,
