@@ -16,6 +16,7 @@ import {
   BodyText,
   Input,
   FormLabel,
+  Card,
 } from "../../../../src/components/ThemeProvider/components";
 
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
@@ -27,11 +28,9 @@ export default function AddCustomerPage() {
 
   const router = useRouter();
 
-  const { globalStyles } =
-    useThemeStyles();
+  const { globalStyles } = useThemeStyles();
 
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -93,7 +92,7 @@ export default function AddCustomerPage() {
         false
       }
     >
-      {/* Header */}
+    
       <View style={styles.header}>
         <BodyText
           style={globalStyles.title}
@@ -107,72 +106,74 @@ export default function AddCustomerPage() {
         </BodyText>
       </View>
 
-      {/* Name */}
-      <View style={globalStyles.formGroup}>
-        <FormLabel>
-          Customer Name *
-        </FormLabel>
+      <Card>
+        {/* Name */}
+        <View style={globalStyles.formGroup}>
+          <FormLabel>
+            Customer Name *
+          </FormLabel>
 
-        <Input
-          placeholder="Enter customer name"
-          value={form.name}
-          onChangeText={(value) =>
-            handleChange("name", value)
-          }
-        />
-      </View>
+          <Input
+            placeholder="Enter customer name"
+            value={form.name}
+            onChangeText={(value) =>
+              handleChange("name", value)
+            }
+          />
+        </View>
 
-      {/* Phone */}
-      <View style={globalStyles.formGroup}>
-        <FormLabel>
-          Phone Number
-        </FormLabel>
+        {/* Phone */}
+        <View style={globalStyles.formGroup}>
+          <FormLabel>
+            Phone Number
+          </FormLabel>
 
-        <Input
-          placeholder="e.g 0712345678"
-          keyboardType="phone-pad"
-          value={form.phone}
-          onChangeText={(value) =>
-            handleChange("phone", value)
-          }
-        />
-      </View>
+          <Input
+            placeholder="e.g 0712345678"
+            keyboardType="phone-pad"
+            value={form.phone}
+            onChangeText={(value) =>
+              handleChange("phone", value)
+            }
+          />
+        </View>
 
-      {/* Note */}
-      <View style={globalStyles.formGroup}>
-        <FormLabel>
-          Note
-        </FormLabel>
+        {/* Note */}
+        <View style={globalStyles.formGroup}>
+          <FormLabel>
+            Note
+          </FormLabel>
 
-        <Input
-          placeholder="Optional note"
-          multiline
-          numberOfLines={4}
-          style={styles.noteInput}
-          value={form.note}
-          onChangeText={(value) =>
-            handleChange("note", value)
-          }
-        />
-      </View>
+          <Input
+            placeholder="Optional note"
+            multiline
+            numberOfLines={4}
+            style={styles.noteInput}
+            value={form.note}
+            onChangeText={(value) =>
+              handleChange("note", value)
+            }
+          />
+        </View>
 
-      {/* Save Button */}
-      <Pressable
-        style={[
-          styles.button,
-          loading && {
-            opacity: 0.7,
-          },
-        ]}
-        disabled={loading}
-        onPress={handleSave}
-      >
-        <BodyText style={styles.buttonText}>
-          {loading
-            ? "Saving..."
-            : "Save Customer"}
-        </BodyText>
-      </Pressable>
+        {/* Save Button */}
+        <Pressable
+          style={[
+            globalStyles.primaryBtn,
+            loading && {
+              opacity: 0.7,
+            },
+          ]}
+          disabled={loading}
+          onPress={handleSave}
+        >
+          <BodyText style={globalStyles.primaryBtnText}>
+            {loading
+              ? "Saving..."
+              : "Save Customer"}
+          </BodyText>
+        </Pressable>
+      </Card>
     </ScrollView>
   );
 }
@@ -194,20 +195,5 @@ const styles = StyleSheet.create({
   noteInput: {
     minHeight: 110,
     textAlignVertical: "top",
-  },
-
-  button: {
-    backgroundColor: "#2E8B8B",
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 12,
-  },
-
-  buttonText: {
-    color: "#FFFFFF",
-    fontWeight: "700",
-    fontSize: 16,
   },
 });
