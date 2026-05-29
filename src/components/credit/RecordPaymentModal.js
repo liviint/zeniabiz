@@ -3,7 +3,6 @@ import {
   Modal,
   Pressable,
   StyleSheet,
-  TextInput,
   View,
   Alert,
 } from "react-native";
@@ -12,9 +11,13 @@ import {
   BodyText,
   Card,
   SecondaryText,
+  Input,
+  TextArea,
+  FormLabel
 } from "../../../src/components/ThemeProvider/components";
 import { newUuid } from "../../db/utils";
 import { useSQLiteContext } from "expo-sqlite";
+import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 
 export default function RecordPaymentModal({
   visible,
@@ -23,6 +26,7 @@ export default function RecordPaymentModal({
   onSuccess,
 }) {
     const db = useSQLiteContext();
+    const { globalStyles } = useThemeStyles();
   const remainingBalance = useMemo(
     () => Math.max(Number(credit?.balance_due || 0), 0),
     [credit]
@@ -183,12 +187,12 @@ export default function RecordPaymentModal({
             </View>
 
             {/* Amount */}
-            <View style={styles.field}>
-              <SecondaryText style={styles.label}>
+            <View style={globalStyles.formGroup}>
+              <FormLabel >
                 Amount
-              </SecondaryText>
+              </FormLabel>
 
-              <TextInput
+              <Input
                 value={amount}
                 onChangeText={setAmount}
                 keyboardType="numeric"
@@ -198,12 +202,12 @@ export default function RecordPaymentModal({
             </View>
 
             {/* Payment Method */}
-            <View style={styles.field}>
+            <View style={globalStyles.formGroup}>
               <SecondaryText style={styles.label}>
                 Payment Method
               </SecondaryText>
 
-              <TextInput
+              <Input
                 value={paymentMethod}
                 onChangeText={setPaymentMethod}
                 placeholder="cash"
@@ -212,12 +216,12 @@ export default function RecordPaymentModal({
             </View>
 
             {/* Note */}
-            <View style={styles.field}>
-              <SecondaryText style={styles.label}>
+            <View style={globalStyles.formGroup}>
+              <FormLabel style={styles.label}>
                 Note
-              </SecondaryText>
+              </FormLabel>
 
-              <TextInput
+              <TextArea
                 value={note}
                 onChangeText={setNote}
                 placeholder="Optional note"
@@ -229,27 +233,23 @@ export default function RecordPaymentModal({
             {/* Actions */}
             <View style={styles.actions}>
               <Pressable
-                style={[
-                  styles.button,
-                  styles.cancelButton,
-                ]}
+                style={globalStyles.secondaryBtn}
                 onPress={onClose}
               >
-                <BodyText style={styles.cancelText}>
+                <BodyText style={globalStyles.secondaryBtnText}>
                   Cancel
                 </BodyText>
               </Pressable>
 
               <Pressable
                 style={[
-                  styles.button,
-                  styles.saveButton,
+                  globalStyles.primaryBtn,
                   loading && { opacity: 0.7 },
                 ]}
                 onPress={handleSave}
                 disabled={loading}
               >
-                <BodyText style={styles.saveText}>
+                <BodyText style={globalStyles.primaryBtnText}>
                   {loading
                     ? "Saving..."
                     : "Save Payment"}
@@ -288,25 +288,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  field: {
-    marginBottom: 16,
-  },
-
-  label: {
-    marginBottom: 8,
-    fontSize: 13,
-  },
-
-  input: {
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    fontSize: 16,
-    backgroundColor: "#FFFFFF",
-  },
-
   noteInput: {
     minHeight: 90,
     textAlignVertical: "top",
@@ -316,26 +297,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     marginTop: 8,
-  },
-
-  button: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  cancelButton: {
-    backgroundColor: "#F3F4F6",
-  },
-
-  saveButton: {
-    backgroundColor: "#2E8B8B",
-  },
-
-  cancelText: {
-    fontWeight: "600",
+    justifyContent:"flex-end",
   },
 
   saveText: {
