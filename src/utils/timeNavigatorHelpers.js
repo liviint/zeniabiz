@@ -34,7 +34,7 @@ const endOfRange3Months = (d) =>
 
 const startOfAllTime = () => new Date(0);
 
-const endOfAllTime = () => new Date(8640000000000000); 
+const endOfAllTime = () => new Date();
 
 export const createRange = (type, baseDate = new Date()) => {
     switch (type) {
