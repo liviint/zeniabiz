@@ -49,12 +49,9 @@ const GoogleBackupProvider = ({ children }) => {
       switch (result.action) {
         case "UPLOAD":
           try {
+            
             await uploadBackup(db);
 
-            Alert.alert(
-              "Backup Complete",
-              "Your data has been backed up successfully."
-            );
           } catch (error) {
             console.log("UPLOAD ERROR", error);
 
