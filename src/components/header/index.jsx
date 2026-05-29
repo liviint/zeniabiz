@@ -39,6 +39,12 @@ export default function Header() {
           />
 
           <NavLink 
+            label="Credit" 
+            path="/credits" 
+            isActive={isActive("/(tabs)/profile")} 
+          />  
+
+          <NavLink 
             label="Profile" 
             path="/auth/profile" 
             isActive={isActive("/(tabs)/profile")} 

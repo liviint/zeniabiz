@@ -79,6 +79,18 @@ export default function TabLayout() {
             href: null,
           }}
         />
+        <Tabs.Screen
+          name="credits"
+          options={{
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="customers"
+          options={{
+            href: null,
+          }}
+        />
       <Tabs.Screen
           name="business/index"
           options={{
