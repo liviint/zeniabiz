@@ -85,7 +85,7 @@ const CreditDiscountForm = ({
             <View style={globalStyles.formGroup}>
                 <Pressable
                 style={globalStyles.primaryBtn}
-                onPress={handleSave}
+                onPress={() => handleSave(true)}
             >
                 <BodyText style={globalStyles.primaryBtnText}>
                 Complete Sale

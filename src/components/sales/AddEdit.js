@@ -37,6 +37,7 @@ export default function SellPage() {
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState([]);
   const [title, setTitle] = useState("");
+  const [sale,setSale] = useState(null)
 
   const [date,setDate] = useState(new Date())
 
@@ -79,8 +80,10 @@ export default function SellPage() {
     if (!id) return;
     (async () => {
       const t = await getSaleById(db, id);
+      console.log(t,"hello sale")
       setDate(new Date(t.date))
       setTitle(t?.title);
+      setSale(t)
     })();
   }, [isFocused]);
 
@@ -101,6 +104,7 @@ export default function SellPage() {
   }, []);
 
   const addToCart = (product) => {
+    setSale(null)
     setCart((prev) => {
       const exists = prev.find((c) => c.product_id === product.id);
       if (exists) {
@@ -141,10 +145,31 @@ export default function SellPage() {
   );
 
   useEffect(() => {
-      setPaymentsForm(prev => ({...prev,amountPaid:total}))
-  },[cart])
+    if (!sale) {
+      setPaymentsForm(prev => ({
+        ...prev,
+        amountPaid: total,
+      }));
+    }
+  }, [cart]);
 
-  const handleSave = async () => {
+  useEffect(() => {
+    if (sale) {
+      setPaymentsForm({
+        amountPaid: sale.amount_paid ?? 0,
+        discount: sale.discount ?? 0,
+        customer_id: sale.customer_id ?? null,
+      });
+    } 
+  }, [sale]);
+
+  const handleSave = async (fromCreditDiscount = false) => {
+    if (!fromCreditDiscount && (sale?.balance_due ?? 0) > 0) {
+      return Alert.alert(
+        "Unpaid Balance",
+        `This sale has a credit of ${sale.balance_due}. Please handle it using Credit/Discount button.`
+      );
+    }
     try {
       if (cart.length === 0) {
         return Alert.alert("Add items first");
@@ -290,7 +315,10 @@ export default function SellPage() {
           </BodyText>
         </Pressable>
 
-        <Pressable style={globalStyles.primaryBtn} onPress={() => handleSave()}>
+        <Pressable 
+          style={globalStyles.primaryBtn} 
+          onPress={() => handleSave()}
+        >
           <BodyText style={globalStyles.primaryBtnText}>
             Complete Sale
           </BodyText>
