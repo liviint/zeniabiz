@@ -240,48 +240,11 @@ export async function reverseSale(
       });
     }
 
-    // -------------------------
-    // 5️⃣ Soft delete sale
-    // -------------------------
-    const existingSale = await db.getFirstAsync(
-      `
-      SELECT *
-      FROM sales
-      WHERE id = ?
-      `,
-      [saleId]
-    );
-
-    // if (existingSale) {
-    //   await db.runAsync(
-    //     `
-    //     UPDATE sales
-    //     SET
-    //       deleted_at = ?,
-    //       updated_at = ?,
-    //       updated_by = ?
-    //     WHERE id = ?
-    //     `,
-    //     [
-    //       now,
-    //       now,
-    //       user_id,
-    //       saleId,
-    //     ]
-    //   );
-
-    //   // 🔥 SYNC sale deletion
-    //   await syncEvent(db, {
-    //     model: "sales",
-    //     operation: "update",
-    //     payload: {
-    //       ...existingSale,
-    //       deleted_at: now,
-    //       updated_at: now,
-    //       updated_by: user_id,
-    //     },
-    //   });
-    // }
+    await db.runAsync(`
+      UPDATE payments
+      SET deleted_at = ?, updated_at = ?
+      WHERE sale_id = ?
+    `,[now, now, saleId]);
 
   } catch (err) {
     throw err;
@@ -815,6 +778,13 @@ export async function deleteSale(db, sale_id) {
       `UPDATE sale_items SET deleted_at = ?, updated_at = ? WHERE sale_id = ?`,
       [now, now, sale_id]
     );
+
+    // 6 soft delete payments
+    await db.runAsync(`
+      UPDATE payments
+      SET deleted_at = ?, updated_at = ?
+      WHERE sale_id = ?
+    `,[now, now, sale_id]);
 
     // -------------------------
     // 🔥 SYNC SECTION
