@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useIsFocused } from "@react-navigation/native";
 import {
   StyleSheet,
   Alert,
@@ -24,6 +25,7 @@ import { getSetting, setSetting } from "../../db/settingsDb";
 const GoogleBackUp = () => {
   const db = useSQLiteContext();
   const dispatch = useDispatch()
+  const isFocused = useIsFocused();
   const [isConnected, setIsConnected] = useState(false);
   const [lastBackup, setLastBackup] = useState(null);
   const [autoBackupEnabled, setAutoBackupEnabled] = useState(true);
@@ -33,7 +35,7 @@ const GoogleBackUp = () => {
     configureGoogleDrive();
     checkConnection();
     loadSettings();
-  }, []);
+  }, [isFocused]);
 
   // 2. Load settings
   const loadSettings = async () => {

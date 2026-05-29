@@ -10,6 +10,7 @@ import {
 import { loadActiveContext } from "@/src/db/utils";
 import { clearSyncRequest } from "@/src/store/features/googleDriveSyncSlice";
 import NetInfo from "@react-native-community/netinfo";
+import { setSetting } from "../../db/settingsDb";
 
 const AUTO_SYNC_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -51,6 +52,8 @@ const GoogleBackupProvider = ({ children }) => {
           try {
             
             await uploadBackup(db);
+            const now = new Date().toISOString();
+            await setSetting(db, "last_backup_date", now);
 
           } catch (error) {
             console.log("UPLOAD ERROR", error);
