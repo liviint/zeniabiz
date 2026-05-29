@@ -114,11 +114,7 @@ export const shiftRange = (state, direction) => {
 
     if (state.type === "all") return state;
 
-    // prevent moving into future
-    const today = new Date();
-
-    const base =
-        state.startDate || new Date();
+    const base = state.startDate || new Date();
 
     let newDate;
 
@@ -168,14 +164,11 @@ export const shiftRange = (state, direction) => {
 
 export const formatLabel = (state) => {
     if (!state) return "";
-
+    console.log(state,"hello state")
     const start = new Date(state.startDate);
     const end = new Date(state.endDate);
 
     const now = new Date();
-
-    const isSameDay =
-        start.toDateString() === now.toDateString();
 
     const diffDays = Math.round(
         (now - start) / (1000 * 60 * 60 * 24)
@@ -185,8 +178,8 @@ export const formatLabel = (state) => {
     // DAY LABELS
     // -------------------------
     if (state.type === "day") {
-        if (diffDays === 1) return "Today";
-        if (diffDays === 2) return "Yesterday";
+        if (diffDays === 0) return "Today";
+        if (diffDays === 1) return "Yesterday";
 
         return start.toLocaleDateString(undefined, {
             weekday: "short",
