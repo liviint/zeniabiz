@@ -32,23 +32,25 @@ export default function Header() {
       <View style={styles.overlay}>
         <View style={styles.navSmall}>
 
+          
+
+          <NavLink 
+            label="Credit" 
+            path="/credits" 
+            isActive={isActive("/(tabs)/credits")} 
+          />  
+
           <NavLink 
             label="Settings" 
             path="/settings" 
             isActive={isActive("/(tabs)/settings")} 
           />
 
-          <NavLink 
-            label="Credit" 
-            path="/credits" 
-            isActive={isActive("/(tabs)/profile")} 
-          />  
-
-          <NavLink 
+          {/* <NavLink 
             label="Profile" 
             path="/auth/profile" 
             isActive={isActive("/(tabs)/profile")} 
-          />  
+          />   */}
 
           {/* <View style={{ height: 1, backgroundColor: "rgba(255,255,255,0.2)", width: "80%", marginVertical: 10 }} />
 
