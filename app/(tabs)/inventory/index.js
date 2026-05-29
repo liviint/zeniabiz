@@ -12,6 +12,7 @@ import EmptyState from "../../../src/components/common/EmptyState";
 import { StatCard } from "../../../src/components/common/StatCard";
 import { useDebounce } from "../../../src/hooks/useDebounce";
 import { useManualSync } from "../../../src/hooks/useManualSync";
+import FilterComponent from "../../../src/components/common/FilterComponent";
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();
@@ -26,6 +27,24 @@ export default function ProductsListPage() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 400);
   const [filter, setFilter] = useState("all");
+
+  const filterOptions = [
+    {
+      label:"All",
+      action:() => setFilter("all"),
+      key:"all",
+    },
+    {
+      label:"Low Stock",
+      action:() => setFilter("low_stock"),
+      key:"low_stock",
+    },
+    {
+      label:"Out of Stock",
+      action:() => setFilter("out_of_stock"),
+      key:"out_of_stock",
+    }
+  ]
 
   const fetchProducts = async () => {
     setIsLoading(true);
@@ -73,6 +92,7 @@ export default function ProductsListPage() {
             setSearch={setSearch}
             filter={filter}
             setFilter={setFilter}
+            filterOptions={filterOptions}
           />
         }
         ListEmptyComponent={
@@ -90,7 +110,14 @@ export default function ProductsListPage() {
   );
 }
 
-const ListHeader = ({ stats, search, filter, setSearch, setFilter}) => {
+const ListHeader = ({ 
+  stats, 
+  search, 
+  filter, 
+  setSearch, 
+  setFilter,
+  filterOptions
+}) => {
   return (
     <>
       <View style={styles.filtersContainer}>
@@ -109,11 +136,11 @@ const ListHeader = ({ stats, search, filter, setSearch, setFilter}) => {
           )}
         </View>
 
-        <View style={styles.chipsRow}>
-          <FilterChip label="All" active={filter === "all"} onPress={() => setFilter("all")} />
-          <FilterChip label="Low Stock" active={filter === "low_stock"} onPress={() => setFilter("low_stock")} />
-          <FilterChip label="Out of Stock" active={filter === "out_of_stock"} onPress={() => setFilter("out_of_stock")} />
-        </View>
+        <FilterComponent 
+          filterOptions={filterOptions}
+          activeFilter={filter}
+        />
+
       </View>
       <StatCard 
         label="Products"
@@ -178,16 +205,6 @@ clearText: {
   fontWeight: "bold",
 },
 
-  chipsRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",

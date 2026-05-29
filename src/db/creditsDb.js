@@ -1,14 +1,54 @@
 import { newUuid } from "./utils";
-export async function getCredits(db, timeState) {
+
+export async function getCredits(
+  db,
+  timeState,
+  statusFilter = "ALL"
+) {
+  let extraCondition = "";
+
+  let balanceCondition =
+    "AND ROUND(s.balance_due, 2) > 0";
+
+  if (statusFilter === "unpaid") {
+    extraCondition = `
+      AND s.payment_status = 'UNPAID'
+    `;
+  }
+
+  if (statusFilter === "partial") {
+    extraCondition = `
+      AND s.payment_status = 'PARTIAL'
+    `;
+  }
+
+  if (statusFilter === "paid") {
+    balanceCondition = `
+      AND ROUND(s.balance_due, 2) <= 0
+    `;
+
+    extraCondition = `
+      AND (
+        SELECT COUNT(*)
+        FROM payments p
+        WHERE p.sale_id = s.id
+        AND p.deleted_at IS NULL
+      ) > 1
+    `;
+  }
+
   const result = await db.getAllAsync(
     `
     SELECT
       s.id,
       s.title,
+
       s.total_amount,
       s.amount_paid,
       s.balance_due,
+
       s.payment_status,
+      s.due_date,
       s.date,
 
       c.name AS customer_name,
@@ -21,8 +61,13 @@ export async function getCredits(db, timeState) {
 
     WHERE
       s.deleted_at IS NULL
-      AND s.balance_due > 0
-      AND date(s.date) BETWEEN date(?) AND date(?)
+
+      ${balanceCondition}
+
+      AND date(s.date)
+        BETWEEN date(?) AND date(?)
+
+      ${extraCondition}
 
     ORDER BY s.date DESC
     `,

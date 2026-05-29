@@ -1,15 +1,15 @@
 import { useIsFocused } from "@react-navigation/native";
-import { useSelector } from "react-redux";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
   Pressable,
+  RefreshControl,
   SectionList,
   StyleSheet,
   View,
-  RefreshControl,
 } from "react-native";
+import { useSelector } from "react-redux";
 
 import {
   BodyText,
@@ -20,13 +20,14 @@ import {
 import EmptyState from "../../../src/components/common/EmptyState";
 import TimeNavigator from "../../../src/components/common/TimeNavigator";
 
-import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { useManualSync } from "../../../src/hooks/useManualSync";
+import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 
-import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 import { groupDataIntoSections } from "../../../src/helpers";
+import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 import { dateFormat } from "../../../utils/dateFormat";
 
+import FilterComponent from "../../../src/components/common/FilterComponent";
 import { getCredits } from "../../../src/db/creditsDb";
 
 export default function CreditsListPage() {
@@ -40,13 +41,39 @@ export default function CreditsListPage() {
 
   const [credits, setCredits] = useState([]);
   const [timeState, setTimeState] = useState(createRange("month"));
+  const [statusFilter, setStatusFilter] = useState("outstandng");
+  const lastSyncedAt = useSelector((state) => state.sync.lastSyncedAt);
 
-  const lastSyncedAt = useSelector(
-    (state) => state.sync.lastSyncedAt
-  );
+  const filterOptions = [
+    {
+      label:"Outstandng",
+      action:() => setStatusFilter("outstandng"),
+      key:"outstandng",
+    },
+    {
+      label:"Unpaid",
+      action:() => setStatusFilter("unpaid"),
+      key:"unpaid",
+    },
+    {
+      label:"Partial",
+      action:() => setStatusFilter("partial"),
+      key:"partial",
+    },
+    // {
+    //   label:"Overdue",
+    //   action:() => setStatusFilter("overdue"),
+    //   key:"overdue",
+    // }
+    {
+      label:"Paid",
+      action:() => setStatusFilter("paid"),
+      key:"paid",
+    },
+  ]
 
   const fetchCredits = async () => {
-    const data = await getCredits(db, timeState);
+    const data = await getCredits(db, timeState, statusFilter);
     setCredits(data);
   };
 
@@ -54,7 +81,7 @@ export default function CreditsListPage() {
     if (isFocused) {
       fetchCredits();
     }
-  }, [isFocused, timeState, lastSyncedAt]);
+  }, [isFocused, timeState, lastSyncedAt, statusFilter]);
 
   const grouped = groupDataIntoSections(credits);
 
@@ -67,9 +94,7 @@ export default function CreditsListPage() {
   ].filter((section) => section.data.length > 0);
 
   const renderItem = ({ item }) => (
-    <Pressable
-      onPress={() => router.push(`/credits/${item.id}`)}
-    >
+    <Pressable onPress={() => router.push(`/credits/${item.id}`)}>
       <Card>
         <View style={styles.row}>
           <View style={styles.left}>
@@ -89,19 +114,13 @@ export default function CreditsListPage() {
               {item.title}
               {" • "}
               {dateFormat(item.date)}
-              {item.payment_status
-                ? ` • ${item.payment_status}`
-                : ""}
+              {item.payment_status ? ` • ${item.payment_status}` : ""}
             </SecondaryText>
 
             {!!item.phone && (
-              <SecondaryText style={styles.phone}>
-                {item.phone}
-              </SecondaryText>
+              <SecondaryText style={styles.phone}>{item.phone}</SecondaryText>
             )}
           </View>
-
-
 
           <View style={styles.right}>
             <BodyText style={styles.balance}>
@@ -122,9 +141,7 @@ export default function CreditsListPage() {
   return (
     <View style={globalStyles.container}>
       <View style={styles.headerRow}>
-        <BodyText style={globalStyles.title}>
-          Customer Credits
-        </BodyText>
+        <BodyText style={globalStyles.title}>Customer Credits</BodyText>
       </View>
 
       <SectionList
@@ -132,20 +149,17 @@ export default function CreditsListPage() {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         renderSectionHeader={({ section: { title } }) => (
-          <BodyText style={styles.sectionHeader}>
-            {title}
-          </BodyText>
+          <BodyText style={styles.sectionHeader}>{title}</BodyText>
         )}
         ListHeaderComponent={
-          <ListHeader
-            timeState={timeState}
-            setTimeState={setTimeState}
+          <ListHeader 
+            timeState={timeState} 
+            setTimeState={setTimeState} 
+            filterOptions={filterOptions}
+            statusFilter={statusFilter}
           />
         }
         ListEmptyComponent={
@@ -160,13 +174,19 @@ export default function CreditsListPage() {
   );
 }
 
-const ListHeader = ({ timeState, setTimeState }) => {
+const ListHeader = ({ 
+  timeState, 
+  setTimeState, 
+  filterOptions={filterOptions}, 
+  statusFilter 
+}) => {
   return (
     <>
+      <TimeNavigator state={timeState} onChange={setTimeState} />
 
-      <TimeNavigator
-        state={timeState}
-        onChange={setTimeState}
+      <FilterComponent 
+        filterOptions={filterOptions}
+        activeFilter={statusFilter}
       />
 
     </>
