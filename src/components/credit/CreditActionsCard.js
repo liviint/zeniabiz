@@ -71,22 +71,7 @@ export function CreditActionsCard({
             </BodyText>
           </Pressable>
         )}
-
-        {/* View Customer */}
-        {!!credit.customer_id && (
-          <Pressable
-            style={[styles.button, styles.outlineButton]}
-            onPress={() =>
-              router.push(
-                `/customers/${credit.customer_id}`
-              )
-            }
-          >
-            <BodyText style={styles.outlineButtonText}>
-              View Customer
-            </BodyText>
-          </Pressable>
-        )}
+        
       </View>
 
       <RecordPaymentModal

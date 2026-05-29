@@ -7,7 +7,7 @@ import {migrateSalesCreditFieldsV1, migratePaymentsFromSalesV1} from "../../db/m
 
 const migrateDbIfNeeded = async (db) => {
 
-  
+  // await db.execAsync(`DELETE FROM `);
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
 

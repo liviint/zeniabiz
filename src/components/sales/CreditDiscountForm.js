@@ -2,6 +2,7 @@ import {
     View,
     Pressable,
     Modal,
+    ScrollView,
 } from "react-native";
 import {
     Card,
@@ -30,6 +31,8 @@ const CreditDiscountForm = ({
         }));
     };
 
+    
+
     return (
 
         <Modal 
@@ -37,7 +40,8 @@ const CreditDiscountForm = ({
             transparent 
             animationType="slide"
         >
-        <View style={styles.modalContainer}>
+        <ScrollView contentContainerStyle={styles.modalContainer}
+        >
             <Card style={styles.modalCard}>
 
             <BodyText>Checkout</BodyText>
@@ -52,16 +56,8 @@ const CreditDiscountForm = ({
                 <Input
                 keyboardType="numeric"
                 value={String(paymentsForm.amountPaid)}
-                onChangeText={(v) => setPaymentsForm(prev => ({...prev,amountPaid:parseFloat(v) || 0}))}
+                onChangeText={(v) => setPaymentsForm(prev => ({...prev,amountPaid:parseFloat(v)}))}
                 />
-            </View>
-
-            {/* CREDIT */}
-            <View style={globalStyles.formGroup}>
-                <FormLabel>Balance (Credit)</FormLabel>
-                <BodyText style={{ color: "#FF6B6B" }}>
-                {(total - paymentsForm.amountPaid).toFixed(2)}
-                </BodyText>
             </View>
 
             <View style={globalStyles.formGroup}>
@@ -71,24 +67,23 @@ const CreditDiscountForm = ({
                     value={String(paymentsForm.discount)}
                     onChangeText={(v) => setPaymentsForm(prev => ({...prev,discount:parseFloat(v) || 0}))}
                 />
-                </View>
-
-            {/* PAYMENT METHOD */}
-            <View style={globalStyles.formGroup}>
-                <FormLabel>Payment Method</FormLabel>
-                <Input
-                value={paymentsForm.paymentMethod}
-                onChangeText={(val) => setPaymentsForm(prev => ({...prev,paymentMethod:val}))}
-                />
             </View>
 
+            <View style={globalStyles.formGroup}>
+                <FormLabel>Balance (Credit)</FormLabel>
+                <BodyText style={{ color: "#FF6B6B" }}>
+                {(total - paymentsForm.amountPaid - paymentsForm.discount).toFixed(2)}
+                </BodyText>
+            </View>
+
+            
             <CustomersPicker
                 form={paymentsForm}
                 handleCustomerChange={handleCustomerChange}
             />
 
-            {/* CONFIRM */}
-            <Pressable
+            <View style={globalStyles.formGroup}>
+                <Pressable
                 style={globalStyles.primaryBtn}
                 onPress={handleSave}
             >
@@ -96,8 +91,9 @@ const CreditDiscountForm = ({
                 Complete Sale
                 </BodyText>
             </Pressable>
+            </View>
+            
 
-            {/* CANCEL */}
             <Pressable
                 style={globalStyles.secondaryBtn}
                 onPress={() => setCheckoutModalVisible(false)}
@@ -106,7 +102,7 @@ const CreditDiscountForm = ({
             </Pressable>
 
             </Card>
-        </View>
+        </ScrollView>
         </Modal>
     );
 }

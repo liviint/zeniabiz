@@ -140,59 +140,52 @@ export default function SellPage() {
     0
   );
 
+  useEffect(() => {
+      setPaymentsForm(prev => ({...prev,amountPaid:total}))
+  },[cart])
+
   const handleSave = async () => {
-  try {
-    if (cart.length === 0) {
-      return Alert.alert("Add items first");
+    try {
+      if (cart.length === 0) {
+        return Alert.alert("Add items first");
+      }
+
+      const totalAfterDiscount = Math.max(
+        total - (paymentsForm.discount || 0),
+        0
+      );
+
+      const credit =  totalAfterDiscount - (paymentsForm.amountPaid || 0);
+
+      const saleData = {
+        items: cart,
+        sale_id: id,
+
+        title,
+        category: category?.name,
+        category_id: category?.id || null,
+
+        date,
+
+        subtotal:total,
+        customer_id: paymentsForm.customer_id,
+        discount: paymentsForm.discount || 0,
+        total_amount: totalAfterDiscount,
+        amount_paid:  paymentsForm.amountPaid || 0,
+        balance_due: credit,
+        payment_status:
+          credit === 0 ? "PAID" : paymentsForm.amountPaid > 0 ? "PARTIAL" : "UNPAID",
+      };
+
+      await createOrUpdateSale(db, saleData);
+
+      Alert.alert("Success", "Sale recorded");
+
+      router.push("/sales");
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Error", "Failed to save sale");
     }
-
-    const subtotal = cart.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-
-    const totalAfterDiscount = Math.max(
-      subtotal - (paymentsForm.discount || 0),
-      0
-    );
-    const rawCredit =
-      totalAfterDiscount -
-      (paymentsForm.amountPaid || 0);
-
-    const credit = Math.max(
-      Number(rawCredit.toFixed(2)),
-      0
-    );
-
-    const saleData = {
-      items: cart,
-      sale_id: id,
-
-      title,
-      category: category?.name,
-      category_id: category?.id || null,
-
-      date,
-
-      subtotal,
-      customer_id: paymentsForm.customer_id,
-      discount: paymentsForm.discount || 0,
-      total_amount: totalAfterDiscount,
-      amount_paid: paymentsForm.amountPaid || 0,
-      balance_due: credit,
-      payment_status:
-        credit === 0 ? "PAID" : paymentsForm.amountPaid > 0 ? "PARTIAL" : "UNPAID",
-    };
-
-    await createOrUpdateSale(db, saleData);
-
-    Alert.alert("Success", "Sale recorded");
-
-    router.push("/sales");
-  } catch (error) {
-    console.log(error);
-    Alert.alert("Error", "Failed to save sale");
-  }
 };
 
   return (
@@ -287,14 +280,7 @@ export default function SellPage() {
       )}
 
       <View style={styles.footer}>
-        <Pressable style={globalStyles.primaryBtn} onPress={handleSave}>
-          <BodyText style={globalStyles.primaryBtnText}>
-            Complete Sale
-          </BodyText>
-        </Pressable>
-      </View>
 
-      <View style={styles.footer}>
         <Pressable
           style={globalStyles.secondaryBtn}
           onPress={() => setCheckoutModalVisible(true)}
@@ -303,6 +289,16 @@ export default function SellPage() {
             Credit / Discount
           </BodyText>
         </Pressable>
+
+        <Pressable style={globalStyles.primaryBtn} onPress={() => handleSave()}>
+          <BodyText style={globalStyles.primaryBtnText}>
+            Complete Sale
+          </BodyText>
+        </Pressable>
+      </View>
+
+      <View style={styles.footer}>
+        
       </View>
 
       <EditSaleForm 
@@ -362,6 +358,12 @@ const styles = StyleSheet.create({
   },
   footer: {
     marginTop: 8,
+    display:"flex",
+    width:"100%",
+    flexDirection:"row",
+    justifyContent:"flex-end",
+    gap:8,
+    flexWrap:"wrap",
   },
   modalContainer: {
     flex: 1,
