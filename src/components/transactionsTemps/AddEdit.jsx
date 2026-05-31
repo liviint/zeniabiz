@@ -71,7 +71,7 @@ export default function AddTransactionTemplateScreen() {
       id: form.id,
     });
 
-    Alert.alert("Success ✅", "Template saved successfully!");
+    Alert.alert("Success", "Template saved successfully!");
     setForm(initialForm);
     router.back();
   };

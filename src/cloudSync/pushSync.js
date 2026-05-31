@@ -86,7 +86,7 @@ async function syncModel(db, model, items) {
   const data = res.data;
 
   console.log(`📦 Sync response: ${model}`);
-  console.log("✅ accepted:", data.accepted?.length || 0);
+  console.log("accepted:", data.accepted?.length || 0);
   console.log("❌ rejected:", data.rejected?.length || 0);
 
   for (const accepted of data.accepted || []) {

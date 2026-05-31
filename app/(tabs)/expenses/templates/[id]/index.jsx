@@ -44,7 +44,7 @@ export default function TransactionTemplateDetailsScreen() {
 
   const handleDelete = async () => {
     await deleteTransactionTemplate(db, id);
-    Alert.alert("Deleted ✅", "Template removed successfully.");
+    Alert.alert("Deleted", "Template removed successfully.");
     router.back();
   };
 
