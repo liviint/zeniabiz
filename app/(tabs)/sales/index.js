@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { View, SectionList, Pressable, RefreshControl } from "react-native";
+import { View, SectionList, Pressable, RefreshControl, StyleSheet, } from "react-native";
 import { useIsFocused } from "@react-navigation/native";
 import {
   Card,
@@ -17,6 +17,7 @@ import { groupDataIntoSections } from "../../../src/helpers";
 import { useManualSync } from "../../../src/hooks/useManualSync";
 import TimeNavigator from "../../../src/components/common/TimeNavigator"
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
+import { StatCard } from "../../../src/components/common/StatCard";
 
 export default function SalesList() {
   const { onRefresh, refreshing } = useManualSync();
@@ -26,6 +27,7 @@ export default function SalesList() {
   const router = useRouter();
 
   const [sales, setSales] = useState([]);
+  const [stats, setStats] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [timeState, setTimeState] = useState(createRange("month"));
   const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
@@ -35,10 +37,21 @@ export default function SalesList() {
     (async () => {
       setIsLoading(true);
       const data = await getSales(db, timeState);
+      console.log(data,"hello data")
       setSales(data.sort((a, b) => new Date(b.date) - new Date(a.date)));
       setIsLoading(false);
     })();
   }, [isFocused, timeState,lastSyncedAt]);
+
+  useEffect(() => {
+    setStats({
+      count: sales.length,
+      cashCollected: sales.reduce(
+        (sum, sale) => sum + (sale.amount_paid || 0),
+        0
+      ),
+    });
+  }, [sales]);
 
   const formatDate = (date) => {
     if (!date) return "";
@@ -60,7 +73,6 @@ export default function SalesList() {
     { title: "Older", data: grouped.older },
   ].filter(section => section.data.length > 0);
 
-
   return (
     <View style={globalStyles.container}>
       <RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>
@@ -71,7 +83,20 @@ export default function SalesList() {
           onChange={setTimeState}
       />
 
-      
+      <View style={styles.statsRow}>
+        <StatCard
+          label="Cash Collected"
+          value={stats?.cashCollected?.toLocaleString()}
+          subText=""
+        />
+
+        <StatCard
+          label="Sales Count"
+          value={stats?.count?.toLocaleString()}
+          subText=""
+        />
+      </View>
+
     <SectionList
       sections={sections}
       keyExtractor={(item) => item.id}
@@ -115,11 +140,17 @@ export default function SalesList() {
           />
       }
   />
-
-
       <AddButton
         primaryAction={{ route: "/sales/add", label: "Add a Sale" }}
       />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  statsRow:{
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  }
+});
