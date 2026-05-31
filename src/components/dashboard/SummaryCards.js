@@ -27,7 +27,6 @@ export default function SummaryCards({ isSyncing,timeState }) {
 
   const fetchStats = async () => {
     const summary = await getFinancialStats(db,timeState);
-    console.log(summary,"hello summary")
     setStats(summary);
   };
 

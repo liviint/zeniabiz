@@ -15,16 +15,16 @@ export const startOfWeek = (d) => {
 export const endOfWeek = (d) => {
     const start = startOfWeek(d);
     const res = new Date(start);
-    res.setDate(start.getDate() + 6);
+    res.setDate(start.getDate() + 7);
     return res;
 };
 
 export const startOfMonth = (d) =>
     new Date(d.getFullYear(), d.getMonth(), 1);
 
-export const endOfMonth = (d) => {
-    return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
-}
+export const endOfMonth = (d) => 
+    new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+
     
 const startOfRange3Months = (d) =>
         new Date(d.getFullYear(), d.getMonth() - 2, 1);
@@ -164,21 +164,45 @@ export const shiftRange = (state, direction) => {
 
 export const formatLabel = (state) => {
     if (!state) return "";
+
     const start = new Date(state.startDate);
     const end = new Date(state.endDate);
-
     const now = new Date();
 
-    const diffDays = Math.round(
-        (now - start) / (1000 * 60 * 60 * 24)
-    );
+    const sameRange = (a, b) =>
+        a.startDate.getTime() === start.getTime() &&
+        a.endDate.getTime() === end.getTime();
+
+    const formatShortDate = (date) =>
+        date.toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+        });
+
+    const formatMonthYear = (date) =>
+        date.toLocaleDateString(undefined, {
+            month: "short",
+            year: "numeric",
+        });
+
+    // For display only because endDate is exclusive
+    const displayEnd = new Date(end);
+    displayEnd.setDate(displayEnd.getDate() - 1);
 
     // -------------------------
-    // DAY LABELS
+    // DAY
     // -------------------------
     if (state.type === "day") {
-        if (diffDays === 0) return "Today";
-        if (diffDays === 1) return "Yesterday";
+        if (sameRange(createRange("day", now))) {
+            return "Today";
+        }
+
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        if (sameRange(createRange("day", yesterday))) {
+            return "Yesterday";
+        }
 
         return start.toLocaleDateString(undefined, {
             weekday: "short",
@@ -187,89 +211,76 @@ export const formatLabel = (state) => {
         });
     }
 
-    
+    // -------------------------
+    // WEEK
+    // -------------------------
     if (state.type === "week") {
-        if (diffDays === 0 || diffDays < 7) return "This Week";
-        if (diffDays < 14) return "Last Week";
+        if (sameRange(createRange("week", now))) {
+            return "This Week";
+        }
 
-        return `${start.toLocaleDateString(undefined, {
-            month: "short",
-            day: "numeric",
-        })} – ${end.toLocaleDateString(undefined, {
-            month: "short",
-            day: "numeric",
-        })}`;
+        const lastWeek = new Date(now);
+        lastWeek.setDate(lastWeek.getDate() - 7);
+
+        if (sameRange(createRange("week", lastWeek))) {
+            return "Last Week";
+        }
+
+        return `${formatShortDate(start)} – ${formatShortDate(displayEnd)}`;
     }
 
-
+    // -------------------------
+    // MONTH
+    // -------------------------
     if (state.type === "month") {
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
+        if (sameRange(createRange("month", now))) {
+            return "This Month";
+        }
 
-        const isCurrentMonth =
-            start.getMonth() === currentMonth &&
-            start.getFullYear() === currentYear;
+        const lastMonth = new Date(
+            now.getFullYear(),
+            now.getMonth() - 1,
+            1
+        );
 
-        const isLastMonth =
-            start.getMonth() === currentMonth - 1 &&
-            start.getFullYear() === currentYear;
+        if (sameRange(createRange("month", lastMonth))) {
+            return "Last Month";
+        }
 
-        if (isCurrentMonth) return "This Month";
-        if (isLastMonth) return "Last Month";
-
-        return start.toLocaleString(undefined, {
-            month: "short",
-            year: "numeric",
-        });
+        return formatMonthYear(start);
     }
 
+    // -------------------------
+    // LAST 3 MONTHS
+    // -------------------------
     if (state.type === "range") {
-        const current = createRange("range", now);
+        if (sameRange(createRange("range", now))) {
+            return "Last 3 Months";
+        }
 
-        const sameRange =
-            new Date(state.startDate).getTime() === current.startDate.getTime() &&
-            new Date(state.endDate).getTime() === current.endDate.getTime();
-
-        if (sameRange) return "Last 3 Months";
-
-        // fallback → show actual dates
-        return `${new Date(state.startDate).toLocaleDateString(undefined, {
-            month: "short",
-            day: "numeric",
-        })} – ${new Date(state.endDate).toLocaleDateString(undefined, {
-            month: "short",
-            day: "numeric",
-        })}`;
+        return `${formatShortDate(start)} – ${formatShortDate(displayEnd)}`;
     }
 
+    // -------------------------
+    // LAST 12 MONTHS
+    // -------------------------
     if (state.type === "year") {
-        const current = createRange("year", now);
+        if (sameRange(createRange("year", now))) {
+            return "Last 12 Months";
+        }
 
-        const sameRange =
-            new Date(state.startDate).getTime() === current.startDate.getTime() &&
-            new Date(state.endDate).getTime() === current.endDate.getTime();
-
-        if (sameRange) return "Last 12 Months";
-
-        // fallback → show actual range
-        return `${new Date(state.startDate).toLocaleDateString(undefined, {
-            month: "short",
-            year: "numeric",
-        })} – ${new Date(state.endDate).toLocaleDateString(undefined, {
-            month: "short",
-            year: "numeric",
-        })}`;
+        return `${formatMonthYear(start)} – ${formatMonthYear(displayEnd)}`;
     }
 
+    // -------------------------
+    // ALL TIME
+    // -------------------------
     if (state.type === "all") {
-        return "All time"
+        return "All Time";
     }
 
-    return `${start.toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-    })} – ${end.toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-    })}`;
+    // -------------------------
+    // FALLBACK
+    // -------------------------
+    return `${formatShortDate(start)} – ${formatShortDate(displayEnd)}`;
 };
