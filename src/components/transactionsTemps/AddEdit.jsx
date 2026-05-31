@@ -4,7 +4,6 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
     Alert,
-    StyleSheet,
     TouchableOpacity,
     View,
 } from "react-native";
