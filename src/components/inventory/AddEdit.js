@@ -3,7 +3,6 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useState , useEffect} from "react";
 import { 
   Alert, 
-  ScrollView, 
   TouchableOpacity, 
   Text, 
   View,
@@ -51,72 +50,70 @@ export default function AddProduct() {
     }, []);
 
   return (
-    
+    <KeyboardAwareScrollView
+      style={globalStyles.container}
+      contentContainerStyle={{ paddingBottom: 40 }}
+      enableOnAndroid
+      extraScrollHeight={20}
+      keyboardShouldPersistTaps="handled"
+    >
+        <BodyText style={globalStyles.title}>
+          {id ? "Update" : "Add"} Product
+        </BodyText>
+        <Card>
+      <View style={globalStyles.formGroup}>
+        <FormLabel>Name</FormLabel>
+        <Input value={form.name} onChangeText={(v) => handleChange("name", v)} />
+      </View>
 
-      <KeyboardAwareScrollView
-        style={globalStyles.container}
-        contentContainerStyle={{ paddingBottom: 40 }}
-        enableOnAndroid
-        extraScrollHeight={20}
-        keyboardShouldPersistTaps="handled"
-      >
-          <BodyText style={globalStyles.title}>
-            {id ? "Update" : "Add"} Product
-          </BodyText>
-          <Card>
-        <View style={globalStyles.formGroup}>
-          <FormLabel>Name</FormLabel>
-          <Input value={form.name} onChangeText={(v) => handleChange("name", v)} />
-        </View>
-
-          {
-              id ? "" 
-              :
-              <View style={globalStyles.formGroup}>
-                <FormLabel>Cost Price</FormLabel>
-              < Input value={String(form.cost_price)} keyboardType="numeric" onChangeText={(v) => handleChange("cost_price", v)} />
-            </View>
-          }
-
-          <View style={globalStyles.formGroup}>
-            <FormLabel>Selling Price</FormLabel>
-            <Input value={String(form.selling_price)} keyboardType="numeric" onChangeText={(v) => handleChange("selling_price", v)} />
-          </View>
-
-          {
+        {
             id ? "" 
             :
             <View style={globalStyles.formGroup}>
-              <FormLabel>Stock Quantity</FormLabel>
-              <Input 
-                value={String(form.stock_quantity)} 
-                keyboardType="numeric" onChangeText={(v) => handleChange("stock_quantity", v)} 
-              />
-            </View>
-          }
+              <FormLabel>Cost Price</FormLabel>
+            < Input value={String(form.cost_price)} keyboardType="numeric" onChangeText={(v) => handleChange("cost_price", v)} />
+          </View>
+        }
 
+        <View style={globalStyles.formGroup}>
+          <FormLabel>Selling Price</FormLabel>
+          <Input value={String(form.selling_price)} keyboardType="numeric" onChangeText={(v) => handleChange("selling_price", v)} />
+        </View>
+
+        {
+          id ? "" 
+          :
           <View style={globalStyles.formGroup}>
-            <FormLabel>Minimum Quantity</FormLabel>
+            <FormLabel>Stock Quantity</FormLabel>
             <Input 
-              value={String(form.minimum_quantity)} 
-              keyboardType="numeric" 
-              onChangeText={(v) => handleChange("minimum_quantity", v)} 
+              value={String(form.stock_quantity)} 
+              keyboardType="numeric" onChangeText={(v) => handleChange("stock_quantity", v)} 
             />
           </View>
+        }
 
-          {id && (
-            <SecondaryText style={{marginTop:5, marginBottom:10,fontSize:14}}>
-              Stock and cost are managed through restocking.
-            </SecondaryText>
-          )}
+        <View style={globalStyles.formGroup}>
+          <FormLabel>Minimum Quantity</FormLabel>
+          <Input 
+            value={String(form.minimum_quantity)} 
+            keyboardType="numeric" 
+            onChangeText={(v) => handleChange("minimum_quantity", v)} 
+          />
+        </View>
 
-          <TouchableOpacity style={globalStyles.primaryBtn} onPress={handleSave}>
-            <Text style={globalStyles.primaryBtnText}>
-              {id ? "Update Product" : "Save Product"}
-            </Text>
-          </TouchableOpacity>
+        {id && (
+          <SecondaryText style={{marginTop:5, marginBottom:10,fontSize:14}}>
+            Stock and cost are managed through restocking.
+          </SecondaryText>
+        )}
 
-          </Card>
-      </KeyboardAwareScrollView>
+        <TouchableOpacity style={globalStyles.primaryBtn} onPress={handleSave}>
+          <Text style={globalStyles.primaryBtnText}>
+            {id ? "Update Product" : "Save Product"}
+          </Text>
+        </TouchableOpacity>
+
+        </Card>
+    </KeyboardAwareScrollView>
   );
 }

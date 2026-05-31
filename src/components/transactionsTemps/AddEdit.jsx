@@ -4,7 +4,6 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
     Alert,
-    ScrollView,
     StyleSheet,
     TouchableOpacity,
     View,
@@ -16,6 +15,7 @@ import {
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import CategoriesPicker from "../common/CategoriesPicker";
 import { BodyText, Card, FormLabel, Input } from "../ThemeProvider/components";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 export default function AddTransactionTemplateScreen() {
   const isFocused = useIsFocused();
@@ -85,7 +85,13 @@ export default function AddTransactionTemplateScreen() {
   }, [isFocused]);
 
   return (
-    <ScrollView style={globalStyles.container}>
+    <KeyboardAwareScrollView
+      style={globalStyles.container}
+      contentContainerStyle={{ paddingBottom: 40 }}
+      enableOnAndroid
+      extraScrollHeight={20}
+      keyboardShouldPersistTaps="handled"
+    >
       <BodyText style={globalStyles.title}>
         {id ? "Edit Expense Template" : "Add Expense Template"}
       </BodyText>
@@ -139,35 +145,6 @@ export default function AddTransactionTemplateScreen() {
           </BodyText>
         </TouchableOpacity>
       </Card>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  typeRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 16,
-  },
-  typeButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 14,
-    backgroundColor: "#F0F0F0",
-    alignItems: "center",
-  },
-  typeText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#666",
-  },
-  expenseActive: {
-    backgroundColor: "#FF6B6B",
-  },
-  incomeActive: {
-    backgroundColor: "#2E8B8B",
-  },
-  activeText: {
-    color: "#FFFFFF",
-  },
-});

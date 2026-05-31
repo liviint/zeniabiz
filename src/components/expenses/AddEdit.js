@@ -10,6 +10,7 @@ import { getTransactionTemplates } from "../../db/transactionsTempsDb";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import CategoriesPicker from "../common/CategoriesPicker";
 import { BodyText, Card, FormLabel, Input, SecondaryText, TextArea } from "../ThemeProvider/components";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 export default function AddEdit() {
   const isFocused = useIsFocused()
@@ -144,7 +145,13 @@ const isFormValid = () => {
 
 
   return (
-    <ScrollView style={globalStyles.container}>
+    <KeyboardAwareScrollView
+      style={globalStyles.container}
+      contentContainerStyle={{ paddingBottom: 40 }}
+      enableOnAndroid
+      extraScrollHeight={20}
+      keyboardShouldPersistTaps="handled"
+    >
       <BodyText style={globalStyles.title}>
         {id ? "Edit Expense" : "Add Expense"}
       </BodyText>
@@ -269,7 +276,7 @@ const isFormValid = () => {
         </TouchableOpacity>
 
       </Card>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 
