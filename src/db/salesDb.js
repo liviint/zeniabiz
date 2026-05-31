@@ -343,11 +343,12 @@ export async function createOrUpdateSale(
             total_amount,
             amount_paid,
             balance_due,
+            is_credit_sale,
             payment_status,
             created_at,
             updated_at
           )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
           id,
@@ -364,6 +365,7 @@ export async function createOrUpdateSale(
           total_amount,
           amount_paid,
           balance_due,
+          balance_due > 0 ? 1 : 0,
           payment_status,
 
           now,

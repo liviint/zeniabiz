@@ -3,7 +3,7 @@ import { newUuid } from "./utils";
 export async function getCredits(
   db,
   timeState,
-  statusFilter = "ALL"
+  statusFilter = "outstanding"
 ) {
   let extraCondition = "";
 
@@ -26,15 +26,6 @@ export async function getCredits(
     balanceCondition = `
       AND ROUND(s.balance_due, 2) <= 0
     `;
-
-    extraCondition = `
-      AND (
-        SELECT COUNT(*)
-        FROM payments p
-        WHERE p.sale_id = s.id
-        AND p.deleted_at IS NULL
-      ) > 1
-    `;
   }
 
   const result = await db.getAllAsync(
@@ -44,6 +35,7 @@ export async function getCredits(
       s.title,
 
       s.total_amount,
+      s.customer_id,
       s.amount_paid,
       s.balance_due,
 
@@ -61,6 +53,8 @@ export async function getCredits(
 
     WHERE
       s.deleted_at IS NULL
+
+      AND s.is_credit_sale = 1
 
       ${balanceCondition}
 
@@ -202,4 +196,27 @@ export async function offsetCreditBalance(db, saleId) {
     await db.runAsync("ROLLBACK");
     throw err;
   }
+}
+
+export function getCreditStats(
+  credits,
+  statusFilter = "outstanding"
+) {
+  const count = credits.length;
+
+  const totalAmount = credits.reduce(
+    (sum, credit) => {
+      if (statusFilter === "paid") {
+        return sum + Number(credit.amount_paid || 0);
+      }
+
+      return sum + Number(credit.balance_due || 0);
+    },
+    0
+  );
+    
+  return {
+    totalAmount,
+    count,
+  };
 }

@@ -1,5 +1,10 @@
 import { Card, BodyText, SecondaryText } from "../ThemeProvider/components";
 
+
+export const StatsComponent = () => {
+  
+}
+
 export const StatCard = ({
   label,
   value,

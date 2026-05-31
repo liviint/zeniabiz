@@ -28,7 +28,8 @@ import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 import { dateFormat } from "../../../utils/dateFormat";
 
 import FilterComponent from "../../../src/components/common/FilterComponent";
-import { getCredits } from "../../../src/db/creditsDb";
+import { getCredits, getCreditStats } from "../../../src/db/creditsDb";
+import { StatCard } from "../../../src/components/common/StatCard";
 
 export default function CreditsListPage() {
   const db = useSQLiteContext();
@@ -40,15 +41,16 @@ export default function CreditsListPage() {
   const { onRefresh, refreshing } = useManualSync();
 
   const [credits, setCredits] = useState([]);
+  const [creditStats,setCreditStats] = useState({})
   const [timeState, setTimeState] = useState(createRange("month"));
-  const [statusFilter, setStatusFilter] = useState("outstandng");
+  const [statusFilter, setStatusFilter] = useState("outstanding");
   const lastSyncedAt = useSelector((state) => state.sync.lastSyncedAt);
 
   const filterOptions = [
     {
-      label:"Outstandng",
-      action:() => setStatusFilter("outstandng"),
-      key:"outstandng",
+      label:"outstanding",
+      action:() => setStatusFilter("outstanding"),
+      key:"outstanding",
     },
     {
       label:"Unpaid",
@@ -75,13 +77,25 @@ export default function CreditsListPage() {
   const fetchCredits = async () => {
     const data = await getCredits(db, timeState, statusFilter);
     setCredits(data);
+    
   };
+
+  const fetchStats = async() => {
+    const stats = await getCreditStats(credits, statusFilter);
+    setCreditStats(stats)
+  }
 
   useEffect(() => {
     if (isFocused) {
       fetchCredits();
     }
   }, [isFocused, timeState, lastSyncedAt, statusFilter]);
+
+   useEffect(() => {
+    if (isFocused) {
+      fetchStats();
+    }
+  }, [credits]);
 
   const grouped = groupDataIntoSections(credits);
 
@@ -160,6 +174,7 @@ export default function CreditsListPage() {
             setTimeState={setTimeState} 
             filterOptions={filterOptions}
             statusFilter={statusFilter}
+            stats={creditStats}
           />
         }
         ListEmptyComponent={
@@ -178,8 +193,10 @@ const ListHeader = ({
   timeState, 
   setTimeState, 
   filterOptions={filterOptions}, 
-  statusFilter 
+  statusFilter,
+  stats,
 }) => {
+  console.log(statusFilter,"hello status")
   return (
     <>
       <TimeNavigator state={timeState} onChange={setTimeState} />
@@ -189,6 +206,35 @@ const ListHeader = ({
         activeFilter={statusFilter}
       />
 
+      <View style={styles.statsRow}>
+  <StatCard
+    label="Amount"
+    value={stats?.totalAmount?.toLocaleString()}
+    subText={
+      statusFilter === "outstanding"
+        ? "Outstanding balance"
+        : statusFilter === "unpaid"
+        ? "Unpaid balance"
+        : statusFilter === "partial"
+        ? "Remaining balance"
+        : "Recovered amount"
+    }
+  />
+
+  <StatCard
+    label="Sales"
+    value={stats?.count}
+    subText={
+      statusFilter === "outstanding"
+        ? "Outstanding credits"
+        : statusFilter === "unpaid"
+        ? "Unpaid credits"
+        : statusFilter === "partial"
+        ? "Partial credits"
+        : "Recovered credits"
+    }
+  />
+</View>
     </>
   );
 };
@@ -247,4 +293,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: "right",
   },
+  statsRow:{
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  }
 });

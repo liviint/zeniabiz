@@ -64,6 +64,14 @@ export const migrateSalesCreditFieldsV1 = async (db) => {
     console.log("discount_type already exists");
   }
 
+   try {
+    await db.execAsync(`
+      ALTER TABLE sales ADD COLUMN is_credit_sale INTEGER DEFAULT 0;
+    `);
+  } catch (error) {
+    console.log("is_credit_sale already exists");
+  }
+
   // Backfill old data
   // Existing sales were fully paid historically
   await db.execAsync(`
