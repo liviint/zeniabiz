@@ -17,6 +17,7 @@ import { useManualSync } from "../../../src/hooks/useManualSync";
 import { setCategoriesMap } from "../../../src/store/features/cetegoriesSlice";
 import TimeNavigator from "../../../src/components/common/TimeNavigator"
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
+import { StatCard } from "../../../src/components/common/StatCard";
 
 export default function FinanceListPage() {
     const { onRefresh, refreshing } = useManualSync();
@@ -24,6 +25,7 @@ export default function FinanceListPage() {
     const router = useRouter();
     const dispatch = useDispatch()
     const [expenses,setTransactions] = useState([])
+    const [stats, setStats] = useState({})
     const [categoriesMap,setCategoriesMapLocal] = useState({})
     const [isLoading,setIsLoading] = useState(true)
     const isFocused = useIsFocused()
@@ -54,6 +56,13 @@ export default function FinanceListPage() {
       }
         setIsLoading(false)
     },[isFocused, timeState,lastSyncedAt])
+
+    useEffect(() => {
+      setStats({
+        count:expenses.length,
+        total:expenses.reduce((sum,expense) => sum + expense.amount,0)
+      })
+    },[expenses])
 
   let grouped = groupDataIntoSections(expenses)
 
@@ -103,12 +112,13 @@ export default function FinanceListPage() {
 
   return (
     <View style={globalStyles.container}>
+
       <View style={styles.headerRow}>
         <BodyText style={globalStyles.title}>
           My Expenses
         </BodyText>
       </View>
-      
+          
       <>
       <SectionList
         sections={sections}
@@ -122,6 +132,8 @@ export default function FinanceListPage() {
         )}
         ListHeaderComponent={
           <ListHeader
+            stats={stats}
+            expenses={expenses}
             timeState={timeState}
             setTimeState={setTimeState}
           />
@@ -147,7 +159,7 @@ export default function FinanceListPage() {
   )
 }
 
-const ListHeader = ({ stats, timeState,setTimeState}) => {
+const ListHeader = ({ stats, timeState,setTimeState, expenses}) => {
   return <>
     <TimeNavigator
           state={timeState}
@@ -160,6 +172,25 @@ const ListHeader = ({ stats, timeState,setTimeState}) => {
         {name:"View Categories", route:"/expenses/categories"},
       ]}
     />
+
+    {expenses.length ? 
+        <View style={styles.statsRow}>
+          <StatCard
+            label="Total spent"
+            value={stats?.total?.toLocaleString()}
+            subText=""
+            color="#FF6B6B"
+          />
+
+          <StatCard
+            label="Expenses count"
+            value={stats?.count?.toLocaleString()}
+            subText=""
+            color="#FF6B6B"
+          />
+        </View>
+        :""
+      }
 
   </>
 }
@@ -177,10 +208,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 2,
   },
-  statRow: {
+  statsRow:{
     flexDirection: "row",
-    gap: 12,
-    marginBottom: 16,
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   statCard: {
     flex: 1,

@@ -37,7 +37,6 @@ export default function SalesList() {
     (async () => {
       setIsLoading(true);
       const data = await getSales(db, timeState);
-      console.log(data,"hello data")
       setSales(data.sort((a, b) => new Date(b.date) - new Date(a.date)));
       setIsLoading(false);
     })();
@@ -83,19 +82,22 @@ export default function SalesList() {
           onChange={setTimeState}
       />
 
-      <View style={styles.statsRow}>
-        <StatCard
-          label="Cash Collected"
-          value={stats?.cashCollected?.toLocaleString()}
-          subText=""
-        />
+      {sales.length ? 
+        <View style={styles.statsRow}>
+          <StatCard
+            label="Cash Collected"
+            value={stats?.cashCollected?.toLocaleString()}
+            subText=""
+          />
 
-        <StatCard
-          label="Sales Count"
-          value={stats?.count?.toLocaleString()}
-          subText=""
-        />
-      </View>
+          <StatCard
+            label="Sales Count"
+            value={stats?.count?.toLocaleString()}
+            subText=""
+          />
+        </View>
+        :""
+      }
 
     <SectionList
       sections={sections}

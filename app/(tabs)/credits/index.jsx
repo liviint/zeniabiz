@@ -206,34 +206,19 @@ const ListHeader = ({
       />
 
       <View style={styles.statsRow}>
-  <StatCard
-    label="Amount"
-    value={stats?.totalAmount?.toLocaleString()}
-    subText={
-      statusFilter === "outstanding"
-        ? "Outstanding balance"
-        : statusFilter === "unpaid"
-        ? "Unpaid balance"
-        : statusFilter === "partial"
-        ? "Remaining balance"
-        : "Recovered amount"
-    }
-  />
+        <StatCard
+          label={"Balance"}
+          value={stats?.totalAmount?.toLocaleString()}
+          color="#FF6B6B"
+        />
 
-  <StatCard
-    label="Sales"
-    value={stats?.count}
-    subText={
-      statusFilter === "outstanding"
-        ? "Outstanding credits"
-        : statusFilter === "unpaid"
-        ? "Unpaid credits"
-        : statusFilter === "partial"
-        ? "Partial credits"
-        : "Recovered credits"
-    }
-  />
-</View>
+        <StatCard
+          label={"Credits"}
+          value={stats?.count}
+          color="#FF6B6B"
+          subText={""}
+        />
+      </View>
     </>
   );
 };
