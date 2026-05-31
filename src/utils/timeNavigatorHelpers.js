@@ -22,10 +22,10 @@ export const endOfWeek = (d) => {
 export const startOfMonth = (d) =>
     new Date(d.getFullYear(), d.getMonth(), 1);
 
-export const endOfMonth = (d) =>
-    new Date(d.getFullYear(), d.getMonth() + 1, 0);
-
-
+export const endOfMonth = (d) => {
+    return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+}
+    
 const startOfRange3Months = (d) =>
         new Date(d.getFullYear(), d.getMonth() - 2, 1);
 
@@ -164,7 +164,6 @@ export const shiftRange = (state, direction) => {
 
 export const formatLabel = (state) => {
     if (!state) return "";
-    console.log(state,"hello state")
     const start = new Date(state.startDate);
     const end = new Date(state.endDate);
 

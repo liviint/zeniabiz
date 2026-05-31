@@ -196,7 +196,6 @@ const ListHeader = ({
   statusFilter,
   stats,
 }) => {
-  console.log(statusFilter,"hello status")
   return (
     <>
       <TimeNavigator state={timeState} onChange={setTimeState} />

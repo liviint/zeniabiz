@@ -287,7 +287,6 @@ export async function getFinancialStats(db, timeState) {
     [company, startDate, endDate]
   );
 
-  console.log(paymentsResult,"hello cash collected")
 
   // -------------------------
   // 3. Outstanding Credit

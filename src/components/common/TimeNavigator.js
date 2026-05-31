@@ -34,10 +34,8 @@ const TimeNavigator = ({ state, onChange }) => {
     const isAllTime = state.type === "all" || state.type === "year";
 
     const isNextDisabled =
-        isAllTime ||
-        (state.endDate &&
-            startOfDay(new Date(state.endDate)) >
-                startOfDay(today));
+    isAllTime ||
+    (state.endDate && new Date(state.endDate).getTime() > today.getTime());
 
     const isPrevDisabled = isAllTime;
 
