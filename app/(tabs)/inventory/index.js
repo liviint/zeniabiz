@@ -23,6 +23,7 @@ export default function ProductsListPage() {
   const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
 
   const [products, setProducts] = useState([]);
+  const [stats,setStats] = useState({})
   const [isLoading,setIsLoading] = useState(true)
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 400);
@@ -57,6 +58,13 @@ export default function ProductsListPage() {
     if (isFocused) fetchProducts();
   }, [isFocused, debouncedSearch, filter,lastSyncedAt]);
 
+  useEffect(() => {
+    setStats({
+      count:products.length,
+      stockValue:products.reduce((sum,product) => sum + product.cost_price,0)
+    })
+  },[products])
+
   const renderItem = ({ item }) => (
     <Pressable onPress={() => router.push(`/inventory/${item?.id}`)}>
       <Card>
@@ -87,7 +95,7 @@ export default function ProductsListPage() {
         contentContainerStyle={{ paddingBottom: 96 }}
         ListHeaderComponent={
           <ListHeader
-            stats={{count:products.length}}
+            stats={stats}
             search={search}
             setSearch={setSearch}
             filter={filter}
@@ -142,38 +150,22 @@ const ListHeader = ({
         />
 
       </View>
-      <StatCard 
-        label="Products"
-        value={stats.count}
-        subText={
-          filter === "all"
-            ? "All items"
-            : filter === "low_stock"
-            ? "Low stock items"
-            : "Out of stock items"
-        }
-      />
+      <View style={styles.row}>
+        <StatCard 
+          label="Stock Value"
+          value={stats.stockValue}
+
+        />
+        <StatCard 
+          label="Products"
+          value={stats.count}
+        />
+      </View>
     </>
       
   )
   
 }
-
-const FilterChip = ({ label, active, onPress }) => {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={[
-        styles.chip,
-        { backgroundColor: active ? "#2E8B8B" : "#F4E1D2" },
-      ]}
-    >
-      <BodyText style={{ color: active ? "#fff" : "#333" }}>
-        {label}
-      </BodyText>
-    </Pressable>
-  );
-};
 
 const styles = StyleSheet.create({
   filtersContainer: {

@@ -358,14 +358,13 @@ export async function getFinancialStats(db, timeState) {
 
   const netProfit = grossProfit - expenses;
 
-  // -------------------------
-  // 8. Return
-  // -------------------------
+  let availableCash = cashCollected - expenses
   
   return {
     revenue,
     cashCollected,
     outstandingCredit,
+    availableCash,
 
     cost,
     expenses,

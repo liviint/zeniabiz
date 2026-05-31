@@ -27,6 +27,7 @@ export default function SummaryCards({ isSyncing,timeState }) {
 
   const fetchStats = async () => {
     const summary = await getFinancialStats(db,timeState);
+    console.log(summary,"hello summary")
     setStats(summary);
   };
 
@@ -37,6 +38,15 @@ export default function SummaryCards({ isSyncing,timeState }) {
   const formatNumber = (num) =>
     Number(num || 0).toLocaleString();
 
+  const availableCash = stats.availableCash;
+  const isPositiveCash = availableCash > 0;
+  const isZeroCash = availableCash === 0;
+  const cashRemark = isZeroCash
+    ? "No cash available right now"
+    : isPositiveCash
+      ? "Cash flow is healthy"
+      : "Cash flow is tight";
+
   const isProfitPositive = stats.netProfit >= 0;
   const profitRemark = stats.netProfit === 0 ? "" : stats.netProfit > 0
             ? "You're making money 📈"
@@ -44,16 +54,19 @@ export default function SummaryCards({ isSyncing,timeState }) {
 
   return (
     <View style={styles.container}>
-      <StatCard
-        label="Net Profit"
-        value={formatNumber(stats.netProfit)}
-        subText={profitRemark}
-        color={isProfitPositive ? "#2E8B8B" : "#FF6B6B"}
-        style={heroStyles.card}
-        labelStyle={heroStyles.label}
-        valueStyle={heroStyles.value}
-        subTextStyle={heroStyles.subText}
-      />
+      <View style={styles.row}>
+        <StatCard
+          label="Cash on Hand"
+          value={formatNumber(stats.availableCash)}
+          subText={cashRemark}
+          color={isPositiveCash ? "#2E8B8B" : "#FF6B6B"}
+          style={heroStyles.card}
+          labelStyle={heroStyles.label}
+          valueStyle={heroStyles.value}
+          subTextStyle={heroStyles.subText}
+        />
+      
+      </View>
       <View style={{
         marginVertical: 10,
         borderTopWidth: 1,
@@ -115,10 +128,14 @@ export default function SummaryCards({ isSyncing,timeState }) {
 
       <View style={styles.row}>
         <StatCard
-          label="Stock Value (Current)"
-          value={formatNumber(stats.stockValue)}
-          subText="Inventory worth"
-          color={colors.text}
+          label="Net Profit"
+          value={formatNumber(stats.netProfit)}
+          subText={profitRemark}
+          color={isProfitPositive ? "#2E8B8B" : "#FF6B6B"}
+          style={heroStyles.card}
+          labelStyle={heroStyles.label}
+          valueStyle={heroStyles.value}
+          subTextStyle={heroStyles.subText}
         />
       </View>
     </View>
