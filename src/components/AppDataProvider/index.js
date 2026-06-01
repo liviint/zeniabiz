@@ -2,7 +2,11 @@ import { SQLiteProvider } from "expo-sqlite";
 import SessionProvider from "./SessionProvider"
 import SyncProvider from "./SyncProvider"
 import GoogleBackUpProvider from "./GoogleBackUpProvider"
-import { applyInventoryMigrationsV1 } from "../../db/migrations/inventory"
+import { 
+  applyInventoryMigrationsV1 ,
+  applyInventoryBatchesMigrationsV1,
+  applyInventoryMovementsMigrationsV1
+} from "../../db/migrations/inventory"
 import {migrateSalesCreditFieldsV1, migratePaymentsFromSalesV1} from "../../db/migrations/credit"
 
 const migrateDbIfNeeded = async (db) => {
@@ -184,11 +188,13 @@ const migrateDbIfNeeded = async (db) => {
     updated_by TEXT,
 
     product_id TEXT NOT NULL,
-    quantity_remaining INTEGER NOT NULL,
+    quantity_on_hand INTEGER NOT NULL DEFAULT 0,
     cost_price REAL NOT NULL,
     selling_price REAL NOT NULL,
+    batch_number TEXT,
+    expiry_date TEXT,
 
-    date TEXT,
+    purchase_date TEXT NOT NULL,
 
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -197,8 +203,12 @@ const migrateDbIfNeeded = async (db) => {
     FOREIGN KEY (product_id) REFERENCES products(id)
   );
 
+
   CREATE INDEX IF NOT EXISTS idx_batches_company_product
   ON inventory_batches(company, product_id);
+
+  CREATE INDEX IF NOT EXISTS idx_batches_expiry
+  ON inventory_batches(company, expiry_date);
 
   CREATE TABLE IF NOT EXISTS inventory_movements (
     id TEXT PRIMARY KEY,
@@ -216,6 +226,7 @@ const migrateDbIfNeeded = async (db) => {
     type TEXT NOT NULL CHECK (type IN ('purchase', 'sale', 'adjustment')),
 
     reference_id TEXT,
+    batch_id TEXT,
     date TEXT NOT NULL,
 
     processed_at TEXT,
@@ -386,6 +397,8 @@ const migrateDbIfNeeded = async (db) => {
 
 `);
   await applyInventoryMigrationsV1(db);
+  await applyInventoryBatchesMigrationsV1(db);
+  await applyInventoryMovementsMigrationsV1(db);
   await migrateSalesCreditFieldsV1(db);
   await migratePaymentsFromSalesV1(db);
 };
