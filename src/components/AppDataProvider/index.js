@@ -5,7 +5,8 @@ import GoogleBackUpProvider from "./GoogleBackUpProvider"
 import { 
   applyInventoryMigrationsV1 ,
   applyInventoryBatchesMigrationsV1,
-  applyInventoryMovementsMigrationsV1
+  applyInventoryMovementsMigrationsV1,
+  migrateMovementsToBatches
 } from "../../db/migrations/inventory"
 import {migrateSalesCreditFieldsV1, migratePaymentsFromSalesV1} from "../../db/migrations/credit"
 
@@ -401,6 +402,7 @@ const migrateDbIfNeeded = async (db) => {
   await applyInventoryMovementsMigrationsV1(db);
   await migrateSalesCreditFieldsV1(db);
   await migratePaymentsFromSalesV1(db);
+  await migrateMovementsToBatches(db)
 };
 
 export default function AppDataProvider({ children }) {
