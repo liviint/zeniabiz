@@ -20,86 +20,45 @@ export async function restoreFIFO(db, purchaseId, qty) {
   );
 }
 
-export async function allocateFIFO(db, productId, requiredQty) {
-  console.log(requiredQty,"hello required qty")
-  let remaining = requiredQty;
-  const allocations = [];
+export async function allocateFIFO(
+  db,
+  productId,
+  requiredQty
+) {
+  let remaining = Number(requiredQty);
 
-  // 1️⃣ Load ALL movements in order (truth source)
-  const movements = await db.getAllAsync(
+  const batches = await db.getAllAsync(
     `
-    SELECT *
-    FROM inventory_movements
+    SELECT
+      id,
+      quantity_on_hand,
+      cost_price,
+      purchase_date
+    FROM inventory_batches
     WHERE product_id = ?
       AND deleted_at IS NULL
-    ORDER BY created_at ASC
+      AND quantity_on_hand > 0
+    ORDER BY purchase_date ASC, created_at ASC
     `,
     [productId]
   );
 
-  console.log(movements,"hello movements")
+  const allocations = [];
 
-  // 2️⃣ Rebuild FIFO state in-memory
-  const fifo = [];
-
-  for (const m of movements) {
-    const qty = Number(m.quantity);
-
-    // --------------------
-    // PURCHASE → add layer
-    // --------------------
-    if (m.type === "purchase") {
-      fifo.push({
-        id: m.id,
-        remaining: qty,
-        cost: m.unit_cost,
-      });
-    }
-
-    // --------------------
-    // SALE → consume FIFO
-    // --------------------
-    if (m.type === "sale") {
-      let toConsume = Math.abs(qty);
-
-      for (const layer of fifo) {
-        if (toConsume <= 0) break;
-        if (layer.remaining <= 0) continue;
-
-        const take = Math.min(layer.remaining, toConsume);
-
-        layer.remaining -= take;
-        toConsume -= take;
-      }
-
-      if (toConsume > 0) {
-        throw new Error("Data corruption: negative stock detected");
-      }
-    }
-
-    // --------------------
-    // ADJUSTMENT (optional)
-    // --------------------
-    if (m.type === "adjustment") {
-      fifo.push({
-        id: m.id,
-        remaining: qty,
-        cost: m.unit_cost,
-      });
-    }
-  }
-
-  // 3️⃣ Now allocate from reconstructed FIFO
-  for (const layer of fifo) {
+  for (const batch of batches) {
     if (remaining <= 0) break;
-    if (layer.remaining <= 0) continue;
 
-    const take = Math.min(layer.remaining, remaining);
+    const available = Number(batch.quantity_on_hand);
+
+    const take = Math.min(
+      available,
+      remaining
+    );
 
     allocations.push({
-      purchase_id: layer.id,
+      batch_id: batch.id,
       quantity: take,
-      cost_price: layer.cost,
+      cost_price: batch.cost_price,
     });
 
     remaining -= take;
@@ -112,7 +71,7 @@ export async function allocateFIFO(db, productId, requiredQty) {
   return allocations;
 }
 
-  async function insertMovementAndApply(db, movement) {
+  async function insertMovement(db, movement) {
     await db.runAsync(
       `INSERT INTO inventory_movements
       (id, product_id, company, unit_cost, quantity, type, reference_id, date, created_at, updated_at, created_by, updated_by)
@@ -243,7 +202,6 @@ export async function reverseSale(
     throw err;
   }
 }
-
 
 export async function createOrUpdateSale(
   db,
@@ -378,30 +336,12 @@ export async function createOrUpdateSale(
       );
 
       for (const alloc of allocations) {
-        const movement = {
-          id: newUuid(),
-          product_id: item.product_id,
-          company,
-          unit_cost: alloc.cost_price,
-          quantity: -alloc.quantity,
-          type: "sale",
-          reference_id: id,
-          purchase_reference_id: alloc.purchase_id,
-          date: saleDate,
-          created_by: user_id,
-          updated_by: user_id,
-          created_at: now,
-          updated_at: now,
-        };
-
-        await insertMovementAndApply(db, movement);
-
         const saleItemId = newUuid();
 
         await db.runAsync(
           `
           INSERT INTO sale_items
-          (id, sale_id, company, product_id, quantity, price, cost_price, purchase_movement_id)
+          (id, sale_id, company, product_id, quantity, price, cost_price, batch_id)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
           `,
           [
@@ -412,10 +352,45 @@ export async function createOrUpdateSale(
             alloc.quantity,
             item.price,
             alloc.cost_price,
-            alloc.purchase_id,
+            alloc.batch_id,
           ]
         );
 
+        const result = await db.runAsync(
+          `
+          UPDATE inventory_batches
+          SET quantity_on_hand = quantity_on_hand - ?,
+              updated_at = ?
+          WHERE id = ?
+            AND quantity_on_hand >= ?
+          `,
+          [
+            alloc.quantity,
+            now,
+            alloc.batch_id,
+            alloc.quantity,
+          ]
+        );
+
+        if (result.changes === 0) {
+          throw new Error("Insufficient batch stock");
+        }
+
+        await insertMovement(db, {
+          id: newUuid(),
+          product_id: item.product_id,
+          batch_id: alloc.batch_id,
+          company,
+          unit_cost: alloc.cost_price,
+          quantity: -alloc.quantity,
+          type: "sale",
+          reference_id: id,
+          date: saleDate,
+          created_by: user_id,
+          updated_by: user_id,
+          created_at: now,
+          updated_at: now,
+        });
         
       }
     }
@@ -694,7 +669,7 @@ export async function deleteSale(db, sale_id) {
         deleted_at: null,
       };
 
-      await insertMovementAndApply(db, adjustment);
+      await insertMovement(db, adjustment);
     }
 
     // 4️⃣ soft delete sale

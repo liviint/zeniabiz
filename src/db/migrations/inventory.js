@@ -39,6 +39,7 @@ export const applyInventoryBatchesMigrationsV1 = async (db) => {
         "inventory_batches",
         "quantity_remaining",
     );
+
 }
 
 export const applyInventoryMovementsMigrationsV1 = async (db) => {
@@ -46,6 +47,12 @@ export const applyInventoryMovementsMigrationsV1 = async (db) => {
         db,
         "inventory_movements",
         "batch_id",
+        "TEXT"
+    );
+    await addColumnIfNotExists(
+        db,
+        "inventory_movements",
+        "reason",
         "TEXT"
     );
 }

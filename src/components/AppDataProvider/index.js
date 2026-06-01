@@ -9,6 +9,7 @@ import {
   migrateMovementsToBatches
 } from "../../db/migrations/inventory"
 import {migrateSalesCreditFieldsV1, migratePaymentsFromSalesV1} from "../../db/migrations/credit"
+import { applySalesMigrationsV1 } from "../../db/migrations/sales"
 
 const migrateDbIfNeeded = async (db) => {
 
@@ -225,6 +226,7 @@ const migrateDbIfNeeded = async (db) => {
     quantity INTEGER NOT NULL,
 
     type TEXT NOT NULL CHECK (type IN ('purchase', 'sale', 'adjustment')),
+    reason TEXT,
 
     reference_id TEXT,
     batch_id TEXT,
@@ -286,6 +288,7 @@ const migrateDbIfNeeded = async (db) => {
     product_id TEXT,
 
     purchase_movement_id TEXT,
+    batch_id TEXT,
 
     quantity INTEGER,
     price REAL,
@@ -402,6 +405,7 @@ const migrateDbIfNeeded = async (db) => {
   await applyInventoryMovementsMigrationsV1(db);
   await migrateSalesCreditFieldsV1(db);
   await migratePaymentsFromSalesV1(db);
+  await applySalesMigrationsV1(db);
   await migrateMovementsToBatches(db)
 };
 
