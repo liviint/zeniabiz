@@ -253,20 +253,18 @@ export async function getProductById(db, id) {
   return product;
 }
 
-export async function getProductBatches(db, id) {
-    const movements = await db.getAllAsync(
-        `
-        SELECT *
-        FROM inventory_movements
-        WHERE product_id = ?
-          AND deleted_at IS NULL
-        ORDER BY date ASC, created_at ASC
-        `,
-      [id]
-    );
-
-  const batches = buildFIFO(movements);
-  return batches
+export async function getProductBatches(db, productId) {
+  return await db.getAllAsync(
+    `
+    SELECT *
+    FROM inventory_batches
+    WHERE product_id = ?
+      AND deleted_at IS NULL
+      AND quantity_on_hand > 0
+    ORDER BY purchase_date ASC, created_at ASC
+    `,
+    [productId]
+  );
 }
 
 export async function deleteProduct(db, id) {

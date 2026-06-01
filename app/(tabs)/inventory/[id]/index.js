@@ -8,6 +8,7 @@ import { BodyText, Card, SecondaryText } from "../../../../src/components/ThemeP
 import { deleteProduct, getProductById, getProductBatches } from "../../../../src/db/inventoryDb";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import RestockForm from "../../../../src/components/inventory/RestockForm";
+import { dateFormat } from "../../../../utils/dateFormat";
 
 export default function ProductViewPage() {
   const db = useSQLiteContext();
@@ -56,34 +57,34 @@ export default function ProductViewPage() {
       </Card>
 
       {stockBatches.length > 0 && (
-  <View style={{ marginTop: 20 }}>
-    <BodyText style={globalStyles.title}>Stock Batches</BodyText>
+        <View style={{ marginTop: 20 }}>
+          <BodyText style={globalStyles.title}>Stock Batches</BodyText>
 
-    {stockBatches.map((batch) => (
-      <Card key={batch.source_id} style={styles.batchCard}>
-        <DetailRow
-          label="Quantity"
-          value={batch?.quantity_remaining}
-        />
+          {stockBatches.map((batch) => (
+            <Card key={batch.id} style={styles.batchCard}>
+              <DetailRow
+                label="Quantity"
+                value={batch?.quantity_on_hand}
+              />
 
-        <DetailRow
-          label="Cost Price"
-          value={batch?.cost_price}
-        />
+              <DetailRow
+                label="Cost Price"
+                value={batch?.cost_price}
+              />
 
-        <DetailRow
-          label="Selling Price"
-          value={batch?.selling_price}
-        />
+              <DetailRow
+                label="Selling Price"
+                value={batch?.selling_price}
+              />
 
-        <DetailRow
-          label="Added"
-          value={new Date(batch.date).toLocaleDateString()}
-        />
-      </Card>
-    ))}
-  </View>
-)}
+              <DetailRow
+                label="Added"
+                value={batch.purchase_date ? dateFormat(batch.purchase_date): "-"}
+              />
+            </Card>
+          ))}
+        </View>
+      )}
 
       <View style={styles.actionsRow}>
         <Pressable
