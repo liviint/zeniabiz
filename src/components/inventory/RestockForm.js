@@ -1,10 +1,11 @@
 import { useLocalSearchParams } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
-import { Alert, Pressable, StyleSheet, View , Modal } from "react-native";
-import { BodyText, Card, Input } from "../../components/ThemeProvider/components";
+import { Alert, Pressable, StyleSheet, View , Modal, TouchableOpacity,  } from "react-native";
+import { BodyText, Card, Input , FormLabel} from "../../components/ThemeProvider/components";
 import { getProductById, restockProduct } from "../../db/inventoryDb";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 export default function RestockForm({
     product, restockVisible, setRestockVisible, setProduct, setReoloadBatches }) {
@@ -16,12 +17,25 @@ export default function RestockForm({
         stock_quantity:0,
         selling_price:"",
         cost_price:"",
+        expiry_date:null,
     }
     const [form,setForm] = useState(initialForm)
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
     const handleFormChange = (key,value) => {
         setForm(prev => ({...prev,[key]:value}))
     }
+
+    const handleDateChange = (event, selectedDate) => {
+        setShowDatePicker(false);
+        if (selectedDate) {
+            const updated = new Date();
+            updated.setFullYear(selectedDate.getFullYear());
+            updated.setMonth(selectedDate.getMonth());
+            updated.setDate(selectedDate.getDate());
+            setForm(prev => ({...prev,expiry_date:updated}))
+        }
+    };
 
     const handleRestockConfirm = async () => {
 
@@ -71,8 +85,8 @@ export default function RestockForm({
             <BodyText style={styles.modalTitle}>Restock Product</BodyText>
             
             <View style={globalStyles.formGroup}>
+                <FormLabel>Batch Quantity</FormLabel>
                 <Input
-                    placeholder="Enter quantity"
                     keyboardType="numeric"
                     value={form.stock_quantity}
                     onChangeText={(val) => handleFormChange("stock_quantity",val)}
@@ -81,8 +95,8 @@ export default function RestockForm({
                 </View>
 
                 <View style={globalStyles.formGroup}>
+                    <FormLabel>Cost Price</FormLabel>
                     <Input
-                        placeholder="Cost per item"
                         keyboardType="numeric"
                         value={form.cost_price}
                         onChangeText={(val) => handleFormChange("cost_price",val)}
@@ -91,14 +105,48 @@ export default function RestockForm({
                 </View>
 
                 <View style={globalStyles.formGroup}>
+                    <FormLabel>Selling Price</FormLabel>
                     <Input
-                        placeholder="Selling price per item"
                         keyboardType="numeric"
                         value={form.selling_price}
                         onChangeText={(val) => handleFormChange("selling_price",val)}
                         style={styles.input}
                     />
                 </View>
+
+                <View style={globalStyles.formGroup}>
+                    <FormLabel>Sell By Date</FormLabel>
+                    <View style={{ flexDirection: "row", gap: 12 }}>
+                    <TouchableOpacity
+                        onPress={() => setShowDatePicker(true)}
+                        style={{
+                        flex: 1,
+                        paddingVertical: 8,
+                        paddingHorizontal: 4,
+                        alignItems: "center",
+                        ...globalStyles.formBorder
+                        }}
+                    >
+                        <BodyText>
+                        {form?.expiry_date
+                            ? new Date(form.expiry_date).toDateString()
+                            : "Select date"}
+                        </BodyText>
+                    </TouchableOpacity>
+        
+                    
+                    </View>
+        
+                    {showDatePicker && (
+                    <DateTimePicker
+                        value={form.expiry_date || new Date()}
+                        mode="date"
+                        display="calendar"
+                        onChange={handleDateChange}
+                    />
+                    )}
+                
+                        </View>
 
                 <View style={styles.modalActions}>
                     <Pressable
