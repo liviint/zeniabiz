@@ -101,60 +101,7 @@ export async function reverseSale(
 ) {
   const now = new Date().toISOString();
 
-  // -------------------------
-  // 1️⃣ Load existing sale movements
-  // -------------------------
-  const saleMovements = await db.getAllAsync(
-    `
-    SELECT *
-    FROM inventory_movements
-    WHERE reference_id = ?
-      AND type = 'sale'
-      AND deleted_at IS NULL
-    `,
-    [saleId]
-  );
-
-  if (!saleMovements.length) return;
-
   try {
-    // -------------------------
-    // 2️⃣ Soft delete inventory movements
-    // -------------------------
-    for (const movement of saleMovements) {
-      await db.runAsync(
-        `
-        UPDATE inventory_movements
-        SET
-          deleted_at = ?,
-          updated_at = ?,
-          updated_by = ?
-        WHERE id = ?
-        `,
-        [
-          now,
-          now,
-          user_id,
-          movement.id,
-        ]
-      );
-
-      // 🔥 SYNC inventory movement deletion
-      await syncEvent(db, {
-        model: "inventory_movements",
-        operation: "update",
-        payload: {
-          ...movement,
-          deleted_at: now,
-          updated_at: now,
-          updated_by: user_id,
-        },
-      });
-    }
-
-    // -------------------------
-    // 3️⃣ Load sale items
-    // -------------------------
     const saleItems = await db.getAllAsync(
       `
       SELECT *
@@ -165,38 +112,85 @@ export async function reverseSale(
       [saleId]
     );
 
-    // -------------------------
-    // 4️⃣ Soft delete sale items
-    // -------------------------
+    // 1. Restore batch stock
+    for (const item of saleItems) {
+      await db.runAsync(
+        `
+        UPDATE inventory_batches
+        SET quantity_on_hand = quantity_on_hand + ?,
+            updated_at = ?
+        WHERE id = ?
+        `,
+        [
+          item.quantity,
+          now,
+          item.batch_id,
+        ]
+      );
+    }
+
+    // 2. Append reversal movements (IMPORTANT: append-only ledger)
+    for (const item of saleItems) {
+      await db.runAsync(
+        `
+        INSERT INTO inventory_movements (
+          id,
+          product_id,
+          batch_id,
+          company,
+          unit_cost,
+          quantity,
+          type,
+          reason,
+          reference_id,
+          date,
+          created_at,
+          updated_at,
+          created_by,
+          updated_by
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+        [
+          newUuid(),
+          item.product_id,
+          item.batch_id,
+          company,
+          item.cost_price,
+          item.quantity,
+          "adjustment",
+          "sale_reversal",
+          saleId,
+          now,
+          now,
+          now,
+          user_id,
+          user_id,
+        ]
+      );
+    }
+
+    // 3. Mark sale items deleted
     for (const item of saleItems) {
       await db.runAsync(
         `
         UPDATE sale_items
-        SET
-          deleted_at = ?,
-          updated_at = ?
+        SET deleted_at = ?, updated_at = ?
         WHERE id = ?
         `,
         [now, now, item.id]
       );
-
-      // 🔥 SYNC sale item deletion
-      await syncEvent(db, {
-        model: "sale_items",
-        operation: "update",
-        payload: {
-          ...item,
-          deleted_at: now,
-          updated_at: now,
-        },
-      });
     }
 
-    await db.runAsync(`
+    // 4. Mark payments deleted
+    await db.runAsync(
+      `
       UPDATE payments
       SET deleted_at = ?, updated_at = ?
       WHERE sale_id = ?
-    `,[now, now, saleId]);
+      `,
+      [now, now, saleId]
+    );
 
   } catch (err) {
     throw err;
