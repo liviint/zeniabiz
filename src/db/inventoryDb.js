@@ -27,7 +27,6 @@ export async function upsertProduct(
     const initialStock = parseFloat(stock_quantity) || 0;
     created_at = created_at || now;
 
-    // 1️⃣ PRODUCT ONLY
       await db.runAsync(
         `
         INSERT INTO products (
@@ -66,7 +65,6 @@ export async function upsertProduct(
         ]
       );
 
-      // 2️⃣ INITIAL STOCK → delegate to restock
       if (isNew && initialStock > 0) {
           await restockProduct(db, id, {
                 stock_quantity: initialStock,
@@ -75,27 +73,6 @@ export async function upsertProduct(
               }
             );
       }
-
-    // 3️⃣ SYNC PRODUCT (should ideally be queued in DB)
-      syncEvent(db, {
-        model: "products",
-        operation: "upsert",
-        payload: {
-          id,
-          company,
-          created_by: user_id,
-          updated_by: user_id,
-          name,
-          selling_price: sellPrice,
-          cost_price: unitCost,
-          minimum_quantity:minimum_quantity,
-          created_at,
-          updated_at: now,
-          deleted_at: null,
-        },
-      }).catch((err) => {
-        console.error("Sync failed:", err);
-      });
       return id;
 
     })
@@ -337,76 +314,110 @@ export const restockProduct = async (
   productId,
   form,
 ) => {
+  const { company, user_id } = getActiveContextSync(db);
 
-    const { company, user_id } = getActiveContextSync(db);
+  const {
+    stock_quantity,
+    cost_price,
+    selling_price,
+    expiry_date = null,
+    batch_number = null,
+  } = form;
 
-    const { stock_quantity, cost_price, selling_price } = form;
+  const now = new Date().toISOString();
 
-    const now = new Date().toISOString();
+  const quantity = Number(stock_quantity);
+  const unitCost = Number(cost_price);
+  const sellPrice = Number(selling_price);
 
-    const quantity = Number(stock_quantity);
-    const unitCost = Number(cost_price);
-    const sellPrice = Number(selling_price);
+  if (!quantity || quantity <= 0) {
+    throw new Error("Stock quantity must be greater than 0");
+  }
 
-    if (!quantity || quantity <= 0) {
-      throw new Error("Stock quantity must be greater than 0");
-    }
+  if (isNaN(unitCost) || isNaN(sellPrice)) {
+    throw new Error("Invalid pricing values");
+  }
 
-    if (isNaN(unitCost) || isNaN(sellPrice)) {
-      throw new Error("Invalid pricing values");
-    }
+  const batchId = newUuid();
+  const movementId = newUuid();
 
-    const batchId = newUuid();
-    const movementId = newUuid();
-
-    // ✅ SINGLE SOURCE OBJECT
-    const movement = {
-      id: movementId,
-      product_id: productId,
-      unit_cost: unitCost,
-      selling_price: sellPrice,
-      quantity,
-      type: "purchase",
-      date: now,
-      company,
-      created_by: user_id,
-      updated_by: user_id,
-      created_at: now,
-      updated_at: now,
-      deleted_at: null,
-    };
-  
-    // ✅ 1️⃣ INSERT MOVEMENT
+  await db.withTransactionAsync(async () => {
+    // Create batch
     await db.runAsync(
       `
-      INSERT INTO inventory_movements
-      (id, company, created_by, updated_by, product_id, unit_cost,selling_price, quantity, type, date, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO inventory_batches (
+        id,
+        company,
+        created_by,
+        updated_by,
+        product_id,
+        quantity_on_hand,
+        cost_price,
+        selling_price,
+        batch_number,
+        expiry_date,
+        purchase_date,
+        created_at,
+        updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
-        movement.id,
-        movement.company,
-        movement.created_by,
-        movement.updated_by,
-        movement.product_id,
-        movement.unit_cost,
-        movement.selling_price,
-        movement.quantity,
-        movement.type,
-        movement.date,
-        movement.created_at,
-        movement.updated_at,
+        batchId,
+        company,
+        user_id,
+        user_id,
+        productId,
+        quantity,
+        unitCost,
+        sellPrice,
+        batch_number,
+        expiry_date,
+        now,
+        now,
+        now,
       ]
     );
 
-    // ✅ 3️⃣ SYNC ONLY MOVEMENT
-    syncEvent(db, {
-      model: "inventory_movements",
-      operation: "insert",
-      payload: movement,
-    }).catch(console.error);
+    // Create movement
+    await db.runAsync(
+      `
+      INSERT INTO inventory_movements (
+        id,
+        company,
+        created_by,
+        updated_by,
+        product_id,
+        batch_id,
+        quantity,
+        unit_cost,
+        selling_price,
+        type,
+        date,
+        created_at,
+        updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        movementId,
+        company,
+        user_id,
+        user_id,
+        productId,
+        batchId,
+        quantity,
+        unitCost,
+        sellPrice,
+        "purchase",
+        now,
+        now,
+        now,
+      ]
+    );
+  });
 
-    return batchId;
+  return batchId;
 };
 
 export function buildFIFO(movements) {
