@@ -325,16 +325,6 @@ export async function getFinancialStats(db, timeState) {
     [company, startDate, endDate]
   );
 
-  // -------------------------
-  // 5. Stock Value
-  // -------------------------
-
-  const stockResult = await getTotalStockValue(db);
-
-  // -------------------------
-  // 6. Safe extraction
-  // -------------------------
-
   const revenue = (revenueAndCost?.revenue - discountResult?.discounts) || 0 ;
 
   const cost = revenueAndCost?.cost || 0;
@@ -346,9 +336,6 @@ export async function getFinancialStats(db, timeState) {
     outstandingResult?.outstandingCredit || 0;
 
   const expenses = expenseResult?.expenses || 0;
-
-  const stockValue =
-    stockResult?.stock_value || 0;
 
   // -------------------------
   // 7. Profit Calculations
@@ -371,7 +358,5 @@ export async function getFinancialStats(db, timeState) {
 
     grossProfit,
     netProfit,
-
-    stockValue,
   };
 }
