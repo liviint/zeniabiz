@@ -307,12 +307,55 @@ export async function deleteProduct(db, id) {
   }
 }
 
-export const restockProduct = async (
-  db,
-  productId,
-  form,
-) => {
-  const { company, user_id } = getActiveContextSync(db);
+export async function upsertBatch(db, batch) {
+  await db.runAsync(
+    `
+    INSERT INTO inventory_batches (
+      id,
+      company,
+      created_by,
+      updated_by,
+      product_id,
+      quantity_on_hand,
+      cost_price,
+      selling_price,
+      batch_number,
+      expiry_date,
+      purchase_date,
+      created_at,
+      updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      quantity_on_hand = excluded.quantity_on_hand,
+      cost_price = excluded.cost_price,
+      selling_price = excluded.selling_price,
+      batch_number = excluded.batch_number,
+      expiry_date = excluded.expiry_date,
+      updated_by = excluded.updated_by,
+      updated_at = excluded.updated_at
+    `,
+    [
+      batch.id,
+      batch.company,
+      batch.created_by,
+      batch.updated_by,
+      batch.product_id,
+      batch.quantity_on_hand,
+      batch.cost_price,
+      batch.selling_price,
+      batch.batch_number,
+      batch.expiry_date,
+      batch.purchase_date,
+      batch.created_at,
+      batch.updated_at,
+    ]
+  );
+}
+
+export const restockProduct = async (db, productId, form) => {
+  try {
+    const { company, user_id } = getActiveContextSync(db);
 
   const {
     stock_quantity,
@@ -339,83 +382,68 @@ export const restockProduct = async (
   const batchId = newUuid();
   const movementId = newUuid();
 
-  await db.withTransactionAsync(async () => {
-    // Create batch
-    await db.runAsync(
-      `
-      INSERT INTO inventory_batches (
-        id,
-        company,
-        created_by,
-        updated_by,
-        product_id,
-        quantity_on_hand,
-        cost_price,
-        selling_price,
-        batch_number,
-        expiry_date,
-        purchase_date,
-        created_at,
-        updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
-      [
-        batchId,
-        company,
-        user_id,
-        user_id,
-        productId,
-        quantity,
-        unitCost,
-        sellPrice,
-        batch_number,
-        expiry_date,
-        now,
-        now,
-        now,
-      ]
-    );
+  await upsertBatch(db, {
+    id: batchId,
+    company,
+    created_by: user_id,
+    updated_by: user_id,
 
-    // Create movement
-    await db.runAsync(
-      `
-      INSERT INTO inventory_movements (
-        id,
-        company,
-        created_by,
-        updated_by,
-        product_id,
-        batch_id,
-        quantity,
-        unit_cost,
-        selling_price,
-        type,
-        date,
-        created_at,
-        updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
-      [
-        movementId,
-        company,
-        user_id,
-        user_id,
-        productId,
-        batchId,
-        quantity,
-        unitCost,
-        sellPrice,
-        "purchase",
-        now,
-        now,
-        now,
-      ]
-    );
+    product_id: productId,
+    quantity_on_hand: quantity,
+
+    cost_price: unitCost,
+    selling_price: sellPrice,
+
+    batch_number,
+    expiry_date,
+    purchase_date: now,
+
+    created_at: now,
+    updated_at: now,
   });
 
+  // Movement
+  await db.runAsync(
+    `
+    INSERT INTO inventory_movements (
+      id,
+      company,
+      created_by,
+      updated_by,
+      product_id,
+      batch_id,
+      quantity,
+      unit_cost,
+      selling_price,
+      type,
+      date,
+      created_at,
+      updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      movementId,
+      company,
+      user_id,
+      user_id,
+      productId,
+      batchId,
+      quantity,
+      unitCost,
+      sellPrice,
+      "purchase",
+      now,
+      now,
+      now,
+    ]
+  );
+
+
   return batchId;
+  } catch (error) {
+    console.log(error,"hello restock err")
+  }
 };
 
 export function buildFIFO(movements) {

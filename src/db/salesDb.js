@@ -113,32 +113,25 @@ export async function allocateFIFO(db, productId, requiredQty) {
 }
 
   async function insertMovementAndApply(db, movement) {
-  await db.runAsync(
-    `INSERT INTO inventory_movements
-    (id, product_id, company, unit_cost, quantity, type, reference_id, date, created_at, updated_at, created_by, updated_by)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      movement.id,
-      movement.product_id,
-      movement.company,
-      movement.unit_cost,
-      movement.quantity,
-      movement.type,
-      movement.reference_id,
-      movement.date,
-      movement.created_at,
-      movement.updated_at,
-      movement.created_by,
-      movement.updated_by,
-    ]
-  );
-
-  await syncEvent(db, {
-          model: "inventory_movements",
-          operation: "insert",
-          payload: movement,
-        });
-
+    await db.runAsync(
+      `INSERT INTO inventory_movements
+      (id, product_id, company, unit_cost, quantity, type, reference_id, date, created_at, updated_at, created_by, updated_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        movement.id,
+        movement.product_id,
+        movement.company,
+        movement.unit_cost,
+        movement.quantity,
+        movement.type,
+        movement.reference_id,
+        movement.date,
+        movement.created_at,
+        movement.updated_at,
+        movement.created_by,
+        movement.updated_by,
+      ]
+    );
 }
 
 
@@ -423,29 +416,11 @@ export async function createOrUpdateSale(
           ]
         );
 
-        await syncEvent(db, {
-          model: "sale_items",
-          operation: "insert",
-          payload: {
-            id: saleItemId,
-            sale: id,
-            company,
-            product_id: item.product_id,
-            quantity: alloc.quantity,
-            price: item.price,
-            cost_price: alloc.cost_price,
-            purchase_movement_id: alloc.purchase_id,
-            created_at: now,
-            updated_at: now,
-            deleted_at: null,
-          },
-        });
+        
       }
     }
 
-    // -------------------------
-    // 5. PAYMENT CREATION (NEW)
-    // -------------------------
+    // 5. PAYMENT CREATION
     if ((amount_paid || 0) > 0) {
       const paymentId = newUuid();
 
@@ -477,55 +452,8 @@ export async function createOrUpdateSale(
         ]
       );
 
-      await syncEvent(db, {
-        model: "payments",
-        operation: "insert",
-        payload: {
-          id: paymentId,
-          sale_id: id,
-          company,
-          created_by: user_id,
-          updated_by: user_id,
-          amount: amount_paid,
-          payment_type: "INITIAL",
-          payment_method: "cash",
-          note: "Auto-created from sale",
-          date: saleDate,
-          created_at: now,
-          updated_at: now,
-          deleted_at: null,
-        },
-      });
+      
     }
-
-    // -------------------------
-    // 6. SYNC SALE
-    // -------------------------
-    await syncEvent(db, {
-      model: "sales",
-      operation: "upsert",
-      payload: {
-        id,
-        company,
-        created_by: user_id,
-        updated_by: user_id,
-        title: finalTitle,
-        note,
-        date: saleDate,
-
-        amount: subtotal,
-        total_amount,
-        amount_paid,
-        balance_due,
-        payment_status,
-        discount,
-        customer_id,
-
-        created_at: now,
-        updated_at: now,
-        deleted_at: null,
-      },
-    });
 
     await db.runAsync("COMMIT");
 
