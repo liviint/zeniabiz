@@ -400,12 +400,15 @@ const migrateDbIfNeeded = async (db) => {
   );
 
 `);
+  //Fourth release
   await applyInventoryMigrationsV1(db);
-  await applyInventoryBatchesMigrationsV1(db);
-  await applyInventoryMovementsMigrationsV1(db);
   await migrateSalesCreditFieldsV1(db);
   await migratePaymentsFromSalesV1(db);
+  
+  //Fifth release
+  await applyInventoryBatchesMigrationsV1(db);
   await applySalesMigrationsV1(db);
+  await applyInventoryMovementsMigrationsV1(db);
   await migrateMovementsToBatches(db)
 };
 
