@@ -10,6 +10,7 @@ export async function upsertProduct(
     selling_price = 0,
     stock_quantity = 0,
     minimum_quantity = 5,
+    expiry_date = null,
     created_at,
   }
 ) {
@@ -70,6 +71,7 @@ export async function upsertProduct(
                 stock_quantity: initialStock,
                 cost_price: unitCost,
                 selling_price: sellPrice,
+                expiry_date:expiry_date ? expiry_date.toISOString() : null,
               }
             );
       }

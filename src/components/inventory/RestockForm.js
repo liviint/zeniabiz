@@ -63,8 +63,9 @@ export default function RestockForm({
         await restockProduct(db, id, {
             stock_quantity: quantity,
             cost_price: cost,
-            selling_price: price
-        });
+            selling_price: price,
+            expiry_date:form.expiry_date ? form.expiry_date.toISOString() : null
+        }); 
         const updated = await getProductById(db, id);
         setProduct(updated);
 

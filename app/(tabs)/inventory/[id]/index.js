@@ -26,12 +26,12 @@ export default function ProductViewPage() {
     if (!id) return;
     const getProduct = async() => {
       const data = await getProductById(db, id);
-      console.log(data,"hellod data")
       data && setProduct(data);
     }
 
     const getBatches = async() => {
       const data = await getProductBatches(db, id);
+      console.log(data,"hellod data")
       setStockBatches(data);
     }
 
@@ -81,6 +81,12 @@ export default function ProductViewPage() {
                 label="Added"
                 value={batch.purchase_date ? dateFormat(batch.purchase_date): "-"}
               />
+
+              <DetailRow
+                label="Sell By Date"
+                value={batch.purchase_date ? dateFormat(batch.expiry_date): "-"}
+              />
+              
             </Card>
           ))}
         </View>

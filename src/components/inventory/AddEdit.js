@@ -106,15 +106,19 @@ export default function AddProduct() {
           </View>
         }
 
-        <View style={globalStyles.formGroup}>
-          <FormLabel>Minimum Quantity</FormLabel>
-          <Input 
-            value={String(form.minimum_quantity)} 
-            keyboardType="numeric" 
-            onChangeText={(v) => handleChange("minimum_quantity", v)} 
-          />
-        </View>
+        {
+          id  ? "" : 
+          <View style={globalStyles.formGroup}>
+            <FormLabel>Minimum Quantity</FormLabel>
+            <Input 
+              value={String(form.minimum_quantity)} 
+              keyboardType="numeric" 
+              onChangeText={(v) => handleChange("minimum_quantity", v)} 
+            />
+          </View>
+        }
 
+        {id ? "" : 
         <View style={globalStyles.formGroup}>
           <FormLabel>Sell By Date</FormLabel>
           <View style={{ flexDirection: "row", gap: 12 }}>
@@ -137,6 +141,7 @@ export default function AddProduct() {
 
             
           </View>
+        
 
           {showDatePicker && (
             <DateTimePicker
@@ -147,7 +152,7 @@ export default function AddProduct() {
             />
           )}
 
-        </View>
+        </View>}
 
         {id && (
           <SecondaryText style={{marginTop:5, marginBottom:10,fontSize:14}}>
