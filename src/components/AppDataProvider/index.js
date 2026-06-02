@@ -209,9 +209,6 @@ const migrateDbIfNeeded = async (db) => {
   CREATE INDEX IF NOT EXISTS idx_batches_company_product
   ON inventory_batches(company, product_id);
 
-  CREATE INDEX IF NOT EXISTS idx_batches_expiry
-  ON inventory_batches(company, expiry_date);
-
   CREATE TABLE IF NOT EXISTS inventory_movements (
     id TEXT PRIMARY KEY,
 

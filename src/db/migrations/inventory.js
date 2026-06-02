@@ -40,6 +40,11 @@ export const applyInventoryBatchesMigrationsV1 = async (db) => {
         "quantity_remaining",
     );
 
+    await db.execAsync(`
+        CREATE INDEX IF NOT EXISTS idx_batches_expiry
+        ON inventory_batches(company, expiry_date);
+    `);
+
 }
 
 export const applyInventoryMovementsMigrationsV1 = async (db) => {
