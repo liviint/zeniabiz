@@ -63,60 +63,163 @@ export const applyInventoryMovementsMigrationsV1 = async (db) => {
 }
 
 export async function migrateMovementsToBatches(db) {
-    const purchases = await db.getAllAsync(`
-        SELECT *
-        FROM inventory_movements
-        WHERE type = 'purchase'
-        AND batch_id IS NULL
-        AND deleted_at IS NULL
-    `);
+  const now = new Date().toISOString();
 
-    for (const purchase of purchases) {
-        const batchId = newUuid();
+  // 1️⃣ Check if batches already exist
+  const existing = await db.getAllAsync(`
+    SELECT COUNT(*) as count
+    FROM inventory_batches
+  `);
 
-        // Current stock from this purchase
-        // Initially assume entire purchase quantity
-        const quantityOnHand = purchase.quantity;
+  const count = existing?.[0]?.count || 0;
 
-        await db.runAsync(
-        `
-        INSERT INTO inventory_batches (
-            id,
-            company,
-            created_by,
-            updated_by,
-            product_id,
-            quantity_on_hand,
-            cost_price,
-            selling_price,
-            purchase_date,
-            created_at,
-            updated_at
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `,
-        [
-            batchId,
-            purchase.company,
-            purchase.created_by,
-            purchase.updated_by,
-            purchase.product_id,
-            quantityOnHand,
-            purchase.unit_cost,
-            purchase.selling_price,
-            purchase.date,
-            purchase.created_at,
-            purchase.updated_at,
-        ]
-        );
+  if (count > 0) {
+    console.log("Migration skipped: inventory_batches already exists");
+    return {
+      skipped: true,
+      reason: "inventory_batches not empty",
+    };
+  }
 
-        await db.runAsync(
+  // 2️⃣ Load ALL movements in chronological order
+  const movements = await db.getAllAsync(`
+    SELECT *
+    FROM inventory_movements
+    WHERE deleted_at IS NULL
+    ORDER BY datetime(date), datetime(created_at)
+  `);
+
+  const fifo = [];
+
+  // 3️⃣ Replay ledger
+  for (const m of movements) {
+    const qty = Number(m.quantity);
+
+    // -------------------------
+    // PURCHASE → create batch layer
+    // -------------------------
+    if (m.type === "purchase") {
+      const batchId = m.batch_id || newUuid();
+
+      const layer = {
+        batchId,
+        product_id: m.product_id,
+        company: m.company,
+        created_by: m.created_by,
+        cost_price: m.unit_cost,
+        selling_price: m.selling_price || 0,
+        remaining: qty,
+        purchase_date: m.date,
+      };
+
+      fifo.push(layer);
+
+      await db.runAsync(
         `
         UPDATE inventory_movements
         SET batch_id = ?
         WHERE id = ?
         `,
-        [batchId, purchase.id]
-        );
+        [batchId, m.id]
+      );
     }
+
+    // -------------------------
+    // SALE → consume FIFO
+    // -------------------------
+    if (m.type === "sale") {
+      let toConsume = Math.abs(qty);
+
+      for (const layer of fifo) {
+        if (toConsume <= 0) break;
+        if (layer.remaining <= 0) continue;
+
+        const take = Math.min(layer.remaining, toConsume);
+
+        layer.remaining -= take;
+        toConsume -= take;
+      }
+
+      if (toConsume > 0) {
+        throw new Error(
+          `Migration failed: negative stock detected for product ${m.product_id}`
+        );
+      }
+    }
+
+    // -------------------------
+    // ADJUSTMENT → direct stock impact
+    // -------------------------
+    if (m.type === "adjustment") {
+      const batchId = m.batch_id || newUuid();
+
+      fifo.push({
+        batchId,
+        product_id: m.product_id,
+        company: m.company,
+        created_by: m.created_by,
+        cost_price: m.unit_cost,
+        selling_price: 0,
+        remaining: qty,
+        purchase_date: m.date,
+      });
+
+      await db.runAsync(
+        `
+        UPDATE inventory_movements
+        SET batch_id = ?
+        WHERE id = ?
+        `,
+        [batchId, m.id]
+      );
+    }
+  }
+
+  // 4️⃣ Insert batches only after full reconstruction
+  await db.runAsync(`DELETE FROM inventory_batches`);
+
+  for (const layer of fifo) {
+    if (layer.remaining <= 0) continue;
+
+    await db.runAsync(
+      `
+      INSERT INTO inventory_batches (
+        id,
+        company,
+        created_by,
+        updated_by,
+        product_id,
+        quantity_on_hand,
+        cost_price,
+        selling_price,
+        batch_number,
+        expiry_date,
+        purchase_date,
+        created_at,
+        updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        layer.batchId,
+        layer.company,
+        layer.created_by,
+        layer.created_by,
+        layer.product_id,
+        layer.remaining,
+        layer.cost_price,
+        layer.selling_price,
+        null,
+        null,
+        layer.purchase_date,
+        now,
+        now,
+      ]
+    );
+  }
+
+  return {
+    success: true,
+    batchesCreated: fifo.length,
+  };
 }
