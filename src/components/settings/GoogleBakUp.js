@@ -29,6 +29,7 @@ const GoogleBackUp = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [lastBackup, setLastBackup] = useState(null);
   const [autoBackupEnabled, setAutoBackupEnabled] = useState(true);
+  const [userEmail, setUserEmail] = useState(null);
 
   // 1. Configure Google once
   useEffect(() => {
@@ -37,12 +38,19 @@ const GoogleBackUp = () => {
     loadSettings();
   }, [isFocused]);
 
+  useEffect(() => {
+    
+    
+  },[])
+
   // 2. Load settings
   const loadSettings = async () => {
     const last = await getSetting(db, "last_backup_date");
+    let email = await getSetting(db, "gdrive_email")
 
     if (last) {
       setLastBackup(new Date(last).toLocaleString());
+      setUserEmail(email)
     }
 
     const auto = await getSetting(db, "auto_backup_enabled");
@@ -100,6 +108,9 @@ const GoogleBackUp = () => {
         dispatch(setGoogleConnected(true));
         dispatch(requestSync());
         
+        await setSetting(db,"gdrive_email",userInfo?.data?.user?.email)
+        setUserEmail(userInfo?.data?.user?.email)
+
         Alert.alert(
           "Connected",
           `Signed in as ${userInfo?.data?.user?.email}`
@@ -200,6 +211,14 @@ const GoogleBackUp = () => {
               Backup Now
             </BodyText>
           </TouchableOpacity>
+
+          <View style={styles.settingRow}>
+            {userEmail && (
+              <BodyText style={styles.helperText}>
+                Signed in as: {userEmail}
+              </BodyText>
+            )}
+          </View>
 
           <View style={styles.settingRow}>
             <BodyText>Automatic Daily Backup</BodyText>
