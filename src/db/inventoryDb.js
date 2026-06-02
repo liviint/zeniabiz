@@ -242,7 +242,8 @@ export async function getProducts(
 }
 
 export async function getProductById(db, id) {
-  const {company} = getActiveContextSync()
+  const { company } = getActiveContextSync();
+
   const product = await db.getFirstAsync(
     `
     SELECT 
@@ -254,30 +255,20 @@ export async function getProductById(db, id) {
       p.minimum_quantity,
       p.created_at,
 
-      -- STOCK = purchases - sales +/- adjustments
-      COALESCE(SUM(
-        CASE 
-          WHEN m.type = 'purchase' THEN m.quantity
-          WHEN m.type = 'sale' THEN -ABS(m.quantity)
-          WHEN m.type = 'adjustment' THEN m.quantity
-          ELSE 0
-        END
-      ), 0) AS stock_quantity,
+      -- STOCK from batches (source of truth)
+      COALESCE(SUM(b.quantity_on_hand), 0) AS stock_quantity,
 
-      -- STOCK VALUE (cost basis from movements only)
+      -- STOCK VALUE from batches
       COALESCE(SUM(
-        CASE 
-          WHEN m.type = 'purchase' THEN m.quantity * m.unit_cost
-          WHEN m.type = 'adjustment' THEN m.quantity * m.unit_cost
-          ELSE 0
-        END
+        b.quantity_on_hand * b.cost_price
       ), 0) AS stock_value
 
     FROM products p
-    LEFT JOIN inventory_movements m
-      ON m.product_id = p.id
-      AND m.deleted_at IS NULL
-      AND m.company = ?
+
+    LEFT JOIN inventory_batches b
+      ON b.product_id = p.id
+      AND b.deleted_at IS NULL
+      AND b.company = ?
 
     WHERE p.id = ?
       AND p.deleted_at IS NULL
@@ -286,7 +277,7 @@ export async function getProductById(db, id) {
     GROUP BY p.id
     LIMIT 1
     `,
-    [company,id,company]
+    [company, id, company]
   );
 
   return product;

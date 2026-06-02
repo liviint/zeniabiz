@@ -31,7 +31,6 @@ export default function ProductViewPage() {
 
     const getBatches = async() => {
       const data = await getProductBatches(db, id);
-      console.log(data,"hellod data")
       setStockBatches(data);
     }
 
