@@ -49,7 +49,7 @@ export default function ProductsListPage() {
       key:"out_of_stock",
     },
     {
-      label: "Expiring Soon",
+      label: "Expiring Soon(< 30 days)",
       action: () => setFilter("expiring_soon"),
       key: "expiring_soon",
     },
