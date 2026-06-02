@@ -158,6 +158,7 @@ export const createGlobalStyles = (colors) =>
       justifyContent: "center",
       gap:8,
       alignItems: "center",
+      flexWrap:"wrap",
     }
 
   });
