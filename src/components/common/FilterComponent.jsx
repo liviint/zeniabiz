@@ -75,7 +75,7 @@ const styles = {
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "#ddd",
-    backgroundColor: "#F4F1ED",
+    backgroundColor: "#F4E1D2",
     alignSelf: "flex-start",
   },
 
