@@ -89,9 +89,10 @@ export async function getProducts(
     sort = "newest",
   } = {}
 ) {
-  const {company} = getActiveContextSync()
+  const { company } = getActiveContextSync(db);
+
   let sql = `
-    SELECT 
+    SELECT
       p.id,
       p.name,
       p.sku,
@@ -100,104 +101,140 @@ export async function getProducts(
       p.minimum_quantity,
       p.created_at,
 
-      -- STOCK (pure ledger calculation)
-      COALESCE(SUM(
-        CASE 
-          WHEN m.type = 'purchase' THEN m.quantity
-          WHEN m.type = 'sale' THEN -ABS(m.quantity)
-          WHEN m.type = 'adjustment' THEN m.quantity
-          ELSE 0
-        END
-      ), 0) AS stock_quantity,
+      COALESCE(
+        SUM(b.quantity_on_hand),
+        0
+      ) AS stock_quantity,
 
-      -- STOCK VALUE (cost basis approximation)
-      COALESCE(SUM(
-        CASE 
-          WHEN m.type = 'purchase' THEN m.quantity * m.unit_cost
-          WHEN m.type = 'adjustment' THEN m.quantity * m.unit_cost
-          ELSE 0
-        END
-      ), 0) AS stock_value
+      COALESCE(
+        SUM(
+          b.quantity_on_hand * b.cost_price
+        ),
+        0
+      ) AS stock_value
 
     FROM products p
-    LEFT JOIN inventory_movements m
-      ON m.product_id = p.id
-      AND m.deleted_at IS NULL
-      AND m.company = ?
+
+    LEFT JOIN inventory_batches b
+      ON b.product_id = p.id
+      AND b.deleted_at IS NULL
+      AND b.company = ?
 
     WHERE p.deleted_at IS NULL
-    AND p.company = ?
+      AND p.company = ?
   `;
 
   const params = [company, company];
 
-  // 📅 Month filter (applies to movements, not products)
-  if (selectedMonth) {
-    const { startDate, endDate } = getMonthRange(selectedMonth);
-
-    sql += `
-      AND (
-        m.date IS NULL 
-        OR (
-          datetime(m.date) >= datetime(?)
-          AND datetime(m.date) < datetime(?)
-        )
-      )
-    `;
-
-    params.push(startDate, endDate);
-  }
-
-  // 🔍 Search
+  // Search
   if (search?.trim()) {
     sql += `
       AND (
-        p.name LIKE ? OR 
-        p.sku LIKE ?
+        p.name LIKE ?
+        OR p.sku LIKE ?
       )
     `;
-    params.push(`%${search}%`, `%${search}%`);
+
+    params.push(
+      `%${search.trim()}%`,
+      `%${search.trim()}%`
+    );
   }
 
-  // 🧱 GROUPING
-  sql += ` GROUP BY p.id`;
+  // Grouping
+  sql += `
+    GROUP BY p.id
+  `;
 
-  if (filter === "low_stock") {
-    sql += `
-      HAVING stock_quantity > 0
-      AND stock_quantity <= minimum_quantity
-    `;
-  } else if (filter === "out_of_stock") {
-    sql += `
-      HAVING stock_quantity = 0
-    `;
+  // Filters
+  switch (filter) {
+    case "low_stock":
+      sql += `
+        HAVING stock_quantity > 0
+        AND stock_quantity <= minimum_quantity
+      `;
+      break;
+
+    case "out_of_stock":
+      sql += `
+        HAVING stock_quantity <= 0
+      `;
+      break;
+
+    case "expiring_soon":
+      sql += `
+        HAVING EXISTS (
+          SELECT 1
+          FROM inventory_batches b2
+          WHERE b2.product_id = p.id
+            AND b2.company = ?
+            AND b2.deleted_at IS NULL
+            AND b2.quantity_on_hand > 0
+            AND b2.expiry_date IS NOT NULL
+            AND date(b2.expiry_date) >= date('now')
+            AND date(b2.expiry_date) <= date('now', '+30 days')
+        )
+      `;
+      params.push(company);
+      break;
+
+    case "expired":
+      sql += `
+        HAVING EXISTS (
+          SELECT 1
+          FROM inventory_batches b2
+          WHERE b2.product_id = p.id
+            AND b2.company = ?
+            AND b2.deleted_at IS NULL
+            AND b2.quantity_on_hand > 0
+            AND b2.expiry_date IS NOT NULL
+            AND date(b2.expiry_date) < date('now')
+        )
+      `;
+      params.push(company);
+      break;
+
+    default:
+      break;
   }
 
-  // 🔃 SORTING
+  // Sorting
   switch (sort) {
     case "oldest":
-      sql += ` ORDER BY datetime(p.created_at) ASC`;
+      sql += `
+        ORDER BY datetime(p.created_at) ASC
+      `;
       break;
 
     case "high_stock":
-      sql += ` ORDER BY stock_quantity DESC`;
+      sql += `
+        ORDER BY stock_quantity DESC
+      `;
       break;
 
     case "low_stock":
-      sql += ` ORDER BY stock_quantity ASC`;
+      sql += `
+        ORDER BY stock_quantity ASC
+      `;
       break;
 
     case "price_high":
-      sql += ` ORDER BY p.selling_price DESC`;
+      sql += `
+        ORDER BY p.selling_price DESC
+      `;
       break;
 
     case "price_low":
-      sql += ` ORDER BY p.selling_price ASC`;
+      sql += `
+        ORDER BY p.selling_price ASC
+      `;
       break;
 
     case "newest":
     default:
-      sql += ` ORDER BY datetime(p.created_at) DESC`;
+      sql += `
+        ORDER BY datetime(p.created_at) DESC
+      `;
       break;
   }
 

@@ -41,6 +41,7 @@ const styles = {
         flexDirection: "row",
         gap: 8,
         paddingVertical: 8,
+        flexWrap:"wrap",
     },
     chip: {
         paddingHorizontal: 12,

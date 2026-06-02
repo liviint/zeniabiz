@@ -44,6 +44,16 @@ export default function ProductsListPage() {
       label:"Out of Stock",
       action:() => setFilter("out_of_stock"),
       key:"out_of_stock",
+    },
+    {
+      label: "Expiring Soon",
+      action: () => setFilter("expiring_soon"),
+      key: "expiring_soon",
+    },
+    {
+      label: "Expired",
+      action: () => setFilter("expired"),
+      key: "expired",
     }
   ]
 
@@ -61,7 +71,7 @@ export default function ProductsListPage() {
   useEffect(() => {
     setStats({
       count:products.length,
-      stockValue:products.reduce((sum,product) => sum + product.cost_price,0)
+      stockValue:products.reduce((sum,product) => sum + (product.cost_price * product.stock_quantity),0)
     })
   },[products])
 
