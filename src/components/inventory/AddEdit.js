@@ -46,14 +46,68 @@ export default function AddProduct() {
   };
 
   const handleSave = async () => {
-    if (!form.name) return Alert.alert("Name required");
-    try {
-        await upsertProduct(db, { ...form })
-    } catch (error) {
-      console.log(error,"hello restock error")
-    }
+  if (!form.name?.trim()) {
+    return Alert.alert("Validation Error", "Product name is required.");
+  }
+
+  const costPrice = Number(form.cost_price);
+  const sellingPrice = Number(form.selling_price);
+  const stockQuantity = Number(form.stock_quantity);
+  const minimumQuantity = Number(form.minimum_quantity);
+
+  if (isNaN(costPrice) || costPrice < 0) {
+    return Alert.alert(
+      "Validation Error",
+      "Enter a valid cost price."
+    );
+  }
+
+  if (isNaN(sellingPrice) || sellingPrice <= 0) {
+    return Alert.alert(
+      "Validation Error",
+      "Enter a valid selling price."
+    );
+  }
+
+  if (sellingPrice <= costPrice) {
+    return Alert.alert(
+      "Validation Error",
+      "Selling price should be higher than cost price."
+    );
+  }
+
+  if (isNaN(stockQuantity) || stockQuantity < 0) {
+    return Alert.alert(
+      "Validation Error",
+      "Stock quantity cannot be negative."
+    );
+  }
+
+  if (isNaN(minimumQuantity) || minimumQuantity < 0) {
+    return Alert.alert(
+      "Validation Error",
+      "Minimum quantity cannot be negative."
+    );
+  }
+
+  try {
+    await upsertProduct(db, {
+      ...form,
+      cost_price: costPrice,
+      selling_price: sellingPrice,
+      stock_quantity: stockQuantity,
+      minimum_quantity: minimumQuantity,
+    });
+
     router.push("/inventory");
-  };
+  } catch (error) {
+    console.log(error, "product save error");
+    Alert.alert(
+      "Error",
+      "Failed to save product. Please try again."
+    );
+  }
+};
 
    useEffect(() => {
       if (!id) return;

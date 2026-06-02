@@ -13,7 +13,8 @@ export default function RestockForm({
     setRestockVisible, 
     setProduct, 
     setReoloadBatches, 
-    batch 
+    batch ,
+    setSelectedBatch,
 }) {
     const db = useSQLiteContext();
     const { globalStyles } = useThemeStyles();
@@ -47,6 +48,7 @@ export default function RestockForm({
         let expiry_date = form.expiry_date ? form.expiry_date.toISOString() : null
         if(batch){
             await upsertBatch(db,{...batch,...form,expiry_date})
+            setSelectedBatch(null)
             Alert.alert("Success", `Updated Successfully`);
         }
         else{
@@ -67,6 +69,13 @@ export default function RestockForm({
             if (!price || price <= 0) {
                 Alert.alert("Invalid input", "Enter a valid selling price");
                 return;
+            }
+
+            if (price <= cost) {
+                return Alert.alert(
+                    "Validation Error",
+                    "Selling price should be higher than cost price."
+                );
             }
 
             await restockProduct(db, id, {
@@ -189,7 +198,10 @@ export default function RestockForm({
                 <View style={styles.modalActions}>
                     <Pressable
                         style={globalStyles.secondaryBtn}
-                        onPress={() => setRestockVisible(false)}
+                        onPress={() => {
+                            setRestockVisible(false)
+                            setSelectedBatch(null)
+                        }}
                     >
                     <BodyText 
                         style={globalStyles.secondaryBtnText}
