@@ -176,6 +176,7 @@ export default function CreditsListPage() {
             filterOptions={filterOptions}
             statusFilter={statusFilter}
             stats={creditStats}
+            globalStyles={globalStyles}
           />
         }
         ListEmptyComponent={
@@ -196,15 +197,18 @@ const ListHeader = ({
   filterOptions={filterOptions}, 
   statusFilter,
   stats,
+  globalStyles
 }) => {
   return (
     <>
       <TimeNavigator state={timeState} onChange={setTimeState} />
 
-      <FilterComponent 
-        filterOptions={filterOptions}
-        activeFilter={statusFilter}
-      />
+      <View style={globalStyles.filterSortContainer}>
+        <FilterComponent 
+          filterOptions={filterOptions}
+          activeFilter={statusFilter}
+        />
+      </View>
 
       <View style={styles.statsRow}>
         <StatCard
