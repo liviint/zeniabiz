@@ -21,6 +21,7 @@ export default function ProductViewPage() {
   const [stockBatches,setStockBatches] = useState([])
   const [restockVisible, setRestockVisible] = useState(false);
   const [reloadBatches,setReoloadBatches] = useState(0)
+  const [selectedBatch, setSelectedBatch] = useState(null);
 
   useEffect(() => {
     if (!id) return;
@@ -82,10 +83,24 @@ export default function ProductViewPage() {
               />
 
               <DetailRow
-                label="Sell By Date"
+                label="Expiry Date"
                 value={batch.purchase_date ? dateFormat(batch.expiry_date): "-"}
               />
-              
+
+              <View style={styles.editBtnContainer}>
+                <Pressable
+                  style={globalStyles.editBtn}
+                  onPress={() => {
+                    setSelectedBatch(batch);
+                    setRestockVisible(true);
+                  }}
+                >
+                  <BodyText style={globalStyles.editBtnText}>
+                    Edit
+                  </BodyText>
+                </Pressable>
+              </View>
+
             </Card>
           ))}
         </View>
@@ -115,6 +130,8 @@ export default function ProductViewPage() {
         setRestockVisible={setRestockVisible}
         setProduct={setProduct}
         setReoloadBatches={setReoloadBatches}
+        batch={selectedBatch}
+        setSelectedBatch={setSelectedBatch}
       />
     </ScrollView>
   );
@@ -136,9 +153,16 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 20,
     paddingBottom:20,
+    justifyContent:"flex-end",
   },
   batchCard: {
     padding: 14,
     marginTop: 10,
-  }
+  },
+  editBtnContainer:{
+    flexDirection: "row",
+    marginTop: 3,
+    paddingBottom:3,
+    justifyContent:"flex-end",
+  },
 });

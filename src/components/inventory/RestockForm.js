@@ -1,14 +1,20 @@
 import { useLocalSearchParams } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Alert, Pressable, StyleSheet, View , Modal, TouchableOpacity,  } from "react-native";
-import { BodyText, Card, Input , FormLabel} from "../../components/ThemeProvider/components";
-import { getProductById, restockProduct } from "../../db/inventoryDb";
+import { BodyText, Card, Input , FormLabel, SecondaryText} from "../../components/ThemeProvider/components";
+import { getProductById, restockProduct , upsertBatch} from "../../db/inventoryDb";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 export default function RestockForm({
-    product, restockVisible, setRestockVisible, setProduct, setReoloadBatches }) {
+    product, 
+    restockVisible, 
+    setRestockVisible, 
+    setProduct, 
+    setReoloadBatches, 
+    batch 
+}) {
     const db = useSQLiteContext();
     const { globalStyles } = useThemeStyles();
     const { id } = useLocalSearchParams();
@@ -38,42 +44,62 @@ export default function RestockForm({
     };
 
     const handleRestockConfirm = async () => {
-
-        const quantity = parseInt(form.stock_quantity, 10);
-        const cost = parseFloat(form.cost_price);
-        const price = parseFloat(form.selling_price);
-
-        if (!quantity || quantity <= 0) {
-            Alert.alert("Invalid input", "Enter a valid quantity");
-            return;
+        let expiry_date = form.expiry_date ? form.expiry_date.toISOString() : null
+        if(batch){
+            await upsertBatch(db,{...batch,...form,expiry_date})
+            Alert.alert("Success", `Updated Successfully`);
         }
+        else{
+            const quantity = parseInt(form.stock_quantity, 10);
+            const cost = parseFloat(form.cost_price);
+            const price = parseFloat(form.selling_price);
 
-        if (!cost || cost <= 0) {
-            Alert.alert("Invalid input", "Enter a valid cost price");
-            return;
+            if (!quantity || quantity <= 0) {
+                Alert.alert("Invalid input", "Enter a valid quantity");
+                return;
+            }
+
+            if (!cost || cost <= 0) {
+                Alert.alert("Invalid input", "Enter a valid cost price");
+                return;
+            }
+
+            if (!price || price <= 0) {
+                Alert.alert("Invalid input", "Enter a valid selling price");
+                return;
+            }
+
+            await restockProduct(db, id, {
+                stock_quantity: quantity,
+                cost_price: cost,
+                selling_price: price,
+                expiry_date,
+            }); 
+            const updated = await getProductById(db, id);
+            setProduct(updated);
+
+            Alert.alert("Success", `Added ${form.stock_quantity} items to stock`);
         }
-
-        if (!price || price <= 0) {
-            Alert.alert("Invalid input", "Enter a valid selling price");
-            return;
-        }
-
-        
-
-        await restockProduct(db, id, {
-            stock_quantity: quantity,
-            cost_price: cost,
-            selling_price: price,
-            expiry_date:form.expiry_date ? form.expiry_date.toISOString() : null
-        }); 
-        const updated = await getProductById(db, id);
-        setProduct(updated);
-
         setRestockVisible(false);
         setForm(initialForm)
         setReoloadBatches(prev => prev + 1)
-        Alert.alert("Success", `Added ${form.stock_quantity} items to stock`);
     };
+
+    useEffect(() => {
+        if (!batch) {
+            setForm(initialForm);
+            return;
+        }
+
+        setForm({
+            stock_quantity: String(batch.quantity_on_hand),
+            cost_price: String(batch.cost_price),
+            selling_price: String(batch.selling_price),
+            expiry_date: batch.expiry_date
+            ? new Date(batch.expiry_date)
+            : null,
+        });
+        }, [batch]);
 
     return (
         <Modal
@@ -83,11 +109,20 @@ export default function RestockForm({
         >
         <View style={styles.modalOverlay}>
             <Card style={styles.modalContent}>
-            <BodyText style={styles.modalTitle}>Restock Product</BodyText>
+            <BodyText style={styles.modalTitle}>
+                {batch ? "Edit Batch" : "Restock Product"}
+            </BodyText>
+
+            {batch && (
+                <SecondaryText style={{ marginBottom: 12,fontSize:14, }}>
+                    Only the Expiry Date is editable.
+                </SecondaryText>
+            )}
             
             <View style={globalStyles.formGroup}>
                 <FormLabel>Batch Quantity</FormLabel>
                 <Input
+                    editable={!batch}
                     keyboardType="numeric"
                     value={form.stock_quantity}
                     onChangeText={(val) => handleFormChange("stock_quantity",val)}
@@ -98,6 +133,7 @@ export default function RestockForm({
                 <View style={globalStyles.formGroup}>
                     <FormLabel>Cost Price</FormLabel>
                     <Input
+                        editable={!batch}
                         keyboardType="numeric"
                         value={form.cost_price}
                         onChangeText={(val) => handleFormChange("cost_price",val)}
@@ -108,6 +144,7 @@ export default function RestockForm({
                 <View style={globalStyles.formGroup}>
                     <FormLabel>Selling Price</FormLabel>
                     <Input
+                        editable={!batch}
                         keyboardType="numeric"
                         value={form.selling_price}
                         onChangeText={(val) => handleFormChange("selling_price",val)}
@@ -116,7 +153,7 @@ export default function RestockForm({
                 </View>
 
                 <View style={globalStyles.formGroup}>
-                    <FormLabel>Sell By Date</FormLabel>
+                    <FormLabel>Expiry Date</FormLabel>
                     <View style={{ flexDirection: "row", gap: 12 }}>
                     <TouchableOpacity
                         onPress={() => setShowDatePicker(true)}
@@ -151,10 +188,14 @@ export default function RestockForm({
 
                 <View style={styles.modalActions}>
                     <Pressable
-                        style={styles.cancelBtn}
+                        style={globalStyles.secondaryBtn}
                         onPress={() => setRestockVisible(false)}
                     >
-                    <BodyText>Cancel</BodyText>
+                    <BodyText 
+                        style={globalStyles.secondaryBtnText}
+                    >
+                        Cancel
+                    </BodyText>
                     </Pressable>
 
                     <Pressable
@@ -162,7 +203,7 @@ export default function RestockForm({
                         onPress={handleRestockConfirm}
                     >
                     <BodyText style={globalStyles.primaryBtnText}>
-                        Confirm
+                        {batch ? "Edit Batch" : "Restock Product"}
                     </BodyText>
                     </Pressable>
                 </View>
@@ -188,7 +229,7 @@ const styles = StyleSheet.create({
 
     modalTitle: {
         fontSize: 18,
-        marginBottom: 12,
+        marginBottom: 2,
     },
 
     modalActions: {
