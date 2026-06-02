@@ -63,25 +63,14 @@ export const applyInventoryMovementsMigrationsV1 = async (db) => {
 }
 
 export async function migrateMovementsToBatches(db) {
-  const now = new Date().toISOString();
-
-  // 1️⃣ Prevent re-running if batches already exist
-  const existing = await db.getFirstAsync(`
-    SELECT COUNT(*) as count
-    FROM inventory_batches
-  `);
-
-  if ((existing?.count || 0) > 0) {
-    console.log("Migration skipped: batches already exist");
-    return { skipped: true };
-  }
+    const now = new Date().toISOString();
 
   // 2️⃣ Get all products (we rebuild per product)
-  const products = await db.getAllAsync(`
-    SELECT id, company, created_by
-    FROM products
-    WHERE deleted_at IS NULL
-  `);
+    const products = await db.getAllAsync(`
+        SELECT id, company, created_by
+        FROM products
+        WHERE deleted_at IS NULL
+    `);
 
   // 3️⃣ Clear batches (fresh rebuild)
   await db.runAsync(`DELETE FROM inventory_batches`);
@@ -230,6 +219,7 @@ export async function migrateMovementsToBatches(db) {
       totalBatches++;
     }
   }
+  
 
   return {
     success: true,

@@ -10,8 +10,10 @@ import {
 } from "../../db/migrations/inventory"
 import {migrateSalesCreditFieldsV1, migratePaymentsFromSalesV1} from "../../db/migrations/credit"
 import { applySalesMigrationsV1 } from "../../db/migrations/sales"
+import { getSetting, setSetting } from "@/src/db/settingsDb";
 
 const migrateDbIfNeeded = async (db) => {
+  let currentVersion = Number((await getSetting(db, "db_version")) || 0);
 
   // await db.execAsync(`DELETE FROM `);
   await db.execAsync(`
@@ -397,17 +399,24 @@ const migrateDbIfNeeded = async (db) => {
   );
 
 `);
-  //Fourth release
-  await applyInventoryMigrationsV1(db);
-  await migrateSalesCreditFieldsV1(db);
-  await migratePaymentsFromSalesV1(db);
-  
-  //Fifth release
-  await applyInventoryBatchesMigrationsV1(db);
-  await applySalesMigrationsV1(db);
-  await applyInventoryMovementsMigrationsV1(db);
-  await migrateMovementsToBatches(db)
-};
+  if(currentVersion < 1){
+    await applyInventoryMigrationsV1(db);
+    await migrateSalesCreditFieldsV1(db);
+    await migratePaymentsFromSalesV1(db);
+
+    currentVersion = 1;
+    await setSetting(db, "db_version", currentVersion);
+  }
+  if(currentVersion < 2){
+    await applyInventoryBatchesMigrationsV1(db);
+    await applySalesMigrationsV1(db);
+    await applyInventoryMovementsMigrationsV1(db);
+    await migrateMovementsToBatches(db)
+
+    currentVersion = 2;
+    await setSetting(db, "db_version", currentVersion);
+  }
+}
 
 export default function AppDataProvider({ children }) {
   return (
