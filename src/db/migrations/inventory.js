@@ -65,161 +65,174 @@ export const applyInventoryMovementsMigrationsV1 = async (db) => {
 export async function migrateMovementsToBatches(db) {
   const now = new Date().toISOString();
 
-  // 1️⃣ Check if batches already exist
-  const existing = await db.getAllAsync(`
+  // 1️⃣ Prevent re-running if batches already exist
+  const existing = await db.getFirstAsync(`
     SELECT COUNT(*) as count
     FROM inventory_batches
   `);
 
-  const count = existing?.[0]?.count || 0;
-
-  if (count > 0) {
-    console.log("Migration skipped: inventory_batches already exists");
-    return {
-      skipped: true,
-      reason: "inventory_batches not empty",
-    };
+  if ((existing?.count || 0) > 0) {
+    console.log("Migration skipped: batches already exist");
+    return { skipped: true };
   }
 
-  // 2️⃣ Load ALL movements in chronological order
-  const movements = await db.getAllAsync(`
-    SELECT *
-    FROM inventory_movements
+  // 2️⃣ Get all products (we rebuild per product)
+  const products = await db.getAllAsync(`
+    SELECT id, company, created_by
+    FROM products
     WHERE deleted_at IS NULL
-    ORDER BY datetime(date), datetime(created_at)
   `);
 
-  const fifo = [];
+  // 3️⃣ Clear batches (fresh rebuild)
+  await db.runAsync(`DELETE FROM inventory_batches`);
 
-  // 3️⃣ Replay ledger
-  for (const m of movements) {
-    const qty = Number(m.quantity);
+  let totalBatches = 0;
 
-    // -------------------------
-    // PURCHASE → create batch layer
-    // -------------------------
-    if (m.type === "purchase") {
-      const batchId = m.batch_id || newUuid();
+  // 4️⃣ Rebuild each product independently
+  for (const product of products) {
+    const fifo = [];
 
-      const layer = {
-        batchId,
-        product_id: m.product_id,
-        company: m.company,
-        created_by: m.created_by,
-        cost_price: m.unit_cost,
-        selling_price: m.selling_price || 0,
-        remaining: qty,
-        purchase_date: m.date,
-      };
+    // 4.1 Load ONLY movements for this product
+    const movements = await db.getAllAsync(
+      `
+      SELECT *
+      FROM inventory_movements
+      WHERE deleted_at IS NULL
+        AND product_id = ?
+      ORDER BY datetime(date), datetime(created_at)
+      `,
+      [product.id]
+    );
 
-      fifo.push(layer);
+    // 4.2 Replay ledger
+    for (const m of movements) {
+      const qty = Number(m.quantity);
 
-      await db.runAsync(
-        `
-        UPDATE inventory_movements
-        SET batch_id = ?
-        WHERE id = ?
-        `,
-        [batchId, m.id]
-      );
-    }
+      // -------------------------
+      // PURCHASE → create batch layer
+      // -------------------------
+      if (m.type === "purchase") {
+        const batchId = m.batch_id || newUuid();
 
-    // -------------------------
-    // SALE → consume FIFO
-    // -------------------------
-    if (m.type === "sale") {
-      let toConsume = Math.abs(qty);
+        fifo.push({
+          batchId,
+          product_id: m.product_id,
+          company: m.company,
+          created_by: m.created_by,
+          cost_price: m.unit_cost,
+          selling_price: m.selling_price || 0,
+          remaining: qty,
+          purchase_date: m.date,
+        });
 
-      for (const layer of fifo) {
-        if (toConsume <= 0) break;
-        if (layer.remaining <= 0) continue;
-
-        const take = Math.min(layer.remaining, toConsume);
-
-        layer.remaining -= take;
-        toConsume -= take;
+        // link movement to batch
+        await db.runAsync(
+          `
+          UPDATE inventory_movements
+          SET batch_id = ?
+          WHERE id = ?
+          `,
+          [batchId, m.id]
+        );
       }
 
-      if (toConsume > 0) {
-        throw new Error(
-          `Migration failed: negative stock detected for product ${m.product_id}`
+      // -------------------------
+      // SALE → consume FIFO
+      // -------------------------
+      if (m.type === "sale") {
+        let toConsume = Math.abs(qty);
+
+        for (const layer of fifo) {
+          if (toConsume <= 0) break;
+          if (layer.remaining <= 0) continue;
+
+          const take = Math.min(layer.remaining, toConsume);
+
+          layer.remaining -= take;
+          toConsume -= take;
+        }
+
+        if (toConsume > 0) {
+          throw new Error(
+            `Negative stock detected during migration for product ${m.product_id}`
+          );
+        }
+      }
+
+      // -------------------------
+      // ADJUSTMENT → direct stock layer
+      // -------------------------
+      if (m.type === "adjustment") {
+        const batchId = m.batch_id || newUuid();
+
+        fifo.push({
+          batchId,
+          product_id: m.product_id,
+          company: m.company,
+          created_by: m.created_by,
+          cost_price: m.unit_cost,
+          selling_price: 0,
+          remaining: qty,
+          purchase_date: m.date,
+        });
+
+        await db.runAsync(
+          `
+          UPDATE inventory_movements
+          SET batch_id = ?
+          WHERE id = ?
+          `,
+          [batchId, m.id]
         );
       }
     }
 
-    // -------------------------
-    // ADJUSTMENT → direct stock impact
-    // -------------------------
-    if (m.type === "adjustment") {
-      const batchId = m.batch_id || newUuid();
-
-      fifo.push({
-        batchId,
-        product_id: m.product_id,
-        company: m.company,
-        created_by: m.created_by,
-        cost_price: m.unit_cost,
-        selling_price: 0,
-        remaining: qty,
-        purchase_date: m.date,
-      });
+    // 5️⃣ Persist batches for this product
+    for (const layer of fifo) {
+      if (layer.remaining <= 0) continue;
 
       await db.runAsync(
         `
-        UPDATE inventory_movements
-        SET batch_id = ?
-        WHERE id = ?
+        INSERT INTO inventory_batches (
+          id,
+          company,
+          created_by,
+          updated_by,
+          product_id,
+          quantity_on_hand,
+          cost_price,
+          selling_price,
+          batch_number,
+          expiry_date,
+          purchase_date,
+          created_at,
+          updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
-        [batchId, m.id]
+        [
+          layer.batchId,
+          layer.company,
+          layer.created_by,
+          layer.created_by,
+          layer.product_id,
+          layer.remaining,
+          layer.cost_price,
+          layer.selling_price,
+          null,
+          null,
+          layer.purchase_date,
+          now,
+          now,
+        ]
       );
+
+      totalBatches++;
     }
-  }
-
-  // 4️⃣ Insert batches only after full reconstruction
-  await db.runAsync(`DELETE FROM inventory_batches`);
-
-  for (const layer of fifo) {
-    if (layer.remaining <= 0) continue;
-
-    await db.runAsync(
-      `
-      INSERT INTO inventory_batches (
-        id,
-        company,
-        created_by,
-        updated_by,
-        product_id,
-        quantity_on_hand,
-        cost_price,
-        selling_price,
-        batch_number,
-        expiry_date,
-        purchase_date,
-        created_at,
-        updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
-      [
-        layer.batchId,
-        layer.company,
-        layer.created_by,
-        layer.created_by,
-        layer.product_id,
-        layer.remaining,
-        layer.cost_price,
-        layer.selling_price,
-        null,
-        null,
-        layer.purchase_date,
-        now,
-        now,
-      ]
-    );
   }
 
   return {
     success: true,
-    batchesCreated: fifo.length,
+    batchesCreated: totalBatches,
   };
 }
