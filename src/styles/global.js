@@ -153,4 +153,11 @@ export const createGlobalStyles = (colors) =>
       gap:10,
     },
 
+    filterSortContainer:{
+      flexDirection: "row",
+      justifyContent: "center",
+      gap:8,
+      alignItems: "center",
+    }
+
   });

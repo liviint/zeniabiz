@@ -13,6 +13,7 @@ import { StatCard } from "../../../src/components/common/StatCard";
 import { useDebounce } from "../../../src/hooks/useDebounce";
 import { useManualSync } from "../../../src/hooks/useManualSync";
 import FilterComponent from "../../../src/components/common/FilterComponent";
+import SortComponent from "../../../src/components/common/SortComponent";
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();
@@ -28,6 +29,7 @@ export default function ProductsListPage() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 400);
   const [filter, setFilter] = useState("all");
+  const [sort, setSort] = useState("newest")
 
   const filterOptions = [
     {
@@ -57,16 +59,55 @@ export default function ProductsListPage() {
     }
   ]
 
+  const sortOptions = [
+  { 
+    label: "Newest", 
+    key: "newest", 
+    action: () => setSort("newest") 
+  },
+  { 
+    label: "Oldest", 
+    key: "oldest", 
+    action: () => setSort("oldest") 
+  },
+  { 
+    label: "Low Stock", 
+    key: "low_stock",
+    action: () => setSort("low_stock") 
+  },
+  { 
+    label: "High Stock", 
+    key: "high_stock", 
+    action: () => setSort("high_stock") 
+  },
+  { 
+    label: "Price ↑", 
+    key: "price_high", 
+    action: () => setSort("price_high") 
+  },
+  { 
+    label: "Price ↓", 
+    key: "price_low", 
+    action: () => setSort("price_low") 
+  },
+];
+
   const fetchProducts = async () => {
     setIsLoading(true);
-    const data = await getProducts(db, { search: debouncedSearch, filter });
+    const data = await getProducts(db, { search: debouncedSearch, filter, sort });
     setProducts(data);
     setIsLoading(false);
   };
 
   useEffect(() => {
     if (isFocused) fetchProducts();
-  }, [isFocused, debouncedSearch, filter,lastSyncedAt]);
+  }, [
+    isFocused, 
+    debouncedSearch, 
+    filter,
+    lastSyncedAt, 
+    sort
+  ]);
 
   useEffect(() => {
     setStats({
@@ -111,6 +152,9 @@ export default function ProductsListPage() {
             filter={filter}
             setFilter={setFilter}
             filterOptions={filterOptions}
+            sortOptions={sortOptions}
+            sort={sort}
+            globalStyles={globalStyles}
           />
         }
         ListEmptyComponent={
@@ -134,7 +178,10 @@ const ListHeader = ({
   filter, 
   setSearch, 
   setFilter,
-  filterOptions
+  filterOptions,
+  sortOptions,
+  sort,
+  globalStyles
 }) => {
   return (
     <>
@@ -154,10 +201,17 @@ const ListHeader = ({
           )}
         </View>
 
-        <FilterComponent 
-          filterOptions={filterOptions}
-          activeFilter={filter}
-        />
+          <View style={globalStyles.filterSortContainer}>
+            <FilterComponent 
+              filterOptions={filterOptions}
+              activeFilter={filter}
+            />
+
+            <SortComponent 
+              sortOptions={sortOptions}
+              activeSort={sort}
+            />
+          </View>
 
       </View>
       <View style={styles.row}>

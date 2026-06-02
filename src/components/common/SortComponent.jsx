@@ -2,11 +2,11 @@ import { Modal, Pressable, View } from "react-native";
 import { BodyText } from "../ThemeProvider/components";
 import { useState } from "react";
 
-const FilterComponent = ({ filterOptions, activeFilter }) => {
+const SortComponent = ({ sortOptions, activeSort }) => {
   const [open, setOpen] = useState(false);
 
   const activeLabel =
-    filterOptions.find((o) => o.key === activeFilter)?.label || "Filter";
+    sortOptions.find((o) => o.key === activeSort)?.label || "Sort";
 
   const handleSelect = (option) => {
     option.action();
@@ -21,36 +21,30 @@ const FilterComponent = ({ filterOptions, activeFilter }) => {
         style={styles.trigger}
       >
         <BodyText style={styles.triggerText}>
-          Filter: {activeLabel} ▾
+          Sort: {activeLabel} ▾
         </BodyText>
       </Pressable>
 
-      {/* MODAL */}
-      <Modal
-        visible={open}
-        transparent
-        animationType="fade"
-      >
-        {/* Backdrop */}
+      {/* Modal */}
+      <Modal visible={open} transparent animationType="fade">
         <Pressable
           style={styles.backdrop}
           onPress={() => setOpen(false)}
         >
-          {/* Dropdown */}
           <View style={styles.dropdown}>
-            {filterOptions.map((option) => (
+            {sortOptions.map((option) => (
               <Pressable
                 key={option.key}
                 onPress={() => handleSelect(option)}
                 style={[
                   styles.option,
-                  activeFilter === option.key && styles.activeOption,
+                  activeSort === option.key && styles.activeOption,
                 ]}
               >
                 <BodyText
                   style={{
                     color:
-                      activeFilter === option.key ? "#fff" : "#333",
+                      activeSort === option.key ? "#fff" : "#333",
                   }}
                 >
                   {option.label}
@@ -64,7 +58,7 @@ const FilterComponent = ({ filterOptions, activeFilter }) => {
   );
 };
 
-export default FilterComponent;
+export default SortComponent;
 
 const styles = {
   container: {},
@@ -75,7 +69,7 @@ const styles = {
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "#ddd",
-    backgroundColor: "#F4F1ED",
+    backgroundColor: "#F4E1D2",
     alignSelf: "flex-start",
   },
 
@@ -87,7 +81,7 @@ const styles = {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.15)",
     justifyContent: "flex-start",
-    paddingTop: 120, // adjust to align under trigger
+    paddingTop: 120,
     paddingLeft: 20,
   },
 
@@ -96,7 +90,7 @@ const styles = {
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#eee",
-    minWidth: 160,
+    minWidth: 180,
     elevation: 10,
   },
 

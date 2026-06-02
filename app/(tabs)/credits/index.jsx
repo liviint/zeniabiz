@@ -48,7 +48,7 @@ export default function CreditsListPage() {
 
   const filterOptions = [
     {
-      label:"outstanding",
+      label:"Outstanding",
       action:() => setStatusFilter("outstanding"),
       key:"outstanding",
     },
