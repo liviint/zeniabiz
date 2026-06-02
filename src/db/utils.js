@@ -100,4 +100,7 @@ export async function withTransaction(db, fn) {
   }
 }
 
+export const formatNumber = (num) =>
+    Number(num || 0).toLocaleString();
+
 

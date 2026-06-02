@@ -14,6 +14,7 @@ import { useDebounce } from "../../../src/hooks/useDebounce";
 import { useManualSync } from "../../../src/hooks/useManualSync";
 import FilterComponent from "../../../src/components/common/FilterComponent";
 import SortComponent from "../../../src/components/common/SortComponent";
+import { formatNumber } from "../../../src/db/utils";
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();
@@ -217,12 +218,12 @@ const ListHeader = ({
       <View style={styles.row}>
         <StatCard 
           label="Stock Value"
-          value={stats.stockValue}
+          value={formatNumber(stats.stockValue)}
 
         />
         <StatCard 
           label="Products"
-          value={stats.count}
+          value={formatNumber(stats.count)}
         />
       </View>
     </>

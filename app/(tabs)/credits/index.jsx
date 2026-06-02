@@ -30,6 +30,7 @@ import { dateFormat } from "../../../utils/dateFormat";
 import FilterComponent from "../../../src/components/common/FilterComponent";
 import { getCredits, getCreditStats } from "../../../src/db/creditsDb";
 import { StatCard } from "../../../src/components/common/StatCard";
+import { formatNumber } from "../../../src/db/utils";
 
 export default function CreditsListPage() {
   const db = useSQLiteContext();
@@ -208,13 +209,13 @@ const ListHeader = ({
       <View style={styles.statsRow}>
         <StatCard
           label={"Balance"}
-          value={stats?.totalAmount?.toLocaleString()}
+          value={formatNumber(stats?.totalAmount)}
           color="#FF6B6B"
         />
 
         <StatCard
           label={"Credits"}
-          value={stats?.count}
+          value={formatNumber(stats?.count)}
           color="#FF6B6B"
           subText={""}
         />
