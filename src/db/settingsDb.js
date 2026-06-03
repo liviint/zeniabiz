@@ -1,11 +1,17 @@
 import { syncEvent } from "../cloudSync/syncEvent";
 
 export const getSetting = async (db, key) => {
+  try {
     const row = await db.getFirstAsync(
-        `SELECT value FROM app_settings WHERE key = ?`,
-        [key]
+      `SELECT value FROM app_settings WHERE key = ?`,
+      [key]
     );
+
     return row?.value ?? null;
+  } catch (error) {
+    console.warn("Failed to get setting:", error.message);
+    return null;
+  }
 };
 
 export const setSetting = async (db, key, value) => {
