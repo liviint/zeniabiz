@@ -1,8 +1,10 @@
 import { Modal, Pressable, View } from "react-native";
 import { BodyText } from "../ThemeProvider/components";
 import { useState } from "react";
+import { useThemeStyles } from "../../hooks/useThemeStyles";
 
 const SortComponent = ({ sortOptions, activeSort }) => {
+  const { colors } = useThemeStyles()
   const [open, setOpen] = useState(false);
 
   const activeLabel =
@@ -31,7 +33,7 @@ const SortComponent = ({ sortOptions, activeSort }) => {
           style={styles.backdrop}
           onPress={() => setOpen(false)}
         >
-          <View style={styles.dropdown}>
+          <View  style={{...styles.dropdown ,backgroundColor: colors.surface}}>
             {sortOptions.map((option) => (
               <Pressable
                 key={option.key}
@@ -44,7 +46,7 @@ const SortComponent = ({ sortOptions, activeSort }) => {
                 <BodyText
                   style={{
                     color:
-                      activeSort === option.key ? "#fff" : "#333",
+                      activeSort === option.key ? "#fff" : "inherit",
                   }}
                 >
                   {option.label}
@@ -81,8 +83,9 @@ const styles = {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.15)",
     justifyContent: "flex-start",
+    alignItms:"center",
     paddingTop: 120,
-    paddingLeft: 20,
+    width:"100%",
   },
 
   dropdown: {
@@ -90,13 +93,15 @@ const styles = {
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#eee",
-    minWidth: 180,
+    width:"80%",
+    alignSelf:"center",
     elevation: 10,
   },
 
   option: {
     paddingHorizontal: 12,
     paddingVertical: 10,
+    borderRadius:10,
   },
 
   activeOption: {

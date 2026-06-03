@@ -82,12 +82,12 @@ export default function ProductsListPage() {
     action: () => setSort("high_stock") 
   },
   { 
-    label: "Price ↑", 
+    label: "Price(High-Low)", 
     key: "price_high", 
     action: () => setSort("price_high") 
   },
   { 
-    label: "Price ↓", 
+    label: "Price(Low-High)", 
     key: "price_low", 
     action: () => setSort("price_low") 
   },

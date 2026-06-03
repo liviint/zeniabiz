@@ -1,8 +1,10 @@
 import { Modal, Pressable, View } from "react-native";
 import { BodyText } from "../ThemeProvider/components";
 import { useState } from "react";
+import { useThemeStyles } from "../../hooks/useThemeStyles";
 
 const FilterComponent = ({ filterOptions, activeFilter }) => {
+  const { colors } = useThemeStyles()
   const [open, setOpen] = useState(false);
 
   const activeLabel =
@@ -37,7 +39,7 @@ const FilterComponent = ({ filterOptions, activeFilter }) => {
           onPress={() => setOpen(false)}
         >
           {/* Dropdown */}
-          <View style={styles.dropdown}>
+          <View style={{...styles.dropdown ,backgroundColor: colors.surface}}>
             {filterOptions.map((option) => (
               <Pressable
                 key={option.key}
@@ -50,7 +52,7 @@ const FilterComponent = ({ filterOptions, activeFilter }) => {
                 <BodyText
                   style={{
                     color:
-                      activeFilter === option.key ? "#fff" : "#333",
+                      activeFilter === option.key ? "#fff" : "inherit",
                   }}
                 >
                   {option.label}
@@ -87,8 +89,9 @@ const styles = {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.15)",
     justifyContent: "flex-start",
-    paddingTop: 120, // adjust to align under trigger
-    paddingLeft: 20,
+    alignItms:"center",
+    paddingTop: 120,
+    width:"100%",
   },
 
   dropdown: {
@@ -96,13 +99,15 @@ const styles = {
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#eee",
-    minWidth: 160,
+    width:"80%",
+    alignSelf:"center",
     elevation: 10,
   },
 
   option: {
     paddingHorizontal: 12,
     paddingVertical: 10,
+    borderRadius:10,
   },
 
   activeOption: {
