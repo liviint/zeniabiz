@@ -174,7 +174,7 @@ export default function AddProduct() {
 
         {id ? "" : 
         <View style={globalStyles.formGroup}>
-          <FormLabel>Sell By Date</FormLabel>
+          <FormLabel>Expiry Date</FormLabel>
           <View style={{ flexDirection: "row", gap: 12 }}>
             <TouchableOpacity
               onPress={() => setShowDatePicker(true)}
