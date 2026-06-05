@@ -63,166 +63,210 @@ export const applyInventoryMovementsMigrationsV1 = async (db) => {
 }
 
 export async function migrateMovementsToBatches(db) {
-    const now = new Date().toISOString();
-
-  // 2️⃣ Get all products (we rebuild per product)
-    const products = await db.getAllAsync(`
-        SELECT id, company, created_by
-        FROM products
-        WHERE deleted_at IS NULL
-    `);
-
-  // 3️⃣ Clear batches (fresh rebuild)
-  await db.runAsync(`DELETE FROM inventory_batches`);
+  const now = new Date().toISOString();
 
   let totalBatches = 0;
+  let warnings = 0;
 
-  // 4️⃣ Rebuild each product independently
-  for (const product of products) {
-    const fifo = [];
+  await db.runAsync("BEGIN");
 
-    // 4.1 Load ONLY movements for this product
-    const movements = await db.getAllAsync(
-      `
-      SELECT *
-      FROM inventory_movements
+  try {
+    const products = await db.getAllAsync(`
+      SELECT id, company, created_by
+      FROM products
       WHERE deleted_at IS NULL
-        AND product_id = ?
-      ORDER BY datetime(date), datetime(created_at)
-      `,
-      [product.id]
-    );
+    `);
 
-    // 4.2 Replay ledger
-    for (const m of movements) {
-      const qty = Number(m.quantity);
+    // Fresh rebuild
+    await db.runAsync(`
+      DELETE FROM inventory_batches
+    `);
 
-      // -------------------------
-      // PURCHASE → create batch layer
-      // -------------------------
-      if (m.type === "purchase") {
-        const batchId = m.batch_id || newUuid();
+    for (const product of products) {
+      const fifo = [];
 
-        fifo.push({
-          batchId,
-          product_id: m.product_id,
-          company: m.company,
-          created_by: m.created_by,
-          cost_price: m.unit_cost,
-          selling_price: m.selling_price || 0,
-          remaining: qty,
-          purchase_date: m.date,
-        });
-
-        // link movement to batch
-        await db.runAsync(
-          `
-          UPDATE inventory_movements
-          SET batch_id = ?
-          WHERE id = ?
-          `,
-          [batchId, m.id]
-        );
-      }
-
-      // -------------------------
-      // SALE → consume FIFO
-      // -------------------------
-      if (m.type === "sale") {
-        let toConsume = Math.abs(qty);
-
-        for (const layer of fifo) {
-          if (toConsume <= 0) break;
-          if (layer.remaining <= 0) continue;
-
-          const take = Math.min(layer.remaining, toConsume);
-
-          layer.remaining -= take;
-          toConsume -= take;
-        }
-
-        if (toConsume > 0) {
-          throw new Error(
-            `Negative stock detected during migration for product ${m.product_id}`
-          );
-        }
-      }
-
-      // -------------------------
-      // ADJUSTMENT → direct stock layer
-      // -------------------------
-      if (m.type === "adjustment") {
-        const batchId = m.batch_id || newUuid();
-
-        fifo.push({
-          batchId,
-          product_id: m.product_id,
-          company: m.company,
-          created_by: m.created_by,
-          cost_price: m.unit_cost,
-          selling_price: 0,
-          remaining: qty,
-          purchase_date: m.date,
-        });
-
-        await db.runAsync(
-          `
-          UPDATE inventory_movements
-          SET batch_id = ?
-          WHERE id = ?
-          `,
-          [batchId, m.id]
-        );
-      }
-    }
-
-    // 5️⃣ Persist batches for this product
-    for (const layer of fifo) {
-      if (layer.remaining <= 0) continue;
-
-      await db.runAsync(
+      const movements = await db.getAllAsync(
         `
-        INSERT INTO inventory_batches (
-          id,
-          company,
-          created_by,
-          updated_by,
-          product_id,
-          quantity_on_hand,
-          cost_price,
-          selling_price,
-          batch_number,
-          expiry_date,
-          purchase_date,
-          created_at,
-          updated_at
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        SELECT *
+        FROM inventory_movements
+        WHERE deleted_at IS NULL
+          AND product_id = ?
+        ORDER BY datetime(date), datetime(created_at)
         `,
-        [
-          layer.batchId,
-          layer.company,
-          layer.created_by,
-          layer.created_by,
-          layer.product_id,
-          layer.remaining,
-          layer.cost_price,
-          layer.selling_price,
-          null,
-          null,
-          layer.purchase_date,
-          now,
-          now,
-        ]
+        [product.id]
       );
 
-      totalBatches++;
-    }
-  }
-  
+      for (const m of movements) {
+        const qty = Number(m.quantity);
 
-  return {
-    success: true,
-    batchesCreated: totalBatches,
-  };
+        // =========================
+        // PURCHASE
+        // =========================
+        if (m.type === "purchase") {
+          const batchId = m.batch_id || newUuid();
+
+          fifo.push({
+            batchId,
+            product_id: m.product_id,
+            company: m.company,
+            created_by: m.created_by,
+            cost_price: m.unit_cost || 0,
+            selling_price: m.selling_price || 0,
+            remaining: qty,
+            purchase_date: m.date,
+          });
+
+          await db.runAsync(
+            `
+            UPDATE inventory_movements
+            SET batch_id = ?
+            WHERE id = ?
+            `,
+            [batchId, m.id]
+          );
+        }
+
+        // =========================
+        // SALE
+        // =========================
+        else if (m.type === "sale") {
+          let toConsume = Math.abs(qty);
+
+          for (const layer of fifo) {
+            if (toConsume <= 0) break;
+            if (layer.remaining <= 0) continue;
+
+            const take = Math.min(
+              layer.remaining,
+              toConsume
+            );
+
+            layer.remaining -= take;
+            toConsume -= take;
+          }
+
+          if (toConsume > 0) {
+            warnings++;
+
+            console.warn(
+              `Migration warning: sale exceeds stock for product ${m.product_id}`
+            );
+          }
+        }
+
+        // =========================
+        // ADJUSTMENT
+        // =========================
+        else if (m.type === "adjustment") {
+          // Positive adjustment = add stock
+          if (qty > 0) {
+            const batchId = m.batch_id || newUuid();
+
+            fifo.push({
+              batchId,
+              product_id: m.product_id,
+              company: m.company,
+              created_by: m.created_by,
+              cost_price: m.unit_cost || 0,
+              selling_price: m.selling_price || 0,
+              remaining: qty,
+              purchase_date: m.date,
+            });
+
+            await db.runAsync(
+              `
+              UPDATE inventory_movements
+              SET batch_id = ?
+              WHERE id = ?
+              `,
+              [batchId, m.id]
+            );
+          }
+
+          // Negative adjustment = remove stock
+          else if (qty < 0) {
+            let toConsume = Math.abs(qty);
+
+            for (const layer of fifo) {
+              if (toConsume <= 0) break;
+              if (layer.remaining <= 0) continue;
+
+              const take = Math.min(
+                layer.remaining,
+                toConsume
+              );
+
+              layer.remaining -= take;
+              toConsume -= take;
+            }
+
+            if (toConsume > 0) {
+              warnings++;
+
+              console.warn(
+                `Migration warning: adjustment exceeds stock for product ${m.product_id}`
+              );
+            }
+          }
+        }
+      }
+
+      // =========================
+      // CREATE BATCHES
+      // =========================
+      for (const layer of fifo) {
+        if (layer.remaining <= 0) continue;
+
+        await db.runAsync(
+          `
+          INSERT INTO inventory_batches (
+            id,
+            company,
+            created_by,
+            updated_by,
+            product_id,
+            quantity_on_hand,
+            cost_price,
+            selling_price,
+            batch_number,
+            expiry_date,
+            purchase_date,
+            created_at,
+            updated_at
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `,
+          [
+            layer.batchId,
+            layer.company,
+            layer.created_by,
+            layer.created_by,
+            layer.product_id,
+            layer.remaining,
+            layer.cost_price,
+            layer.selling_price,
+            null,
+            null,
+            layer.purchase_date,
+            now,
+            now,
+          ]
+        );
+
+        totalBatches++;
+      }
+    }
+
+    await db.runAsync("COMMIT");
+
+    return {
+      success: true,
+      batchesCreated: totalBatches,
+      warnings,
+    };
+  } catch (error) {
+    await db.runAsync("ROLLBACK");
+    throw error;
+  }
 }
+
