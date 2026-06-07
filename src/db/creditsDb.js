@@ -1,10 +1,12 @@
 import { newUuid } from "./utils";
+import { normalizeRange } from "../utils/timeNavigatorHelpers";
 
 export async function getCredits(
   db,
   timeState,
   statusFilter = "outstanding"
 ) {
+  const { startDate, endDate } = normalizeRange(timeState);
   let extraCondition = "";
 
   let balanceCondition =
@@ -58,17 +60,14 @@ export async function getCredits(
 
       ${balanceCondition}
 
-      AND date(s.date)
-        BETWEEN date(?) AND date(?)
+      AND date >= ?
+        AND date < ?
 
       ${extraCondition}
 
     ORDER BY s.date DESC
     `,
-    [
-      timeState.startDate.toISOString(),
-      timeState.endDate.toISOString(),
-    ]
+    [startDate,endDate,]
   );
 
   return result;
