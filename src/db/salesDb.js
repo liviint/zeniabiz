@@ -248,10 +248,13 @@ export async function createOrUpdateSale(
         SET title = ?, note = ?, date = ?, amount = ?,
           discount = ?,
           customer_id = ?,
-          total_amount = ?, amount_paid = ?, balance_due = ?,
+          total_amount = ?, 
+          amount_paid = ?, 
+          balance_due = ?,
+          is_credit_sale = ?,
           payment_status = ?,
           updated_at = ?
-        WHERE id = ?
+          WHERE id = ?
         `,
         [
           finalTitle,
@@ -265,6 +268,7 @@ export async function createOrUpdateSale(
           total_amount,
           amount_paid,
           balance_due,
+          balance_due > 0 ? 1 : 0,
           payment_status,
 
           now,
