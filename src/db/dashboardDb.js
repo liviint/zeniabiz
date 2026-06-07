@@ -299,11 +299,12 @@ export async function getFinancialStats(db, timeState) {
 
     FROM sales
 
-    WHERE company = ?
-      AND deleted_at IS NULL
-      AND balance_due > 0
+    WHERE deleted_at IS NULL
+      AND company = ?
+      AND date >= ?
+      AND date < ?
     `,
-    [company]
+    [company,startDate, endDate]
   );
 
   // -------------------------
