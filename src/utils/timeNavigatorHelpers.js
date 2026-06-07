@@ -91,23 +91,10 @@ export const createRange = (type, baseDate = new Date()) => {
             return createRange("day", baseDate);
     }
 };
-export const normalizeRange = (state) => {
-  const start = new Date(state.startDate);
-  const end = new Date(state.endDate);
-
-  // start of day (UTC-safe)
-  start.setHours(0, 0, 0, 0);
-
-  // end of day → next day start (exclusive boundary)
-  end.setHours(0, 0, 0, 0);
-  end.setDate(end.getDate() + 1);
-
-  return {
-    startDate: start.toISOString(),
-    endDate: end.toISOString(),
-  };
-};
-
+export const normalizeRange = (state) => ({
+    startDate: new Date(state.startDate).toISOString(),
+    endDate: new Date(state.endDate).toISOString(),
+});
 
 export const shiftRange = (state, direction) => {
     const factor = direction === "next" ? 1 : -1;

@@ -35,13 +35,13 @@ export default function DashboardScreen() {
                     timeState={timeState}
                 />
 
-                <CashflowChart 
-                    timeState={timeState}
-                />
-
                 <ExpenseBreakdown 
                     timeState={timeState}
                 /> 
+
+                <CashflowChart 
+                    timeState={timeState}
+                />
 
                 <View style={{ height: 24 }} />
             </ScrollView>
