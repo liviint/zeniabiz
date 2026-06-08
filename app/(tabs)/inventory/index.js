@@ -39,6 +39,16 @@ export default function ProductsListPage() {
       key:"all",
     },
     {
+      label:"Products",
+      action:() => setFilter("products"),
+      key:"products",
+    },
+    {
+      label:"Services",
+      action:() => setFilter("services"),
+      key:"services",
+    },
+    {
       label:"Low Stock",
       action:() => setFilter("low_stock"),
       key:"low_stock",

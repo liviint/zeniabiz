@@ -233,7 +233,7 @@ const showInventoryFields =
 
         </View>}
 
-        {showInventoryFields && (
+        {isEditing && showInventoryFields && (
           <SecondaryText style={{marginTop:5, marginBottom:10,fontSize:14}}>
             Stock and cost are managed through restocking.
           </SecondaryText>

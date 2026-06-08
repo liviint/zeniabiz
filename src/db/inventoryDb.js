@@ -155,6 +155,14 @@ export async function getProducts(
     );
   }
 
+  if (filter === "products") {
+    sql += ` AND p.item_type = 'product' `;
+  }
+
+  if (filter === "services") {
+    sql += ` AND p.item_type = 'service' `;
+  }
+
   // Grouping
   sql += `
     GROUP BY p.id
