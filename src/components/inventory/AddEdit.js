@@ -13,7 +13,7 @@ import { upsertProduct , getProductById} from "../../db/inventoryDb";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
-export default function AddProduct() {
+export default function AddProduct({isProduct=true}) {
   const {id} = useLocalSearchParams()
   const db = useSQLiteContext();
   const router = useRouter();
@@ -97,6 +97,7 @@ export default function AddProduct() {
       selling_price: sellingPrice,
       stock_quantity: stockQuantity,
       minimum_quantity: minimumQuantity,
+      item_type:isProduct ? 'product' : 'service'
     });
 
     router.push("/inventory");
@@ -104,18 +105,23 @@ export default function AddProduct() {
     console.log(error, "product save error");
     Alert.alert(
       "Error",
-      "Failed to save product. Please try again."
+      "Failed to save item. Please try again."
     );
   }
 };
 
-   useEffect(() => {
-      if (!id) return;
-      (async () => {
-        const data = await getProductById(db, id);
-        setForm(data)
-      })();
-    }, []);
+const isEditing = Boolean(id);
+
+const showInventoryFields =
+  isProduct && !isEditing;
+
+  useEffect(() => {
+    if (!isEditing) return;
+    (async () => {
+      const data = await getProductById(db, id);
+      setForm(data)
+    })();
+  }, []);
 
   return (
     <KeyboardAwareScrollView
@@ -126,31 +132,38 @@ export default function AddProduct() {
       keyboardShouldPersistTaps="handled"
     >
         <BodyText style={globalStyles.title}>
-          {id ? "Update" : "Add"} Product
+          {isEditing ? "Update" : "Add"} {isProduct ? "Product" : "Service"}
         </BodyText>
         <Card>
       <View style={globalStyles.formGroup}>
         <FormLabel>Name</FormLabel>
-        <Input value={form.name} onChangeText={(v) => handleChange("name", v)} />
+        <Input 
+          value={form.name} 
+          onChangeText={(v) => handleChange("name", v)} 
+        />
       </View>
 
         {
-            id ? "" 
-            :
+            showInventoryFields &&
             <View style={globalStyles.formGroup}>
               <FormLabel>Cost Price</FormLabel>
-            < Input value={String(form.cost_price)} keyboardType="numeric" onChangeText={(v) => handleChange("cost_price", v)} />
+            < Input 
+              value={String(form.cost_price)} 
+              keyboardType="numeric" onChangeText={(v) => handleChange("cost_price", v)} 
+            />
           </View>
         }
 
         <View style={globalStyles.formGroup}>
           <FormLabel>Selling Price</FormLabel>
-          <Input value={String(form.selling_price)} keyboardType="numeric" onChangeText={(v) => handleChange("selling_price", v)} />
+          <Input 
+            value={String(form.selling_price)} 
+            keyboardType="numeric" onChangeText={(v) => handleChange("selling_price", v)} 
+          />
         </View>
 
         {
-          id ? "" 
-          :
+          showInventoryFields &&
           <View style={globalStyles.formGroup}>
             <FormLabel>Stock Quantity</FormLabel>
             <Input 
@@ -161,7 +174,7 @@ export default function AddProduct() {
         }
 
         {
-          id  ? "" : 
+          showInventoryFields &&
           <View style={globalStyles.formGroup}>
             <FormLabel>Minimum Quantity</FormLabel>
             <Input 
@@ -172,7 +185,7 @@ export default function AddProduct() {
           </View>
         }
 
-        {id ? "" : 
+        {showInventoryFields && 
         <View style={globalStyles.formGroup}>
           <FormLabel>Expiry Date</FormLabel>
           <View style={{ flexDirection: "row", gap: 12 }}>
@@ -216,7 +229,7 @@ export default function AddProduct() {
 
         <TouchableOpacity style={globalStyles.primaryBtn} onPress={handleSave}>
           <Text style={globalStyles.primaryBtnText}>
-            {id ? "Update Product" : "Save Product"}
+            {isEditing ? "Update" : "Save"}  {isProduct ? "Product" : "Service"}
           </Text>
         </TouchableOpacity>
 

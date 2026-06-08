@@ -11,6 +11,7 @@ export async function upsertProduct(
     stock_quantity = 0,
     minimum_quantity = 5,
     expiry_date = null,
+    item_type = "product",
     created_at,
   }
 ) {
@@ -39,10 +40,11 @@ export async function upsertProduct(
           selling_price,
           cost_price,
           minimum_quantity,
+          item_type,
           created_at,
           updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
@@ -50,6 +52,7 @@ export async function upsertProduct(
           cost_price = excluded.cost_price,
           updated_at = excluded.updated_at,
           minimum_quantity = excluded.minimum_quantity,
+          item_type = excluded.item_type,
           updated_by = excluded.updated_by
         `,
         [
@@ -61,12 +64,17 @@ export async function upsertProduct(
           sellPrice,
           unitCost,
           minimum_quantity,
+          item_type,
           created_at,
           now,
         ]
       );
 
-      if (isNew && initialStock > 0) {
+      if (
+            isNew &&
+            item_type === "product" &&
+            initialStock > 0
+          ) {
           await restockProduct(db, id, {
                 stock_quantity: initialStock,
                 cost_price: unitCost,

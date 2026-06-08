@@ -138,7 +138,7 @@ export default function ProductsListPage() {
 
   return (
     <View style={globalStyles.container}>
-      <BodyText style={globalStyles.title}>My Stock</BodyText>
+      <BodyText style={globalStyles.title}>Products & Services</BodyText>
       <FlatList
         data={products}
         keyExtractor={(item) => item.id}
@@ -168,6 +168,9 @@ export default function ProductsListPage() {
 
       <AddButton 
         primaryAction={{ route: "/inventory/add", label: "Add Product" }}
+        secondaryActions={[
+          {route:"/inventory/add/service",label: "Add Service"},
+        ]}
       />
     </View>
   );
@@ -189,7 +192,7 @@ const ListHeader = ({
       <View style={styles.filtersContainer}>
         <View style={styles.searchRow}>
           <Input
-            placeholder="Search products..."
+            placeholder="Search items..."
             value={search}
             onChangeText={setSearch}
             style={styles.searchInput}
