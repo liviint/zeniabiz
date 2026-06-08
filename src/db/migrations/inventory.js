@@ -1,5 +1,6 @@
 import {addColumnIfNotExists, deleteColumnIfExists} from "./helpers"
 import { newUuid } from "../utils";
+
 export const applyInventoryMigrationsV1 = async (db) => {
     await addColumnIfNotExists(
         db,
@@ -269,4 +270,15 @@ export async function migrateMovementsToBatches(db) {
     throw error;
   }
 }
+
+export const applyExpansionOfProductsToServices = async(db) => {
+  await addColumnIfNotExists(
+        db,
+        "products",
+        "item_type",
+        "TEXT NOT NULL DEFAULT 'product'"
+    );
+}
+
+
 

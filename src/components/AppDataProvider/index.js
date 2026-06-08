@@ -6,7 +6,8 @@ import {
   applyInventoryMigrationsV1 ,
   applyInventoryBatchesMigrationsV1,
   applyInventoryMovementsMigrationsV1,
-  migrateMovementsToBatches
+  migrateMovementsToBatches,
+  applyExpansionOfProductsToServices,
 } from "../../db/migrations/inventory"
 import {migrateSalesCreditFieldsV1, migratePaymentsFromSalesV1} from "../../db/migrations/credit"
 import { applySalesMigrationsV1 } from "../../db/migrations/sales"
@@ -175,6 +176,8 @@ const migrateDbIfNeeded = async (db) => {
     selling_price REAL NOT NULL,
     cost_price REAL DEFAULT 0,
     minimum_quantity INTEGER NOT NULL DEFAULT 5,
+
+    item_type TEXT NOT NULL DEFAULT 'product',
 
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -414,6 +417,13 @@ const migrateDbIfNeeded = async (db) => {
     await migrateMovementsToBatches(db)
 
     currentVersion = 2;
+    await setSetting(db, "db_version", currentVersion);
+  }
+
+  if(currentVersion < 3){
+    await applyExpansionOfProductsToServices(db);
+
+    currentVersion = 3;
     await setSetting(db, "db_version", currentVersion);
   }
 }
