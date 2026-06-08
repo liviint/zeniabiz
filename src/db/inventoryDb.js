@@ -12,6 +12,7 @@ export async function upsertProduct(
     minimum_quantity = 5,
     expiry_date = null,
     item_type = "product",
+    unit,
     created_at,
   }
 ) {
@@ -41,10 +42,11 @@ export async function upsertProduct(
           cost_price,
           minimum_quantity,
           item_type,
+          unit,
           created_at,
           updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
@@ -53,6 +55,7 @@ export async function upsertProduct(
           updated_at = excluded.updated_at,
           minimum_quantity = excluded.minimum_quantity,
           item_type = excluded.item_type,
+          unit = excluded.unit,
           updated_by = excluded.updated_by
         `,
         [
@@ -65,6 +68,7 @@ export async function upsertProduct(
           unitCost,
           minimum_quantity,
           item_type,
+          unit,
           created_at,
           now,
         ]
@@ -107,6 +111,8 @@ export async function getProducts(
       p.selling_price,
       p.cost_price,
       p.minimum_quantity,
+      p.item_type,
+      p.unit,
       p.created_at,
 
       COALESCE(
@@ -261,6 +267,8 @@ export async function getProductById(db, id) {
       p.cost_price,
       p.selling_price,
       p.minimum_quantity,
+      p.item_type,
+      p.unit,
       p.created_at,
 
       -- STOCK from batches (source of truth)

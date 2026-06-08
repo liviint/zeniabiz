@@ -178,6 +178,7 @@ const migrateDbIfNeeded = async (db) => {
     minimum_quantity INTEGER NOT NULL DEFAULT 5,
 
     item_type TEXT NOT NULL DEFAULT 'product',
+    unit TEXT,
 
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),

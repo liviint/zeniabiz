@@ -27,6 +27,7 @@ export default function AddProduct({isProduct=true}) {
     minimum_quantity:"",
     created_at:"",
     expiry_date:null,
+    unit:"",
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -185,6 +186,17 @@ const showInventoryFields =
           </View>
         }
 
+        {
+          !showInventoryFields &&
+          <View style={globalStyles.formGroup}>
+            <FormLabel>Service Unit</FormLabel>
+            <Input 
+              value={String(form.unit)} 
+              onChangeText={(v) => handleChange("unit", v)} 
+            />
+          </View>
+        }
+
         {showInventoryFields && 
         <View style={globalStyles.formGroup}>
           <FormLabel>Expiry Date</FormLabel>
@@ -221,7 +233,7 @@ const showInventoryFields =
 
         </View>}
 
-        {id && (
+        {showInventoryFields && (
           <SecondaryText style={{marginTop:5, marginBottom:10,fontSize:14}}>
             Stock and cost are managed through restocking.
           </SecondaryText>

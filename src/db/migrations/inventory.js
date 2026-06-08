@@ -278,6 +278,12 @@ export const applyExpansionOfProductsToServices = async(db) => {
         "item_type",
         "TEXT NOT NULL DEFAULT 'product'"
     );
+  await addColumnIfNotExists(
+        db,
+        "products",
+        "unit",
+        "TEXT"
+    );
 }
 
 

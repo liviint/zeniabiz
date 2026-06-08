@@ -45,16 +45,32 @@ export default function ProductViewPage() {
     router.push("/inventory");
   };
 
+  const isService = product?.item_type === "service";
+
   return (
     <ScrollView style={globalStyles.container}>
-      <BodyText style={globalStyles.title}>Product Details</BodyText>
+      <BodyText style={globalStyles.title}>
+        {isService ? "Service Details" : "Product Details"}
+      </BodyText>
 
-      <Card style={styles.card}>
-        <DetailRow label="Name" value={product?.name} />
-        <DetailRow label="Selling Price" value={product?.selling_price} />
-        <DetailRow label="Stock" value={product?.stock_quantity} />
-        <DetailRow label="Minimum Quantity" value={product?.minimum_quantity} />
-      </Card>
+        <Card style={styles.card}>
+          <DetailRow label="Name" value={product?.name} />
+          <DetailRow label="Selling Price" value={product?.selling_price} />
+
+          {!isService && (
+            <>
+              <DetailRow label="Stock" value={product?.stock_quantity} />
+              <DetailRow label="Minimum Quantity" value={product?.minimum_quantity} />
+            </>
+          )}
+
+          {isService && (
+            <DetailRow
+              label="Unit"
+              value={product?.unit || product?.service_unit || "-"}
+            />
+          )}
+        </Card>
 
       {stockBatches.length > 0 && (
         <View style={{ marginTop: 20 }}>
@@ -84,7 +100,7 @@ export default function ProductViewPage() {
 
               <DetailRow
                 label="Expiry Date"
-                value={batch.purchase_date ? dateFormat(batch.expiry_date): "-"}
+                value={batch.expiry_date ? dateFormat(batch.expiry_date) : "-"}
               />
 
               <View style={styles.editBtnContainer}>
@@ -107,12 +123,15 @@ export default function ProductViewPage() {
       )}
 
       <View style={styles.actionsRow}>
-        <Pressable
-          style={globalStyles.primaryBtn}
-          onPress={() => setRestockVisible(true)}
-        >
-          <BodyText style={globalStyles.primaryBtnText}>Restock</BodyText>
-        </Pressable>
+
+        {!isService && 
+          <Pressable
+            style={globalStyles.primaryBtn}
+            onPress={() => setRestockVisible(true)}
+          >
+            <BodyText style={globalStyles.primaryBtnText}>Restock</BodyText>
+          </Pressable>
+        }     
 
         <Pressable
           style={globalStyles.editBtn}

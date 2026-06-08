@@ -117,14 +117,22 @@ export default function ProductsListPage() {
     })
   },[products])
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item }) => {
+    const isService = item?.item_type === "service";
+
+  return (
     <Pressable onPress={() => router.push(`/inventory/${item?.id}`)}>
       <Card>
         <View style={styles.row}>
           <View style={styles.left}>
-            <BodyText style={styles.title}>{item?.name}</BodyText>
+            <BodyText style={styles.title}>
+              {item?.name}
+            </BodyText>
+
             <SecondaryText style={styles.meta}>
-              Stock: {item?.stock_quantity}
+              {isService
+                ? `Service • ${item?.unit || "unit"}`
+                : `Stock: ${item?.stock_quantity}`}
             </SecondaryText>
           </View>
 
@@ -135,6 +143,7 @@ export default function ProductsListPage() {
       </Card>
     </Pressable>
   );
+};
 
   return (
     <View style={globalStyles.container}>
