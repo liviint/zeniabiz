@@ -121,6 +121,7 @@ export default function SellPage() {
           name: product.name,
           price: product.selling_price,
           quantity: 1,
+          item_type:product.item_type
         },
       ];
     });

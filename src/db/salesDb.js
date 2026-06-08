@@ -327,6 +327,33 @@ export async function createOrUpdateSale(
     // 4. INVENTORY + SALE ITEMS (UNCHANGED)
     // -------------------------
     for (const item of items) {
+
+      const isService = item.item_type === "service";
+
+      if (isService) {
+        const saleItemId = newUuid();
+
+        await db.runAsync(
+          `
+          INSERT INTO sale_items
+          (id, sale_id, company, product_id, quantity, price, cost_price, batch_id)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `,
+          [
+            saleItemId,
+            id,
+            company,
+            item.product_id,
+            item.quantity,
+            item.price,
+            0,
+            null
+          ]
+        );
+
+        continue;
+      }
+
       const allocations = await allocateFIFO(
         db,
         item.product_id,
