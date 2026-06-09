@@ -101,7 +101,7 @@ export async function reverseSale(
 ) {
   const now = new Date().toISOString();
 
-    const saleItems = await getSaleItems(db, saleId)
+    const saleItems = await getSaleItemsFromSale(db, saleId)
 
     await restoreSaleInventory(db, saleItems, now)
 
@@ -120,7 +120,7 @@ export async function reverseSale(
 
 }
 
-async function getSaleItems(db, saleId) {
+async function getSaleItemsFromSale(db, saleId) {
   return await db.getAllAsync(
     `
     SELECT *
