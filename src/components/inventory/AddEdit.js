@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { BodyText, Card, FormLabel, Input , SecondaryText} from "../../../src/components/ThemeProvider/components";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
-import { upsertProduct , getProductById} from "../../db/inventoryDb";
+import { upsertProductAndRestocking , getProductById} from "../../db/inventoryDb";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -92,7 +92,7 @@ export default function AddProduct({isProduct=true}) {
   }
 
   try {
-    await upsertProduct(db, {
+    await upsertProductAndRestocking(db, {
       ...form,
       cost_price: costPrice,
       selling_price: sellingPrice,

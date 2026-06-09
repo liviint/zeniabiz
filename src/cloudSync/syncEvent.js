@@ -4,10 +4,10 @@ export async function enqueueSync(db, {
   model,
   record_id,
   operation,
-  client_request_id = null,
 }) {
   const { company } =  await getActiveContextSync(db);
   const now = new Date().toISOString();
+  let client_request_id = newUuid()
 
   const existing = await db.getFirstAsync(
     `SELECT id FROM sync_queue

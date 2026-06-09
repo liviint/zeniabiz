@@ -1,6 +1,7 @@
-import { getMonthRange , getActiveContextSync, withTransaction, newUuid} from "./utils";
+import { getActiveContextSync, withTransaction, newUuid} from "./utils";
+import { enqueueSync } from "../cloudSync/syncEvent";
 
-export async function upsertProduct(
+export async function upsertProductAndRestocking(
   db,
   {
     id,
@@ -29,6 +30,39 @@ export async function upsertProduct(
     const initialStock = parseFloat(stock_quantity) || 0;
     created_at = created_at || now;
 
+      await upsertProduct(db,{
+        id:id,
+        company:company,
+        created_by:user_id,
+        updated_by:user_id,
+        name:name,
+        selling_price:sellPrice,
+        cost_price:unitCost,
+        minimum_quantity:minimum_quantity,
+        item_type:item_type,
+        unit:unit,
+        created_at:created_at,
+        updated_at:now
+      })
+
+      if (
+            isNew &&
+            item_type === "product" &&
+            initialStock > 0
+          ) {
+          await restockProduct(db, id, {
+                stock_quantity: initialStock,
+                cost_price: unitCost,
+                selling_price: sellPrice,
+                expiry_date:expiry_date ? expiry_date.toISOString() : null,
+              }
+            );
+      }
+      return id;
+    })
+}
+
+export async function upsertProduct(db,product) {
       await db.runAsync(
         `
         INSERT INTO products (
@@ -58,38 +92,196 @@ export async function upsertProduct(
           updated_by = excluded.updated_by
         `,
         [
-          id,
-          company,
-          user_id,
-          user_id,
-          name,
-          sellPrice,
-          unitCost,
-          minimum_quantity,
-          item_type,
-          unit,
-          created_at,
-          now,
+          product.id,
+          product.company,
+          product.created_by,
+          product.updated_by,
+          product.name,
+          product.selling_price,
+          product.cost_price,
+          product.minimum_quantity,
+          product.item_type,
+          product.unit,
+          product.created_at,
+          product.updated_at,
         ]
       );
 
-      if (
-            isNew &&
-            item_type === "product" &&
-            initialStock > 0
-          ) {
-          await restockProduct(db, id, {
-                stock_quantity: initialStock,
-                cost_price: unitCost,
-                selling_price: sellPrice,
-                expiry_date:expiry_date ? expiry_date.toISOString() : null,
-              }
-            );
-      }
-      return id;
-
-    })
+      await enqueueSync(db,{
+        model:"products",
+        record_id:product.id,
+        operation:"upsert",
+      })
+      return product.id;
 }
+
+export async function upsertBatch(db, batch) {
+  await db.runAsync(
+    `
+    INSERT INTO inventory_batches (
+      id,
+      company,
+      created_by,
+      updated_by,
+      product_id,
+      quantity_on_hand,
+      cost_price,
+      selling_price,
+      batch_number,
+      expiry_date,
+      purchase_date,
+      created_at,
+      updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      quantity_on_hand = excluded.quantity_on_hand,
+      cost_price = excluded.cost_price,
+      selling_price = excluded.selling_price,
+      batch_number = excluded.batch_number,
+      expiry_date = excluded.expiry_date,
+      updated_by = excluded.updated_by,
+      updated_at = excluded.updated_at
+    `,
+    [
+      batch.id,
+      batch.company,
+      batch.created_by,
+      batch.updated_by,
+      batch.product_id,
+      batch.quantity_on_hand,
+      batch.cost_price,
+      batch.selling_price,
+      batch.batch_number,
+      batch.expiry_date,
+      batch.purchase_date,
+      batch.created_at,
+      batch.updated_at,
+    ]
+  );
+  await enqueueSync(db,{
+    model:"inventory_batches",
+    record_id:batch.id,
+    operation:"upsert",
+  })
+}
+
+export async function upsertInventoryMovements(db, movement) {
+  await db.runAsync(
+    `
+    INSERT INTO inventory_movements (
+      id,
+      company,
+      created_by,
+      updated_by,
+      product_id,
+      batch_id,
+      quantity,
+      unit_cost,
+      selling_price,
+      type,
+      date,
+      created_at,
+      updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      movement.id,
+      movement.company,
+      movement.created_by,
+      movement.updated_by,
+      movement.product_id,
+      movement.batch_id,
+      movement.quantity,
+      movement.unit_cost,
+      movement.selling_price,
+      movement.type,
+      movement.date,
+      movement.created_at,
+      movement.updated_at,
+    ]
+  );
+  await enqueueSync(db,{
+    model:"inventory_movements",
+    record_id:movement.id,
+    operation:"create",
+  })
+}
+
+export const restockProduct = async (db, productId, form) => {
+  try {
+    const { company, user_id } = getActiveContextSync(db);
+
+  const {
+    stock_quantity,
+    cost_price,
+    selling_price,
+    expiry_date = null,
+    batch_number = null,
+  } = form;
+
+  const now = new Date().toISOString();
+
+  const quantity = Number(stock_quantity);
+  const unitCost = Number(cost_price);
+  const sellPrice = Number(selling_price);
+
+  if (!quantity || quantity <= 0) {
+    throw new Error("Stock quantity must be greater than 0");
+  }
+
+  if (isNaN(unitCost) || isNaN(sellPrice)) {
+    throw new Error("Invalid pricing values");
+  }
+
+  const batchId = newUuid();
+  const movementId = newUuid();
+
+  await upsertBatch(db, {
+    id: batchId,
+    company,
+    created_by: user_id,
+    updated_by: user_id,
+
+    product_id: productId,
+    quantity_on_hand: quantity,
+
+    cost_price: unitCost,
+    selling_price: sellPrice,
+
+    batch_number,
+    expiry_date,
+    purchase_date: now,
+
+    created_at: now,
+    updated_at: now,
+  });
+
+  await upsertInventoryMovements(db, {
+    id:movementId,
+    company:company,
+
+    created_by:user_id,
+    updated_by:user_id,
+
+    product_id:productId,
+    batch_id:batchId,
+    quantity:quantity,
+    unit_cost:unitCost,
+    selling_price:sellPrice,
+    type:"purchase",
+    date:now,
+    created_at: now,
+    updated_at: now,
+  });
+
+
+  return batchId;
+  } catch (error) {
+    console.log(error,"hello restock err")
+  }
+};
 
 export async function getProducts(
   db,
@@ -343,145 +535,6 @@ export async function deleteProduct(db, id) {
     throw error;
   }
 }
-
-export async function upsertBatch(db, batch) {
-  await db.runAsync(
-    `
-    INSERT INTO inventory_batches (
-      id,
-      company,
-      created_by,
-      updated_by,
-      product_id,
-      quantity_on_hand,
-      cost_price,
-      selling_price,
-      batch_number,
-      expiry_date,
-      purchase_date,
-      created_at,
-      updated_at
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(id) DO UPDATE SET
-      quantity_on_hand = excluded.quantity_on_hand,
-      cost_price = excluded.cost_price,
-      selling_price = excluded.selling_price,
-      batch_number = excluded.batch_number,
-      expiry_date = excluded.expiry_date,
-      updated_by = excluded.updated_by,
-      updated_at = excluded.updated_at
-    `,
-    [
-      batch.id,
-      batch.company,
-      batch.created_by,
-      batch.updated_by,
-      batch.product_id,
-      batch.quantity_on_hand,
-      batch.cost_price,
-      batch.selling_price,
-      batch.batch_number,
-      batch.expiry_date,
-      batch.purchase_date,
-      batch.created_at,
-      batch.updated_at,
-    ]
-  );
-}
-
-export const restockProduct = async (db, productId, form) => {
-  try {
-    const { company, user_id } = getActiveContextSync(db);
-
-  const {
-    stock_quantity,
-    cost_price,
-    selling_price,
-    expiry_date = null,
-    batch_number = null,
-  } = form;
-
-  const now = new Date().toISOString();
-
-  const quantity = Number(stock_quantity);
-  const unitCost = Number(cost_price);
-  const sellPrice = Number(selling_price);
-
-  if (!quantity || quantity <= 0) {
-    throw new Error("Stock quantity must be greater than 0");
-  }
-
-  if (isNaN(unitCost) || isNaN(sellPrice)) {
-    throw new Error("Invalid pricing values");
-  }
-
-  const batchId = newUuid();
-  const movementId = newUuid();
-
-  await upsertBatch(db, {
-    id: batchId,
-    company,
-    created_by: user_id,
-    updated_by: user_id,
-
-    product_id: productId,
-    quantity_on_hand: quantity,
-
-    cost_price: unitCost,
-    selling_price: sellPrice,
-
-    batch_number,
-    expiry_date,
-    purchase_date: now,
-
-    created_at: now,
-    updated_at: now,
-  });
-
-  // Movement
-  await db.runAsync(
-    `
-    INSERT INTO inventory_movements (
-      id,
-      company,
-      created_by,
-      updated_by,
-      product_id,
-      batch_id,
-      quantity,
-      unit_cost,
-      selling_price,
-      type,
-      date,
-      created_at,
-      updated_at
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-    [
-      movementId,
-      company,
-      user_id,
-      user_id,
-      productId,
-      batchId,
-      quantity,
-      unitCost,
-      sellPrice,
-      "purchase",
-      now,
-      now,
-      now,
-    ]
-  );
-
-
-  return batchId;
-  } catch (error) {
-    console.log(error,"hello restock err")
-  }
-};
 
 export function buildFIFO(movements) {
   const batches = [];
