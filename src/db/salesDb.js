@@ -1,5 +1,6 @@
 import { getActiveContextSync, withTransaction, newUuid } from "./utils";
 import { normalizeRange } from "../utils/timeNavigatorHelpers";
+import { enqueueSync } from "../cloudSync/syncEvent";
 
 export async function restoreFIFO(db, purchaseId, qty) {
   const row = await db.getFirstAsync(
@@ -213,32 +214,80 @@ export async function createOrUpdateSale(
     customer_id,
   }
 ) {
-  const { company, user_id } = getActiveContextSync(db);
+  return withTransaction(db,async() => {
+    const { company, user_id } = getActiveContextSync(db);
 
-  const now = new Date().toISOString();
-  const saleDate = date ? date.toISOString() : now;
+    const now = new Date().toISOString();
+    const saleDate = date ? date.toISOString() : now;
 
-  const isEdit = !!sale_id;
-  const id = sale_id || newUuid();
+    const isEdit = !!sale_id;
+    const id = sale_id || newUuid();
 
+    await upsertSaleHeader(db,{
+      id,
+      company,
+      user_id,
+      isEdit,
+      title,
+      note,
+      saleDate,
+      subtotal,
+      discount,
+      customer_id,
+      total_amount,
+      amount_paid,
+      balance_due,
+      payment_status,
+      now,
+    })
 
+    await handleSaleItems(db,
+      {
+        saleId:id,
+        company,
+        items,
+        saleDate,
+        user_id,
+        now
+      }
+    )
 
-  const totalItems = items.reduce(
-    (sum, i) => sum + Number(i.quantity),
-    0
-  );
+    await createInitialPayment(db, {
+      saleId: id,
+      company,
+      user_id,
+      customer_id: customer_id,
+      amount_paid: amount_paid,
+      saleDate,
+      now,
+    });
 
+    return id;
+  })
+}
+
+export async function upsertSaleHeader(db, {
+  id,
+  company,
+  user_id,
+  isEdit,
+  title,
+  note,
+  saleDate,
+  subtotal,
+  discount,
+  customer_id,
+  total_amount,
+  amount_paid,
+  balance_due,
+  payment_status,
+  now,
+}) {
   const finalTitle =
     title?.trim() ||
-    `Sold ${totalItems} item${totalItems > 1 ? "s" : ""} - ${total_amount}`;
+    `Sale - ${total_amount}`;
 
-  await db.runAsync("BEGIN");
-
-  try {
-    // -------------------------
-    // 2. EDIT FLOW
-    // -------------------------
-    if (isEdit) {
+  if (isEdit) {
       await reverseSale(db, id, { company, user_id });
 
       await db.runAsync(
@@ -276,9 +325,6 @@ export async function createOrUpdateSale(
       );
     }
 
-    // -------------------------
-    // 3. CREATE FLOW
-    // -------------------------
     else {
       await db.runAsync(
         `
@@ -321,145 +367,174 @@ export async function createOrUpdateSale(
         ]
       );
     }
+}
 
-    // -------------------------
-    // 4. INVENTORY + SALE ITEMS (UNCHANGED)
-    // -------------------------
-    for (const item of items) {
+export async function handleSaleItems(db, {
+  saleId,
+  company,
+  items,
+  saleDate,
+  user_id,
+  now
+}) {
+  for (const item of items) {
+    if (item.item_type === "service") {
+      await createServiceSaleItem(db, {
+        saleId,
+        company,
+        item,
+        saleDate,
+        user_id,
+        now,
+      });
+    } else {
+      await handleProductSaleItem(db, {
+        saleId,
+        company,
+        item,
+        saleDate,
+        user_id,
+        now,
+      });
+    }
+  }
+}
 
-      const isService = item.item_type === "service";
+const createServiceSaleItem = async(db,{saleId,company,item}) => {
+    const saleItemId = newUuid();
 
-      if (isService) {
-        const saleItemId = newUuid();
-
-        await db.runAsync(
-          `
-          INSERT INTO sale_items
-          (id, sale_id, company, product_id, quantity, price, cost_price, batch_id)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-          `,
-          [
-            saleItemId,
-            id,
-            company,
-            item.product_id,
-            item.quantity,
-            item.price,
-            0,
-            null
-          ]
-        );
-
-        continue;
-      }
-
-      const allocations = await allocateFIFO(
-        db,
+    await db.runAsync(
+      `
+      INSERT INTO sale_items
+      (id, sale_id, company, product_id, quantity, price, cost_price, batch_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        saleItemId,
+        saleId,
+        company,
         item.product_id,
-        item.quantity
-      );
+        item.quantity,
+        item.price,
+        0,
+        null
+      ]
+    );
+}
 
-      for (const alloc of allocations) {
-        const saleItemId = newUuid();
+const handleProductSaleItem = async(db,{
+  saleId,
+  company,
+  item,
+  user_id,
+  saleDate,
+  now,
+}) => {
+  const allocations = await allocateFIFO(
+    db,
+    item.product_id,
+    item.quantity
+  );
 
-        await db.runAsync(
-          `
-          INSERT INTO sale_items
-          (id, sale_id, company, product_id, quantity, price, cost_price, batch_id)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-          `,
-          [
-            saleItemId,
-            id,
-            company,
-            item.product_id,
-            alloc.quantity,
-            item.price,
-            alloc.cost_price,
-            alloc.batch_id,
-          ]
-        );
+  for (const alloc of allocations) {
+    const saleItemId = newUuid();
 
-        const result = await db.runAsync(
-          `
-          UPDATE inventory_batches
-          SET quantity_on_hand = quantity_on_hand - ?,
-              updated_at = ?
-          WHERE id = ?
-            AND quantity_on_hand >= ?
-          `,
-          [
-            alloc.quantity,
-            now,
-            alloc.batch_id,
-            alloc.quantity,
-          ]
-        );
+    await db.runAsync(
+      `
+      INSERT INTO sale_items
+      (id, sale_id, company, product_id, quantity, price, cost_price, batch_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        saleItemId,
+        saleId,
+        company,
+        item.product_id,
+        alloc.quantity,
+        item.price,
+        alloc.cost_price,
+        alloc.batch_id,
+      ]
+    );
 
-        if (result.changes === 0) {
-          throw new Error("Insufficient batch stock");
-        }
+    const result = await db.runAsync(
+      `
+      UPDATE inventory_batches
+      SET quantity_on_hand = quantity_on_hand - ?,
+          updated_at = ?
+      WHERE id = ?
+        AND quantity_on_hand >= ?
+      `,
+      [
+        alloc.quantity,
+        now,
+        alloc.batch_id,
+        alloc.quantity,
+      ]
+    );
 
-        await insertMovement(db, {
-          id: newUuid(),
-          product_id: item.product_id,
-          batch_id: alloc.batch_id,
-          company,
-          unit_cost: alloc.cost_price,
-          quantity: -alloc.quantity,
-          type: "sale",
-          reference_id: id,
-          date: saleDate,
-          created_by: user_id,
-          updated_by: user_id,
-          created_at: now,
-          updated_at: now,
-        });
-        
-      }
+    if (result.changes === 0) {
+      throw new Error("Insufficient batch stock");
     }
 
-    // 5. PAYMENT CREATION
-    if ((amount_paid || 0) > 0) {
-      const paymentId = newUuid();
+    await insertMovement(db, {
+      id: newUuid(),
+      product_id: item.product_id,
+      batch_id: alloc.batch_id,
+      company,
+      unit_cost: alloc.cost_price,
+      quantity: -alloc.quantity,
+      type: "sale",
+      reference_id: saleId,
+      date: saleDate,
+      created_by: user_id,
+      updated_by: user_id,
+      created_at: now,
+      updated_at: now,
+    });
+    
+  }
+}
 
-      await db.runAsync(
-        `
-        INSERT INTO payments
-        (
-          id, company, created_by, updated_by,
-          sale_id, customer_id, payment_type,
-          amount, payment_method, note,
-          date, created_at, updated_at
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `,
-        [
-          paymentId,
-          company,
-          user_id,
-          user_id,
-          id,
-          customer_id,
-          "INITIAL",
-          amount_paid,
-          "cash",
-          "Auto-created from sale",
-          saleDate,
-          now,
-          now,
-        ]
-      );
+const createInitialPayment = async(db,{
+  saleId,
+  company,
+  user_id,
+  customer_id,
+  amount_paid,
+  saleDate,
+  now
+}) => {
+  if ((amount_paid || 0) > 0) {
+    const paymentId = newUuid();
 
-      
-    }
-
-    await db.runAsync("COMMIT");
-
-    return id;
-  } catch (err) {
-    await db.runAsync("ROLLBACK");
-    throw err;
+    await db.runAsync(
+      `
+      INSERT INTO payments
+      (
+        id, company, created_by, updated_by,
+        sale_id, customer_id, payment_type,
+        amount, payment_method, note,
+        date, created_at, updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        paymentId,
+        company,
+        user_id,
+        user_id,
+        saleId,
+        customer_id,
+        "INITIAL",
+        amount_paid,
+        "cash",
+        "Auto-created from sale",
+        saleDate,
+        now,
+        now,
+      ]
+    );
   }
 }
 
