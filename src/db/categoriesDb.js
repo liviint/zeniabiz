@@ -1,4 +1,5 @@
-import { getActiveContextSync, newUuid } from "./utils";
+import { getActiveContextSync, newUuid, withTransaction } from "./utils";
+import { enqueueSync } from "../cloudSync/syncEvent";
 
 export const getCategoryById = async (db, id) => {
   const { company } = getActiveContextSync();
@@ -31,30 +32,18 @@ export const getCategories = async (db) => {
   );
 };
 
-export const getUnsyncedCategories = (db) => {
-  return db.getAllAsync(
-    `
-    SELECT *
-    FROM expense_categories
-    WHERE is_synced = 0
-    `
-  );
-}
-
 export const upsertCategory = async (db, { id, name, color, icon }) => {
-  const { company, user_id } = getActiveContextSync();
+  return withTransaction(db,async() => {
+    const { company, user_id } = getActiveContextSync();
 
-  if (!company || !user_id) {
-    throw new Error("Missing active company or user context");
-  }
+    if (!company || !user_id) {
+      throw new Error("Missing active company or user context");
+    }
 
-  const now = new Date().toISOString();
-  const categoryId = id || newUuid();
+    const now = new Date().toISOString();
+    const categoryId = id || newUuid();
 
-  await db.runAsync("BEGIN TRANSACTION");
 
-  try {
-    // 1️⃣ Local DB write (idempotent)
     await db.runAsync(
       `
       INSERT INTO expense_categories (
@@ -87,38 +76,36 @@ export const upsertCategory = async (db, { id, name, color, icon }) => {
       ]
     );
 
-    await db.runAsync("COMMIT");
+    await enqueueSync(db,{
+      model:"expense_categories",
+      record_id:categoryId,
+      operation:"upsert",
+    })
 
     return categoryId;
-  } catch (error) {
-    await db.runAsync("ROLLBACK");
-    throw error;
-  }
+  })
 };
 
 export const deleteCategory = async (db, id) => {
-  const { company, user_id } = getActiveContextSync();
+  return withTransaction(db,async() => {
+    const { company, user_id } = getActiveContextSync();
 
-  if (!company || !user_id) {
-    throw new Error("Missing active company or user context");
-  }
+    if (!company || !user_id) {
+      throw new Error("Missing active company or user context");
+    }
 
-  const now = new Date().toISOString();
+    const now = new Date().toISOString();
 
-  // 🔎 check usage first
-  const usage = await db.getFirstAsync(
-    `SELECT COUNT(*) as count FROM expenses WHERE category_id = ?`,
-    [id]
-  );
+    const usage = await db.getFirstAsync(
+      `SELECT COUNT(*) as count FROM expenses WHERE category_id = ?`,
+      [id]
+    );
 
-  if (usage.count > 0) {
-    throw new Error("Cannot delete category in use");
-  }
+    if (usage.count > 0) {
+      throw new Error("Cannot delete category in use");
+    }
 
-  await db.runAsync("BEGIN TRANSACTION");
-
-  try {
-    // 🗑 soft delete locally
+ 
     await db.runAsync(
       `
       UPDATE expense_categories
@@ -128,10 +115,11 @@ export const deleteCategory = async (db, id) => {
       [now, now, id]
     );
 
-    await db.runAsync("COMMIT");
+    await enqueueSync(db,{
+      model:"expense_categories",
+      record_id:id,
+      operation:"delete",
+    })
 
-  } catch (error) {
-    await db.runAsync("ROLLBACK");
-    throw error;
-  }
+  })
 };

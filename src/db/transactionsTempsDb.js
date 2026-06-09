@@ -1,28 +1,28 @@
-import { getActiveContextSync , newUuid} from "./utils";
+import { getActiveContextSync , newUuid, withTransaction} from "./utils";
+import { enqueueSync } from "../cloudSync/syncEvent";
 
 export const upsertExpenseTemplate = async (db, template) => {
-  const {
-    id,
-    title,
-    amount,
-    category = null,
-    category_id = null,
-    payee = null,
-    note = null,
-  } = template;
 
-  const { company, user_id } = getActiveContextSync();
+  return withTransaction(db, async() => {
+    const {
+      id,
+      title,
+      amount,
+      category = null,
+      category_id = null,
+      payee = null,
+      note = null,
+    } = template;
 
-  if (!company || !user_id) {
-    throw new Error("Missing active company or user context");
-  }
+    const { company, user_id } = getActiveContextSync();
 
-  const templateId = id || newUuid();
-  const now = new Date().toISOString();
+    if (!company || !user_id) {
+      throw new Error("Missing active company or user context");
+    }
 
-  await db.runAsync("BEGIN TRANSACTION");
+    const templateId = id || newUuid();
+    const now = new Date().toISOString();
 
-  try {
     // 1️⃣ Local write
     await db.runAsync(
       `
@@ -63,13 +63,14 @@ export const upsertExpenseTemplate = async (db, template) => {
       ]
     );
 
-    await db.runAsync("COMMIT");
+    await enqueueSync(db,{
+      model:"expense_templates",
+      record_id:templateId,
+      operation:"upsert",
+    })
 
     return templateId;
-  } catch (error) {
-    await db.runAsync("ROLLBACK");
-    throw error;
-  }
+  })
 };
 
 export const getTransactionTemplates = async (db) => {
@@ -99,72 +100,23 @@ export const getTransactionTemplateByid = async (db, id) => {
 };
 
 export const deleteTransactionTemplate = async (db, id) => {
-  const { company } = getActiveContextSync(db);
-  const now = new Date().toISOString();
+  return withTransaction(db,async() => {
+    const now = new Date().toISOString();
 
-  await db.runAsync(
-    `
-    UPDATE expense_templates
-    SET deleted_at = ?,
-        updated_at = ?
-    WHERE id = ?
-    `,
-    [now, now, id]
-  );
+    await db.runAsync(
+      `
+      UPDATE expense_templates
+      SET deleted_at = ?,
+          updated_at = ?
+      WHERE id = ?
+      `,
+      [now, now, id]
+    );
 
-};
-
-export const restoreTransactionTemplate = async (db, uuid) => {
-  await db.runAsync(
-    `
-    UPDATE expense_templates
-    SET deleted_at = NULL,
-        updated_at = datetime('now'),
-        is_synced = 0
-    WHERE uuid = ?
-    `,
-    [uuid]
-  );
-};
-
-
-export const markTemplateAsSynced = async (db, uuid) => {
-  await db.runAsync(
-    `
-    UPDATE expense_templates
-    SET is_synced = 1,
-        updated_at = datetime('now')
-    WHERE uuid = ?
-    `,
-    [uuid]
-  );
-};
-
-export const getUnsyncedTemplates = async (db) => {
-  return await db.getAllAsync(`
-    SELECT *
-    FROM expense_templates
-    WHERE is_synced = 0
-  `);
-};
-
-export const markTemplatesAsSynced = async (db, uuids) => {
-  if (!uuids.length) return;
-  const placeholders = uuids.map(() => "?").join(",");
-  await db.runAsync(
-    `UPDATE expense_templates
-      SET is_synced = 1
-      WHERE uuid IN (${placeholders})`,
-    uuids
-  );
-};
-
-export const hardDeleteTransactionTemplate = async (db, uuid) => {
-  await db.runAsync(
-    `
-    DELETE FROM expense_templates
-    WHERE uuid = ?
-    `,
-    [uuid]
-  );
+    await enqueueSync(db,{
+        model:"expense_templates",
+        record_id:id,
+        operation:"delete",
+      })
+    })
 };

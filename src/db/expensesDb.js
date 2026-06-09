@@ -1,5 +1,6 @@
-import { getActiveContextSync, newUuid } from "./utils";
+import { getActiveContextSync, newUuid, withTransaction } from "./utils";
 import { normalizeRange } from "../utils/timeNavigatorHelpers";
+import { enqueueSync } from "../cloudSync/syncEvent";
 
 export async function upsertExpense(
   db,
@@ -14,18 +15,15 @@ export async function upsertExpense(
     date,
   }
 ) {
-  const { company, user_id } = getActiveContextSync();
+  return withTransaction(db, async() => {
+    const { company, user_id } = getActiveContextSync();
 
-  const now = new Date().toISOString();
-  const expenseDate = date ? date.toISOString() : now;
+    const now = new Date().toISOString();
+    const expenseDate = date ? date.toISOString() : now;
 
-  const expenseId = id || newUuid();
-  const cleanAmount = parseFloat(amount) || 0;
+    const expenseId = id || newUuid();
+    const cleanAmount = parseFloat(amount) || 0;
 
-  await db.runAsync("BEGIN TRANSACTION");
-
-  try {
-    // 1️⃣ UPSERT LOCAL EXPENSE
     await db.runAsync(
       `
       INSERT INTO expenses (
@@ -72,15 +70,14 @@ export async function upsertExpense(
       ]
     );
 
-    await db.runAsync("COMMIT");
+    await enqueueSync(db,{
+      model:"expenses",
+      record_id:expenseId,
+      operation:"upsert",
+    })
 
     return expenseId;
-
-  } catch (error) {
-    await db.runAsync("ROLLBACK");
-    console.log(error, "upsert expense error");
-    throw error;
-  }
+  })
 }
 
 export async function getExpenses(db, timeState) {
@@ -113,7 +110,6 @@ export async function getTransactionById(db, id) {
 }
 
 export async function deleteExpense(db, id) {
-  const { company } = getActiveContextSync();
   const now = new Date().toISOString();
 
   if (!id) {
@@ -132,6 +128,12 @@ export async function deleteExpense(db, id) {
       `,
       [now, now, id]
     );
+
+    await enqueueSync(db,{
+      model:"expenses",
+      record_id:id,
+      operation:"delete",
+    })
 
     await db.runAsync("COMMIT");
 
