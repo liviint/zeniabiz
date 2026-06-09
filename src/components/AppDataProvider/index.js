@@ -11,6 +11,7 @@ import {
 } from "../../db/migrations/inventory"
 import {migrateSalesCreditFieldsV1, migratePaymentsFromSalesV1} from "../../db/migrations/credit"
 import { applySalesMigrationsV1 } from "../../db/migrations/sales"
+import { applySyncMigrationsV1 } from "../../db/migrations/sync"
 import { getSetting, setSetting } from "@/src/db/settingsDb";
 
 const migrateDbIfNeeded = async (db) => {
@@ -371,6 +372,7 @@ const migrateDbIfNeeded = async (db) => {
   CREATE TABLE IF NOT EXISTS sync_queue (
     id TEXT PRIMARY KEY,
     model TEXT NOT NULL,
+    record_id TEXT NOT NULL,
     operation TEXT,
     company TEXT,
 
@@ -383,7 +385,8 @@ const migrateDbIfNeeded = async (db) => {
     updated_at TEXT,
 
     retry_count INTEGER DEFAULT 0,
-    next_retry_at TEXT
+    next_retry_at TEXT,
+    error_message TEXT,
   );
 
   CREATE INDEX IF NOT EXISTS idx_sync_status 
@@ -425,6 +428,13 @@ const migrateDbIfNeeded = async (db) => {
     await applyExpansionOfProductsToServices(db);
 
     currentVersion = 3;
+    await setSetting(db, "db_version", currentVersion);
+  }
+
+  if(currentVersion < 4){
+    await applySyncMigrationsV1(db);
+
+    currentVersion = 4;
     await setSetting(db, "db_version", currentVersion);
   }
 }
