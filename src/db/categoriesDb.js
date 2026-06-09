@@ -1,4 +1,3 @@
-import {syncEvent} from "../cloudSync/syncEvent"
 import { getActiveContextSync, newUuid } from "./utils";
 
 export const getCategoryById = async (db, id) => {
@@ -90,28 +89,6 @@ export const upsertCategory = async (db, { id, name, color, icon }) => {
 
     await db.runAsync("COMMIT");
 
-    // 2️⃣ Sync event (AFTER commit ONLY)
-    syncEvent(db, {
-      model: "expense_categories",
-      operation: "upsert",
-      payload: {
-        id: categoryId,
-        company,
-        created_by: user_id,
-        updated_by: user_id,
-
-        name: name?.trim(),
-        color,
-        icon,
-
-        created_at: now,
-        updated_at: now,
-        deleted_at: null,
-      },
-    }).catch((err) => {
-      console.error("Category sync enqueue failed:", err);
-    });
-
     return categoryId;
   } catch (error) {
     await db.runAsync("ROLLBACK");
@@ -152,22 +129,6 @@ export const deleteCategory = async (db, id) => {
     );
 
     await db.runAsync("COMMIT");
-
-    // 🔥 SYNC EVENT (after commit ONLY)
-    syncEvent(db, {
-      model: "expense_categories",
-      operation: "delete",
-      payload: {
-        id,
-        company,
-        created_by: user_id,
-        updated_by: user_id,
-
-        deleted_at: now,
-      },
-    }).catch((err) => {
-      console.error("Category delete sync failed:", err);
-    });
 
   } catch (error) {
     await db.runAsync("ROLLBACK");

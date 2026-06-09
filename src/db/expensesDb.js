@@ -1,4 +1,3 @@
-import { syncEvent } from "../cloudSync/syncEvent";
 import { getActiveContextSync, newUuid } from "./utils";
 import { normalizeRange } from "../utils/timeNavigatorHelpers";
 
@@ -75,31 +74,6 @@ export async function upsertExpense(
 
     await db.runAsync("COMMIT");
 
-    // 2️⃣ SYNC EVENT (after commit only)
-    syncEvent(db, {
-      model: "expenses",
-      operation: "upsert",
-      payload: {
-        id: expenseId,
-        company,
-        created_by: user_id,
-        updated_by: user_id,
-
-        title,
-        amount: cleanAmount,
-        category:category_id,
-        note,
-        payee,
-        date: expenseDate,
-
-        created_at: now,
-        updated_at: now,
-        deleted_at: null,
-      },
-    }).catch((err) => {
-      console.error("Expense sync enqueue failed:", err);
-    });
-
     return expenseId;
 
   } catch (error) {
@@ -160,21 +134,6 @@ export async function deleteExpense(db, id) {
     );
 
     await db.runAsync("COMMIT");
-
-    // 🔥 2️⃣ SYNC EVENT (AFTER COMMIT)
-    syncEvent(db, {
-      model: "expenses",
-      operation: "delete",
-      payload: {
-        id,
-        company,
-        deleted_at: now,
-        updated_at: now
-      }
-    })
-    .catch(err => {
-  console.error("Sync failed:", err);
-});
 
   } catch (error) {
     await db.runAsync("ROLLBACK");

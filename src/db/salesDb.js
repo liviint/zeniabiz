@@ -1,6 +1,5 @@
 import { getActiveContextSync, withTransaction, newUuid } from "./utils";
 import { normalizeRange } from "../utils/timeNavigatorHelpers";
-import { syncEvent } from "../cloudSync/syncEvent";
 
 export async function restoreFIFO(db, purchaseId, qty) {
   const row = await db.getFirstAsync(
@@ -715,38 +714,6 @@ export async function deleteSale(db, sale_id) {
       SET deleted_at = ?, updated_at = ?
       WHERE sale_id = ?
     `,[now, now, sale_id]);
-
-    // -------------------------
-    // 🔥 SYNC SECTION
-    // -------------------------
-
-    // 6️⃣ sync sale (as upsert with deleted_at)
-    await syncEvent(db, {
-      model: "sales",
-      operation: "delete",
-      payload: {
-        id: sale_id,
-        company,
-        deleted_at: now,
-        updated_at: now,
-      },
-    });
-
-    // 7️⃣ sync each sale_item individually (upsert delete)
-    for (const item of saleItems) {
-      await syncEvent(db, {
-        model: "sale_items",
-        operation: "delete",
-        payload: {
-          id: item.id,
-          sale_id: item.sale_id,
-          company: item.company,
-          product_id: item.product_id,
-          deleted_at: now,
-          updated_at: now,
-        },
-      });
-    }
 
   } catch (err) {
     throw err;

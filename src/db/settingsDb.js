@@ -1,4 +1,3 @@
-import { syncEvent } from "../cloudSync/syncEvent";
 
 export const getSetting = async (db, key) => {
   try {
@@ -36,18 +35,6 @@ export const setSetting = async (db, key, value) => {
     );
 
     await db.runAsync("COMMIT");
-
-    // 2️⃣ SYNC EVENT (AFTER COMMIT ONLY)
-    await syncEvent(db, {
-      model: "app_settings",
-      operation: "upsert",
-      payload: {
-        key,
-        value: String(value),
-        updated_at: now,
-        deleted_at: null
-      }
-    });
 
   } catch (error) {
     await db.runAsync("ROLLBACK");

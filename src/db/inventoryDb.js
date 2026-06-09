@@ -1,4 +1,3 @@
-import { syncEvent } from "../cloudSync/syncEvent";
 import { getMonthRange , getActiveContextSync, withTransaction, newUuid} from "./utils";
 
 export async function upsertProduct(
@@ -338,23 +337,7 @@ export async function deleteProduct(db, id) {
       WHERE id = ?
       `,
       [now, now, id]
-    );
-
-
-    // 🔥 SYNC EVENT (AFTER COMMIT)
-    syncEvent(db, {
-      model: "products",
-      operation: "delete",
-      payload: {
-        id,
-        company,
-        deleted_at: now,
-        updated_at:now
-      }
-    })
-    .catch(err => {
-  console.error("Sync failed:", err);
-});
+    )
 
   } catch (error) {
     throw error;

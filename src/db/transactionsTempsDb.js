@@ -1,4 +1,3 @@
-import { syncEvent } from "../cloudSync/syncEvent";
 import { getActiveContextSync , newUuid} from "./utils";
 
 export const upsertExpenseTemplate = async (db, template) => {
@@ -66,31 +65,6 @@ export const upsertExpenseTemplate = async (db, template) => {
 
     await db.runAsync("COMMIT");
 
-    // 2️⃣ Sync event (after commit ONLY)
-    syncEvent(db, {
-      model: "expense_templates",
-      operation: "upsert",
-      payload: {
-        id: templateId,
-
-        company,
-        created_by: user_id,
-        updated_by: user_id,
-
-        title,
-        amount,
-        category:category_id,
-        payee,
-        note,
-
-        created_at: now,
-        updated_at: now,
-        deleted_at: null,
-      },
-    }).catch((err) => {
-      console.error("Expense template sync failed:", err);
-    });
-
     return templateId;
   } catch (error) {
     await db.runAsync("ROLLBACK");
@@ -138,17 +112,6 @@ export const deleteTransactionTemplate = async (db, id) => {
     [now, now, id]
   );
 
-  // 🔥 SYNC EVENT
-  await syncEvent(db, {
-    model: "expense_templates",
-    operation: "delete",
-    payload: {
-      id,
-      company,
-      deleted_at: now,
-      updated_at: now,
-    }
-  });
 };
 
 export const restoreTransactionTemplate = async (db, uuid) => {
