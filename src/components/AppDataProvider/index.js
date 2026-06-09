@@ -385,7 +385,7 @@ const migrateDbIfNeeded = async (db) => {
 
     retry_count INTEGER DEFAULT 0,
     next_retry_at TEXT,
-    error_message TEXT,
+    error_message TEXT
   );
 
   CREATE INDEX IF NOT EXISTS idx_sync_status 
@@ -396,6 +396,9 @@ const migrateDbIfNeeded = async (db) => {
 
   CREATE INDEX IF NOT EXISTS idx_sync_pending
   ON sync_queue(status, next_retry_at);
+
+  CREATE INDEX IF NOT EXISTS idx_sync_record
+  ON sync_queue(model, record_id);
 
   CREATE TABLE IF NOT EXISTS sync_state (
     model TEXT PRIMARY KEY,
