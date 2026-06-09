@@ -513,7 +513,6 @@ export async function getProductBatches(db, productId) {
 }
 
 export async function deleteProduct(db, id) {
-  const { company, user_id } = getActiveContextSync(db);
   const now = new Date().toISOString();
 
   if (!id) {
@@ -521,7 +520,6 @@ export async function deleteProduct(db, id) {
   }
 
   try {
-    // 🗑 Soft delete product
     await db.runAsync(
       `
       UPDATE products
@@ -530,6 +528,12 @@ export async function deleteProduct(db, id) {
       `,
       [now, now, id]
     )
+
+    await enqueueSync(db,{
+      model:"products",
+      record_id:id,
+      operation:"delete",
+    })
 
   } catch (error) {
     throw error;
