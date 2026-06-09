@@ -1,23 +1,58 @@
-import { addToQueue } from "./queue";
-import { generateUUID } from "./utils";
+import { newUuid, getActiveContextSync } from "../db/utils";
 
-export async function syncEvent(db, {
+export async function enqueueSync(db, {
   model,
-  operation = "upsert", // upsert | delete | update
-  payload
+  record_id,
+  operation,
+  client_request_id = null,
 }) {
+  const { company } =  await getActiveContextSync(db);
   const now = new Date().toISOString();
-  
-  const event = {
-    id: generateUUID(),
-    model,
-    operation,
-    payload,
-    client_request_id: generateUUID(),
-    created_at: now,
-    status: "pending"
-  };
 
-  await addToQueue(db, event);
-  return event.id;
+  const existing = await db.getFirstAsync(
+    `SELECT id FROM sync_queue
+      WHERE model = ?
+      AND record_id = ?
+      AND status = 'pending'`,
+    [model, record_id]
+  );
+
+  if (existing) {
+    await db.runAsync(
+      `UPDATE sync_queue
+        SET updated_at = ?
+        WHERE id = ?`,
+      [now, existing.id]
+    );
+
+    return existing.id;
+  }
+
+  const id = newUuid()
+
+  await db.runAsync(
+    `INSERT INTO sync_queue (
+      id,
+      model,
+      record_id,
+      operation,
+      company,
+      client_request_id,
+      status,
+      created_at,
+      updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
+    [
+      id,
+      model,
+      record_id,
+      operation,
+      company,
+      client_request_id,
+      now,
+      now,
+    ]
+  );
+
+  return id;
 }
