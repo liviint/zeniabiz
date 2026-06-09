@@ -56,3 +56,21 @@ export async function enqueueSync(db, {
 
   return id;
 }
+
+export async function getPendingSyncItems(db, limit = 50) {
+  const now = new Date().toISOString();
+
+  const rows = await db.getAllAsync(
+    `
+    SELECT *
+    FROM sync_queue
+    WHERE status = 'pending'
+      AND (next_retry_at IS NULL OR next_retry_at <= ?)
+    ORDER BY created_at ASC
+    LIMIT ?
+    `,
+    [now, limit]
+  );
+
+  return rows;
+}
