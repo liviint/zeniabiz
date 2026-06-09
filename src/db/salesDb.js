@@ -101,19 +101,44 @@ export async function reverseSale(
 ) {
   const now = new Date().toISOString();
 
-  try {
-    const saleItems = await db.getAllAsync(
-      `
-      SELECT *
-      FROM sale_items
-      WHERE sale_id = ?
-        AND deleted_at IS NULL
-      `,
-      [saleId]
-    );
+    const saleItems = await getSaleItems(db, saleId)
 
-    // 1. Restore batch stock
-    for (const item of saleItems) {
+    await restoreSaleInventory(db, saleItems, now)
+
+    await createSaleReversalMovements(
+      db,
+      saleItems,
+      saleId,
+      company,
+      user_id,
+      now
+    )
+
+    await deleteSaleItems(db, saleId, now);
+
+    await deleteSalePayments(db, saleId, now)
+
+}
+
+async function getSaleItems(db, saleId) {
+  return await db.getAllAsync(
+    `
+    SELECT *
+    FROM sale_items
+    WHERE sale_id = ?
+      AND deleted_at IS NULL
+    `,
+    [saleId]
+  );
+}
+
+async function restoreSaleInventory(
+  db,
+  saleItems,
+  now
+) {
+  for (const item of saleItems) {
+      if (!item.batch_id) continue;
       await db.runAsync(
         `
         UPDATE inventory_batches
@@ -128,62 +153,61 @@ export async function reverseSale(
         ]
       );
     }
+}
 
-    // 2. Append reversal movements (IMPORTANT: append-only ledger)
-    for (const item of saleItems) {
-      await db.runAsync(
-        `
-        INSERT INTO inventory_movements (
-          id,
-          product_id,
-          batch_id,
-          company,
-          unit_cost,
-          quantity,
-          type,
-          reason,
-          reference_id,
-          date,
-          created_at,
-          updated_at,
-          created_by,
-          updated_by
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `,
-        [
-          newUuid(),
-          item.product_id,
-          item.batch_id,
-          company,
-          item.cost_price,
-          item.quantity,
-          "adjustment",
-          "sale_reversal",
-          saleId,
-          now,
-          now,
-          now,
-          user_id,
-          user_id,
-        ]
-      );
-    }
+async function createSaleReversalMovements(
+  db,
+  saleItems,
+  saleId,
+  company,
+  user_id,
+  now
+) {
+  for (const item of saleItems) {
+    if (!item.batch_id) continue;
 
-    // 3. Mark sale items deleted
-    for (const item of saleItems) {
-      await db.runAsync(
-        `
-        UPDATE sale_items
-        SET deleted_at = ?, updated_at = ?
-        WHERE id = ?
-        `,
-        [now, now, item.id]
-      );
-    }
+    await insertMovement(db, {
+      id: newUuid(),
+      product_id: item.product_id,
+      batch_id: item.batch_id,
+      company,
+      unit_cost: item.cost_price,
+      quantity: item.quantity,
+      type: "adjustment",
+      reason: "sale_reversal",
+      reference_id: saleId,
+      date: now,
+      created_by: user_id,
+      updated_by: user_id,
+      created_at: now,
+      updated_at: now,
+    });
+  }
+}
 
-    // 4. Mark payments deleted
-    await db.runAsync(
+async function deleteSaleItems(
+  db,
+  saleId,
+  now
+) {
+  await db.runAsync(
+    `
+    UPDATE sale_items
+    SET deleted_at = ?,
+        updated_at = ?
+    WHERE sale_id = ?
+      AND deleted_at IS NULL
+    `,
+    [now, now, saleId]
+  );
+}
+
+async function deleteSalePayments(
+  db,
+  saleId,
+  now
+) {
+  await db.runAsync(
       `
       UPDATE payments
       SET deleted_at = ?, updated_at = ?
@@ -191,10 +215,6 @@ export async function reverseSale(
       `,
       [now, now, saleId]
     );
-
-  } catch (err) {
-    throw err;
-  }
 }
 
 export async function createOrUpdateSale(
