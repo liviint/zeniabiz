@@ -1,4 +1,4 @@
-import {addColumnIfNotExists} from "./helpers"
+import {addColumnIfNotExists, deleteColumnIfExists} from "./helpers"
 
 export const applySyncMigrationsV1 = async (db) => {
     await addColumnIfNotExists(
@@ -12,5 +12,10 @@ export const applySyncMigrationsV1 = async (db) => {
         "sync_queue",
         "error_message",
         "TEXT"
+    );
+    await deleteColumnIfExists(
+        db,
+        "sync_queue",
+        "payload",
     );
 };

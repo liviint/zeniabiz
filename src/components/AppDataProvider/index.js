@@ -376,7 +376,6 @@ const migrateDbIfNeeded = async (db) => {
     operation TEXT,
     company TEXT,
 
-    payload TEXT NOT NULL,
     client_request_id TEXT UNIQUE,
 
     status TEXT DEFAULT 'pending',
