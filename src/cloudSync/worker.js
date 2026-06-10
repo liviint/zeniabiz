@@ -3,15 +3,16 @@ import {pushLocalChanges} from "./pushSync"
 import { syncStarted, syncFinished } from "../store/features/syncSlice";
 
 const PULL_ORDER = [
-  
   "expense_categories", 
   "products",
   "inventory_batches",
   "inventory_movements",
   "expenses",
   "expense_templates",
+  "customers",
   "sales",
   "sale_items", 
+  "payments"
 ];
 
 let SYNC_LOCK = false;

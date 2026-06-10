@@ -9,62 +9,69 @@ const SYNC_ORDER = [
   "inventory_movements",
   "expenses",
   "expense_templates",
+  "customers",
   "sales",
   "sale_items", 
+  "payments",
 ];
 
 export async function pushLocalChanges(db) {
   let pending = await getPendingItems(db);
-  console.log(pending,"hello pending...")
-  if (pending.length === 0) return true;
 
+  if (pending.length === 0) {
+    return true;
+  }
+
+  const grouped = pending.reduce((acc, item) => {
+    if (!acc[item.model]) {
+      acc[item.model] = [];
+    }
+
+    acc[item.model].push(item);
+    return acc;
+  }, {});
+
+  // sync ordered models first
   for (const model of SYNC_ORDER) {
-    // 🔥 regroup every iteration using latest state
-    const grouped = {};
+    const items = grouped[model];
 
-    for (const item of pending) {
-      if (!grouped[item.model]) {
-        grouped[item.model] = [];
-      }
-      grouped[item.model].push(item);
-    }
+    if (!items?.length) continue;
 
-    if (grouped[model] && grouped[model].length > 0) {
-      const success = await syncModel(db, model, grouped[model]);
+    const success = await syncModel(
+      db,
+      model,
+      items
+    );
 
-      // 🔥 CRITICAL: stop everything if failed
-      if (!success) {
-        console.log("Stopping sync due to failure in:", model);
-        return false
-      }
-  }
-
-    // 🔥 refresh pending after syncing this model
-    pending = await getPendingItems(db);
-  }
-
-  // ⚠️ handle any other models not in SYNC_ORDER
-  const remainingGrouped = {};
-
-  for (const item of pending) {
-    if (!SYNC_ORDER.includes(item.model)) {
-      if (!remainingGrouped[item.model]) {
-        remainingGrouped[item.model] = [];
-      }
-      remainingGrouped[item.model].push(item);
+    if (!success) {
+      console.log(
+        "Stopping sync due to failure in:",
+        model
+      );
+      return false;
     }
   }
 
-  for (const model in remainingGrouped) {
-    const items = remainingGrouped[model];
-    const success = await syncModel(db, model, items);
-      if (!success) {
-        console.log("Stopping sync due to failure in:", model);
-        return false
-      }
-    
+  // sync any models not explicitly ordered
+  for (const [model, items] of Object.entries(grouped)) {
+    if (SYNC_ORDER.includes(model)) continue;
+
+    const success = await syncModel(
+      db,
+      model,
+      items
+    );
+
+    if (!success) {
+      console.log(
+        "Stopping sync due to failure in:",
+        model
+      );
+      return false;
+    }
   }
-  return true
+
+  return true;
 }
 
 async function syncModel(db, model, items) {
