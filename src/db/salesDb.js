@@ -71,26 +71,35 @@ export async function allocateFIFO(
   return allocations;
 }
 
-  async function insertMovement(db, movement) {
-    await db.runAsync(
-      `INSERT INTO inventory_movements
-      (id, product_id, company, unit_cost, quantity, type, reference_id, date, created_at, updated_at, created_by, updated_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        movement.id,
-        movement.product_id,
-        movement.company,
-        movement.unit_cost,
-        movement.quantity,
-        movement.type,
-        movement.reference_id,
-        movement.date,
-        movement.created_at,
-        movement.updated_at,
-        movement.created_by,
-        movement.updated_by,
-      ]
-    );
+async function insertMovement(db, movement) {
+  await db.runAsync(
+    `INSERT INTO inventory_movements
+    (id, product_id, batch_id, company, unit_cost, quantity, type, reason, reference_id, date, created_at, updated_at, created_by, updated_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      movement.id,
+      movement.product_id,
+      movement.batch_id,
+      movement.company,
+      movement.unit_cost,
+      movement.quantity,
+      movement.type,
+      movement.reason,
+      movement.reference_id,
+      movement.date,
+      movement.created_at,
+      movement.updated_at,
+      movement.created_by,
+      movement.updated_by,
+    ]
+  );
+
+  await enqueueSync(db,{
+    model:"inventory_movements",
+    record_id:movement.id,
+    operation:"upsert",
+  })
+
 }
 
 
@@ -114,7 +123,7 @@ export async function reverseSale(
       now
     )
 
-    await deleteSaleItems(db, saleId, now);
+    await deleteSaleItems(db, saleId, saleItems, now);
 
     await deleteSalePayments(db, saleId, now)
 
@@ -152,6 +161,13 @@ async function restoreSaleInventory(
           item.batch_id,
         ]
       );
+
+      await enqueueSync(db,{
+        model:"inventory_batches",
+        record_id:item.batch_id,
+        operation:"upsert",
+      })
+
     }
 }
 
@@ -188,6 +204,7 @@ async function createSaleReversalMovements(
 async function deleteSaleItems(
   db,
   saleId,
+  saleItems,
   now
 ) {
   await db.runAsync(
@@ -200,6 +217,15 @@ async function deleteSaleItems(
     `,
     [now, now, saleId]
   );
+
+  for (const item of saleItems) {
+    await enqueueSync(db, {
+      model: "sale_items",
+      record_id: item.id,
+      operation: "delete",
+    });
+  }
+
 }
 
 async function deleteSalePayments(
@@ -207,14 +233,33 @@ async function deleteSalePayments(
   saleId,
   now
 ) {
+  const payments = await db.getAllAsync(
+    `
+    SELECT id
+    FROM payments
+    WHERE sale_id = ?
+      AND deleted_at IS NULL
+    `,
+    [saleId]
+  );
+
   await db.runAsync(
-      `
-      UPDATE payments
-      SET deleted_at = ?, updated_at = ?
-      WHERE sale_id = ?
-      `,
-      [now, now, saleId]
-    );
+    `
+    UPDATE payments
+    SET deleted_at = ?,
+        updated_at = ?
+    WHERE sale_id = ?
+    `,
+    [now, now, saleId]
+  );
+
+  for (const payment of payments) {
+    await enqueueSync(db, {
+      model: "payments",
+      record_id: payment.id,
+      operation: "delete",
+    });
+  }
 }
 
 export async function createOrUpdateSale(
@@ -345,48 +390,55 @@ export async function upsertSaleHeader(db, {
       );
     }
 
-    else {
-      await db.runAsync(
-        `
-        INSERT INTO sales
-          (
-            id, company, title, note, date,
-            amount,
-            discount,
-            customer_id,
-            total_amount,
-            amount_paid,
-            balance_due,
-            is_credit_sale,
-            payment_status,
-            created_at,
-            updated_at
-          )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `,
-        [
-          id,
-          company,
-          finalTitle,
-          note ?? null,
-          saleDate,
-
-          subtotal,
-
+  else {
+    await db.runAsync(
+      `
+      INSERT INTO sales
+        (
+          id, company, title, note, date,
+          amount,
           discount,
           customer_id,
-
           total_amount,
           amount_paid,
           balance_due,
-          balance_due > 0 ? 1 : 0,
+          is_credit_sale,
           payment_status,
+          created_at,
+          updated_at
+        )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        id,
+        company,
+        finalTitle,
+        note ?? null,
+        saleDate,
 
-          now,
-          now,
-        ]
-      );
-    }
+        subtotal,
+
+        discount,
+        customer_id,
+
+        total_amount,
+        amount_paid,
+        balance_due,
+        balance_due > 0 ? 1 : 0,
+        payment_status,
+
+        now,
+        now,
+      ]
+    );
+  }
+
+  await enqueueSync(db, {
+    model: "sales",
+    record_id: id,
+    operation: "upsert",
+  });
+
 }
 
 export async function handleSaleItems(db, {
@@ -440,6 +492,12 @@ const createServiceSaleItem = async(db,{saleId,company,item}) => {
         null
       ]
     );
+
+    await enqueueSync(db, {
+    model: "sale_items",
+    record_id: saleItemId,
+    operation: "upsert",
+  });
 }
 
 const handleProductSaleItem = async(db,{
@@ -477,6 +535,12 @@ const handleProductSaleItem = async(db,{
       ]
     );
 
+    await enqueueSync(db, {
+      model: "sale_items",
+      record_id: saleItemId,
+      operation: "upsert",
+    });
+
     const result = await db.runAsync(
       `
       UPDATE inventory_batches
@@ -496,6 +560,12 @@ const handleProductSaleItem = async(db,{
     if (result.changes === 0) {
       throw new Error("Insufficient batch stock");
     }
+    
+    await enqueueSync(db, {
+      model: "inventory_batches",
+      record_id: alloc.batch_id,
+      operation: "upsert",
+    });
 
     await insertMovement(db, {
       id: newUuid(),
@@ -555,6 +625,13 @@ const createInitialPayment = async(db,{
         now,
       ]
     );
+
+    await enqueueSync(db, {
+      model: "payments",
+      record_id: paymentId,
+      operation: "upsert",
+    });
+
   }
 }
 
