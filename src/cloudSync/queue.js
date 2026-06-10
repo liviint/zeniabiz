@@ -35,7 +35,7 @@ export async function getPendingItems(db) {
 
   return rows.map(row => ({
     ...row,
-    payload: JSON.parse(row.payload)
+    payload: row.payload
   }))
 }
 
