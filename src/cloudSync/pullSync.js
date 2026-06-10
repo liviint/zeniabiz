@@ -5,6 +5,21 @@ import { api } from "@/api";
 // MODEL FIELD WHITELIST
 // -------------------------
 const MODEL_CONFIG = {
+  customers: {
+    fields: [
+      "id",
+      "company",
+      "created_by",
+      "updated_by",
+      "name",
+      "phone",
+      "note",
+      "created_at",
+      "updated_at",
+      "deleted_at",
+    ],
+    conflictKeys: ["id"],
+  },
   sales: {
     fields: [
       "id",
@@ -108,11 +123,15 @@ const MODEL_CONFIG = {
     fields: [
       "id",
       "company",
+      "created_by",
+      "updated_by",
       "product_id",
-      "quantity_remaining",
+      "quantity_on_hand",
       "cost_price",
       "selling_price",
-      "date",
+      "batch_number",
+      "expiry_date",
+      "purchase_date",
       "created_at",
       "updated_at",
       "deleted_at",
@@ -124,11 +143,37 @@ const MODEL_CONFIG = {
     fields: [
       "id",
       "company",
+      "created_by",
+      "updated_by",
       "product_id",
       "unit_cost",
+      "selling_price",
       "quantity",
       "type",
+      "reason",
       "reference_id",
+      "batch_id",
+      "date",
+      "processed_at",
+      "created_at",
+      "updated_at",
+      "deleted_at",
+    ],
+    conflictKeys: ["id"],
+  },
+
+  payments: {
+    fields: [
+      "id",
+      "company",
+      "created_by",
+      "updated_by",
+      "sale_id",
+      "customer_id",
+      "payment_type",
+      "amount",
+      "payment_method",
+      "note",
       "date",
       "created_at",
       "updated_at",
@@ -218,6 +263,11 @@ export async function applyServerChanges(db, model, items) {
 
     if (model === "expense_templates") {
       item.category_id = item.category_id ?? item.category;
+    }
+
+    if (model === "payments") {
+      item.sale_id = item.sale_id ?? item.sale;
+      item.customer_id = item.customer_id ?? item.customer;
     }
 
     const filtered = {};

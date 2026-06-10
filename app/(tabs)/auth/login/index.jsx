@@ -47,7 +47,6 @@ export default function Index() {
       if (!formData.password.trim()) newErrors.password = "Please enter your password.";
 
       setErrors(newErrors);
-      console.log(newErrors,"hello new erro")
       return Object.keys(newErrors).length === 0;
   };
 
