@@ -1,4 +1,5 @@
-import { newUuid, getActiveContextSync } from "./utils";
+import { newUuid, getActiveContextSync, withTransaction } from "./utils";
+import { enqueueSync } from "../cloudSync/syncEvent";
 
 export async function getCustomers(db) {
   return await db.getAllAsync(
@@ -19,38 +20,47 @@ export async function createCustomer(
     note = null,
   }
 ) {
-  const { company, user_id } =
+
+  return withTransaction(db,async ()=> {
+    const { company, user_id } =
     getActiveContextSync(db);
 
-  const now = new Date().toISOString();
+    const now = new Date().toISOString();
 
-  const id = newUuid();
+    const id = newUuid();
 
-  await db.runAsync(
-    `
-    INSERT INTO customers (
-      id,
-      company,
-      name,
-      phone,
-      note,
-      created_by,
-      created_at,
-      updated_at
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-    [
-      id,
-      company,
-      name,
-      phone,
-      note,
-      user_id,
-      now,
-      now,
-    ]
-  );
+    await db.runAsync(
+      `
+      INSERT INTO customers (
+        id,
+        company,
+        name,
+        phone,
+        note,
+        created_by,
+        created_at,
+        updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        id,
+        company,
+        name,
+        phone,
+        note,
+        user_id,
+        now,
+        now,
+      ]
+    );
 
-  return id;
+    await enqueueSync(db, {
+      model: "customers",
+      record_id: id,
+      operation: "upsert",
+    });
+
+    return id;
+  })
 }
