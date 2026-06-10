@@ -75,10 +75,15 @@ export async function pushLocalChanges(db) {
 }
 
 async function syncModel(db, model, items) {
-  const payload = items.map(item => ({
-    ...item.payload,
-    client_request_id: item.client_request_id
-  }));
+  const payload = await buildPayloads(
+    db,
+    model,
+    items
+  );
+
+  if (payload.length === 0) {
+    return true;
+  }
 
   const res = await sendBulkSync(model, payload);
 
@@ -122,6 +127,42 @@ async function syncModel(db, model, items) {
   }
 
   return true;
+}
+
+
+async function buildPayloads(db, model, items) {
+  const payloads = [];
+
+  for (const item of items) {
+    const record = await getRecordForSync(
+      db,
+      model,
+      item.record_id
+    );
+
+    if (!record) {
+      continue;
+    }
+
+    payloads.push({
+      ...record,
+      operation: item.operation,
+      client_request_id: item.client_request_id,
+    });
+  }
+
+  return payloads;
+}
+
+async function getRecordForSync(
+  db,
+  model,
+  recordId
+) {
+  return await db.getFirstAsync(
+    `SELECT * FROM ${model} WHERE id = ?`,
+    [recordId]
+  );
 }
 
 
