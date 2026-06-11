@@ -43,6 +43,7 @@ export default function SalesList() {
   }, [isFocused, timeState,lastSyncedAt]);
 
   useEffect(() => {
+    console.log(sales,"hello sales")
     setStats({
       count: sales.length,
       cashCollected: sales.reduce(
