@@ -11,7 +11,7 @@ import {
 } from "../../db/migrations/inventory"
 import {migrateSalesCreditFieldsV1, migratePaymentsFromSalesV1} from "../../db/migrations/credit"
 import { applySalesMigrationsV1 } from "../../db/migrations/sales"
-import { applySyncMigrationsV1 } from "../../db/migrations/sync"
+import { applySyncMigrationsV1, rebuildSyncQueue } from "../../db/migrations/sync"
 import { getSetting, setSetting } from "@/src/db/settingsDb";
 
 const migrateDbIfNeeded = async (db) => {
@@ -439,6 +439,14 @@ const migrateDbIfNeeded = async (db) => {
     currentVersion = 4;
     await setSetting(db, "db_version", currentVersion);
   }
+
+  if(currentVersion < 5){
+    await rebuildSyncQueue(db);
+
+    currentVersion = 5;
+    await setSetting(db, "db_version", currentVersion);
+  }
+
 }
 
 export default function AppDataProvider({ children }) {
