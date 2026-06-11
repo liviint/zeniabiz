@@ -99,7 +99,15 @@ async function syncModel(db, model, items) {
 
   console.log(`📦 Sync response: ${model}`);
   console.log("accepted:", data.accepted?.length || 0);
-  console.log("❌ rejected:", data.rejected?.length || 0);
+  console.log("❌ rejected:",  data.rejected?.length || 0);
+  if (data.rejected?.length) {
+    data.rejected.forEach((item) => {
+      console.log(
+        `❌ ${model} ${item.id}`,
+        JSON.stringify(item.error, null, 2)
+      );
+    });
+  }
 
   for (const accepted of data.accepted || []) {
     await markAsSynced(db, accepted.client_request_id);
