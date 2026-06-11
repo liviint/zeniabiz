@@ -18,6 +18,7 @@ import { useManualSync } from "../../../src/hooks/useManualSync";
 import TimeNavigator from "../../../src/components/common/TimeNavigator"
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 import { StatCard } from "../../../src/components/common/StatCard";
+import { getCahsCollcted } from "../../../src/db/paymentsDb";
 
 export default function SalesList() {
   const { onRefresh, refreshing } = useManualSync();
@@ -42,15 +43,16 @@ export default function SalesList() {
     })();
   }, [isFocused, timeState,lastSyncedAt]);
 
+
   useEffect(() => {
-    console.log(sales,"hello sales")
-    setStats({
-      count: sales.length,
-      cashCollected: sales.reduce(
-        (sum, sale) => sum + (sale.amount_paid || 0),
-        0
-      ),
-    });
+    const getStats = async() => {
+      let cashCollected = await getCahsCollcted(db,timeState)
+        setStats({
+          count: sales.length,
+          cashCollected:cashCollected.cashCollected
+        });
+      }
+    getStats()
   }, [sales]);
 
   const formatDate = (date) => {

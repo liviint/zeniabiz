@@ -1,5 +1,6 @@
 import { normalizeRange } from "../utils/timeNavigatorHelpers";
 import { getTotalStockValue } from "./inventoryDb";
+import { getCahsCollcted } from "./paymentsDb";
 import { getActiveContextSync } from "./utils";
 
 export const getCashFlow = async (db, timeState) => {
@@ -272,20 +273,7 @@ export async function getFinancialStats(db, timeState) {
   // 2. Cash Collected
   // -------------------------
 
-  const paymentsResult = await db.getFirstAsync(
-    `
-    SELECT 
-      COALESCE(SUM(amount), 0) AS cashCollected
-
-    FROM payments
-
-    WHERE company = ?
-      AND deleted_at IS NULL
-      AND date >= ?
-      AND date < ?
-    `,
-    [company, startDate, endDate]
-  );
+  const paymentsResult = await getCahsCollcted(db,timeState)
 
 
   // -------------------------
