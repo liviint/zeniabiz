@@ -372,7 +372,7 @@ const migrateDbIfNeeded = async (db) => {
   CREATE TABLE IF NOT EXISTS sync_queue (
     id TEXT PRIMARY KEY,
     model TEXT NOT NULL,
-    record_id TEXT NOT NULL,
+    record_id TEXT,
     operation TEXT,
     company TEXT,
 
@@ -396,9 +396,6 @@ const migrateDbIfNeeded = async (db) => {
 
   CREATE INDEX IF NOT EXISTS idx_sync_pending
   ON sync_queue(status, next_retry_at);
-
-  CREATE INDEX IF NOT EXISTS idx_sync_record
-  ON sync_queue(model, record_id);
 
   CREATE TABLE IF NOT EXISTS sync_state (
     model TEXT PRIMARY KEY,

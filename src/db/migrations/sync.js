@@ -6,7 +6,7 @@ export const applySyncMigrationsV1 = async (db) => {
         db,
         "sync_queue",
         "record_id",
-        "TEXT NOT NULL"
+        "TEXT"
     );
     await addColumnIfNotExists(
         db,
@@ -45,7 +45,7 @@ export async function rebuildSyncQueue(db) {
                 SELECT id, company, deleted_at
                 FROM ${table}
             `);
-
+            console.log(records,"hello records")
             for (const record of records) {
                 await db.runAsync(
                     `
