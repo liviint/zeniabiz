@@ -89,6 +89,8 @@ const MODEL_CONFIG = {
       "name",
       "selling_price",
       "cost_price",
+      "item_type",
+      "unit",
       "created_at",
       "updated_at",
       "deleted_at",
