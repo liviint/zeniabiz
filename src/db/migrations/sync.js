@@ -68,7 +68,7 @@ export async function rebuildSyncQueue(db) {
                     record.id,
                     record.deleted_at? "delete": "upsert",
                     record.company,
-                    newUuid(),,
+                    newUuid(),
                     "pending",
                     now,
                     now,
