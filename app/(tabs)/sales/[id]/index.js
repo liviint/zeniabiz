@@ -83,7 +83,7 @@ export default function SaleDetails() {
         {/* Summary */}
         <Card style={styles.summaryCard}>
           <View style={styles.summaryRow}>
-            <SecondaryText>Total</SecondaryText>
+            <SecondaryText>Marked Price</SecondaryText>
 
             <BodyText style={styles.totalAmount}>
               KES{" "}
@@ -94,7 +94,7 @@ export default function SaleDetails() {
           </View>
 
           <View style={styles.summaryRow}>
-            <SecondaryText>Paid</SecondaryText>
+            <SecondaryText>Amount Paid</SecondaryText>
 
             <BodyText style={styles.paid}>
               KES{" "}

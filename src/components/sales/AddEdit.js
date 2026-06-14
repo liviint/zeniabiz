@@ -180,7 +180,9 @@ export default function SellPage() {
         0
       );
 
-      const credit =  totalAfterDiscount - (form.amountPaid || 0);
+      let tempCredit = totalAfterDiscount - form.amountPaid ;
+      const credit =  tempCredit >= 0 ? tempCredit : 0
+
       const saleData = {
         items: cart,
         sale_id: id,

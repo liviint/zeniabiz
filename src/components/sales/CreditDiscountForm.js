@@ -59,14 +59,8 @@ const CreditDiscountForm = ({
             return alert("Discount cannot exceed total");
         }
 
-        const afterDiscount = safeTotal - discount;
-
         if (amountPaid < 0) {
             return alert("Amount paid cannot be negative");
-        }
-
-        if (amountPaid > afterDiscount) {
-            return alert("Amount paid cannot exceed remaining amount");
         }
 
         console.log(draftForm,"hello draft form")
@@ -79,10 +73,8 @@ const CreditDiscountForm = ({
         setCheckoutModalVisible(false);
     };
 
-    const balance =
-        total -
-        (draftForm.amountPaid || 0) -
-        (draftForm.discount || 0);
+    const balance = (total - draftForm.amountPaid  - draftForm.discount)
+    const balanceUi = balance >= 0  ? balance : 0
 
     return (
         <Modal
@@ -130,7 +122,7 @@ const CreditDiscountForm = ({
                     <View style={globalStyles.formGroup}>
                         <FormLabel>Balance (Credit)</FormLabel>
                         <BodyText style={{ color: "#FF6B6B" }}>
-                            {balance.toFixed(2)}
+                            {balanceUi.toFixed(2)}
                         </BodyText>
                     </View>
 
