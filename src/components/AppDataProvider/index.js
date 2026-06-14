@@ -10,7 +10,7 @@ import {
   applyExpansionOfProductsToServices,
 } from "../../db/migrations/inventory"
 import {migrateSalesCreditFieldsV1, migratePaymentsFromSalesV1} from "../../db/migrations/credit"
-import { applySalesMigrationsV1 } from "../../db/migrations/sales"
+import { applySalesMigrationsV1, applySalesMigrationsV2 } from "../../db/migrations/sales"
 import { applySyncMigrationsV1, rebuildSyncQueue } from "../../db/migrations/sync"
 import { getSetting, setSetting } from "@/src/db/settingsDb";
 
@@ -290,6 +290,7 @@ const migrateDbIfNeeded = async (db) => {
 
     sale_id TEXT,
     product_id TEXT,
+    item_type TEXT,
 
     purchase_movement_id TEXT,
     batch_id TEXT,
@@ -441,6 +442,12 @@ const migrateDbIfNeeded = async (db) => {
     await rebuildSyncQueue(db);
 
     currentVersion = 5;
+    await setSetting(db, "db_version", currentVersion);
+  }
+  
+  if(currentVersion < 6){
+    await applySalesMigrationsV2(db);
+    currentVersion = 6;
     await setSetting(db, "db_version", currentVersion);
   }
 

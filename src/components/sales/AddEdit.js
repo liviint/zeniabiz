@@ -208,9 +208,13 @@ export default function SellPage() {
       router.push("/sales");
     } catch (error) {
       console.log(error);
-      Alert.alert("Error", "Failed to save sale");
+
+      Alert.alert(
+        "Error",
+        error?.message || "Failed to save sale"
+      );
     }
-};
+  };
 
   return (
     <View style={globalStyles.container}>

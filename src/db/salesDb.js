@@ -448,9 +448,10 @@ export async function handleSaleItems(db, {
   saleDate,
   user_id,
   now
-}) {
+},
+) {
   for (const item of items) {
-    if (!item.batch_id) {
+    if (item.item_type === "service") {
       await createServiceSaleItem(db, {
         saleId,
         company,
@@ -478,8 +479,8 @@ const createServiceSaleItem = async(db,{saleId,company,item}) => {
     await db.runAsync(
       `
       INSERT INTO sale_items
-      (id, sale_id, company, product_id, quantity, price, cost_price, batch_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      (id, sale_id, company, product_id, quantity, price, cost_price, batch_id, item_type)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         saleItemId,
@@ -489,7 +490,8 @@ const createServiceSaleItem = async(db,{saleId,company,item}) => {
         item.quantity,
         item.price,
         0,
-        null
+        null,
+        item.item_type
       ]
     );
 

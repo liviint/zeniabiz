@@ -50,7 +50,6 @@ export default function SaleDetails() {
 
     (async () => {
       const s = await getSaleById(db, sale_id);
-      console.log(s,"hello sale")
       setSale(s);
 
       const i = await getSaleItems(db, sale_id);
