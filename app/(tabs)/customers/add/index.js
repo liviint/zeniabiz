@@ -32,11 +32,12 @@ export default function AddCustomerPage() {
 
   const [loading, setLoading] = useState(false);
 
-  const [form, setForm] = useState({
+  const initialForm = {
     name: "",
     phone: "",
     note: "",
-  });
+  }
+  const [form, setForm] = useState(initialForm);
 
   const handleChange = (key, value) => {
     setForm((prev) => ({
@@ -68,6 +69,8 @@ export default function AddCustomerPage() {
         "Success",
         "Customer added successfully."
       );
+      
+      setForm(initialForm)
 
       router.back();
     } catch (error) {
