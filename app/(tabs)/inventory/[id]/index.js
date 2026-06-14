@@ -135,7 +135,11 @@ export default function ProductViewPage() {
 
         <Pressable
           style={globalStyles.editBtn}
-          onPress={() => router.push(`/inventory/${id}/edit`)}
+          onPress={
+            isService ? () => router.push(`/inventory/${id}/edit/service`) 
+            :
+            () => router.push(`/inventory/${id}/edit`)
+          }
         >
           <BodyText style={globalStyles.editBtnText}>Edit</BodyText>
         </Pressable>
