@@ -818,77 +818,28 @@ export async function deleteSale(db, sale_id) {
     throw new Error("sale_id is required");
   }
 
-  return withTransaction(db, async() => {
-    try {
-    // 1️⃣ get sale movements
-    const movements = await db.getAllAsync(
-      `
-      SELECT *
-      FROM inventory_movements
-      WHERE reference_id = ?
-        AND type = 'sale'
-        AND deleted_at IS NULL
-      `,
-      [sale_id]
+  return withTransaction(db, async () => {
+
+    await reverseSale(
+      db,
+      sale_id,
+      { company, user_id }
     );
 
-    if (!movements.length) {
-      throw new Error("No movements found for sale");
-    }
-
-    // 2️⃣ get sale_items BEFORE delete (for sync)
-    const saleItems = await db.getAllAsync(
-      `
-      SELECT *
-      FROM sale_items
-      WHERE sale_id = ?
-        AND deleted_at IS NULL
-      `,
-      [sale_id]
-    );
-
-    // 3️⃣ create compensating adjustments
-    for (const m of movements) {
-      const adjustment = {
-        id: newUuid(),
-        product_id: m.product_id,
-        company,
-        unit_cost: m.unit_cost,
-        quantity: Math.abs(m.quantity),
-        type: "adjustment",
-        reference_id: sale_id,
-        date: now,
-        created_by: user_id,
-        updated_by: user_id,
-        created_at: now,
-        updated_at: now,
-        deleted_at: null,
-      };
-
-      await insertMovement(db, adjustment);
-    }
-
-    // 4️⃣ soft delete sale
     await db.runAsync(
-      `UPDATE sales SET deleted_at = ?, updated_at = ? WHERE id = ?`,
-      [now, now, sale_id]
-    );
-
-    // 5️⃣ soft delete sale_items
-    await db.runAsync(
-      `UPDATE sale_items SET deleted_at = ?, updated_at = ? WHERE sale_id = ?`,
-      [now, now, sale_id]
-    );
-
-    // 6 soft delete payments
-    await db.runAsync(`
-      UPDATE payments
+      `
+      UPDATE sales
       SET deleted_at = ?, updated_at = ?
-      WHERE sale_id = ?
-    `,[now, now, sale_id]);
+      WHERE id = ?
+      `,
+      [now, now, sale_id]
+    );
 
-  } catch (err) {
-    throw err;
-  }
-  })
+    await enqueueSync(db, {
+      model: "sales",
+      record_id: sale_id,
+      operation: "delete",
+    });
+  });
 }
+
