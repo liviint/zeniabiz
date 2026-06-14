@@ -39,13 +39,14 @@ export default function ProductViewPage() {
     getBatches()
   }, [reloadBatches, isFocused]);
 
+  const isService = product?.item_type === "service";
+
   const handleDelete = async () => {
     await deleteProduct(db, id);
-    Alert.alert("Deleted", "Product removed");
+    let message = isService ? "Service removed" : "Product removed"
+    Alert.alert("Deleted", message);
     router.push("/inventory");
   };
-
-  const isService = product?.item_type === "service";
 
   return (
     <ScrollView style={globalStyles.container}>
@@ -144,7 +145,10 @@ export default function ProductViewPage() {
           <BodyText style={globalStyles.editBtnText}>Edit</BodyText>
         </Pressable>
 
-        <DeleteButton handleOk={handleDelete} item="product" />
+        <DeleteButton 
+          handleOk={handleDelete} 
+          item={isService ? "service" : "product"} 
+        />
       </View>
 
       <RestockForm 
