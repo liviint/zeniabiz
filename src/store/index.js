@@ -1,12 +1,12 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 import userReducer from "./features/userSlice";
 import settingsReducer from "./features/settingsSlice";
 import syncReducer from "./features/syncSlice";
 import categoriesReducer from "./features/cetegoriesSlice";
 import googleDriveSyncReducer from "./features/googleDriveSyncSlice";
+import entitySelectionReducer from "./features/entitySelectionSlice";
 
 const userPersistConfig = {
   key: "user",
@@ -26,6 +26,7 @@ const rootReducer = combineReducers({
   sync: syncReducer, 
   categories:categoriesReducer,
   googleDriveSync: googleDriveSyncReducer,
+  entitySelection: entitySelectionReducer,
 });
 
 export const store = configureStore({

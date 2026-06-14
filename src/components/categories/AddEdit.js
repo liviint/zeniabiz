@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import {
     View,
     Text,
@@ -12,8 +13,10 @@ import { BodyText, FormLabel, Input , Card } from "../ThemeProvider/components";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getCategoryById, upsertCategory } from "../../db/categoriesDb";
 import { COLORS } from "../../../utils/constants";
+import { setRecentlyCreatedCategoryId } from "../../store/features/entitySelectionSlice"
 
 export default function AddEdit() {
+    const dispatch = useDispatch()
     const router = useRouter()
     const {globalStyles} = useThemeStyles()
     const db = useSQLiteContext();
@@ -57,13 +60,16 @@ export default function AddEdit() {
         }
 
         try {
-            await upsertCategory(db, {
-            id: form.id,
-            name: form.name,
-            color: form.color,
-            icon: form.icon,
+            let cateId = await upsertCategory(db, {
+                id: form.id,
+                name: form.name,
+                color: form.color,
+                icon: form.icon,
             });
             setForm(initialForm)
+
+            dispatch(setRecentlyCreatedCategoryId(cateId))
+
             router.back();
         } catch (error) {
             console.log(error, "category error");

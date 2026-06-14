@@ -1,5 +1,4 @@
 import { useState } from "react";
-
 import {
   Alert,
   Pressable,
@@ -7,31 +6,26 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-
 import { useRouter } from "expo-router";
-
 import { useSQLiteContext } from "expo-sqlite";
-
 import {
   BodyText,
   Input,
   FormLabel,
   Card,
 } from "../../../../src/components/ThemeProvider/components";
-
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
-
 import { createCustomer } from "../../../../src/db/customersDb";
+import { setRecentlyCreatedCustomerId } from "../../../../src/store/features/entitySelectionSlice"
+import { useDispatch } from "react-redux";
 
 export default function AddCustomerPage() {
+  const dispatch = useDispatch()
+
   const db = useSQLiteContext();
-
   const router = useRouter();
-
   const { globalStyles } = useThemeStyles();
-
   const [loading, setLoading] = useState(false);
-
   const initialForm = {
     name: "",
     phone: "",
@@ -59,17 +53,14 @@ export default function AddCustomerPage() {
 
       setLoading(true);
 
-      await createCustomer(db, {
+      let customer_id = await createCustomer(db, {
         name: form.name.trim(),
         phone: form.phone?.trim(),
         note: form.note?.trim(),
       });
 
-      Alert.alert(
-        "Success",
-        "Customer added successfully."
-      );
-      
+      dispatch(setRecentlyCreatedCustomerId(customer_id));
+
       setForm(initialForm)
 
       router.back();

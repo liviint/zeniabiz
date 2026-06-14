@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { View } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { FormLabel, CustomPicker } from "../ThemeProvider/components";
@@ -7,16 +8,19 @@ import { getCategories } from "../../db/categoriesDb";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
+import { clearRecentlyCreatedCategoryId } from "../../store/features/entitySelectionSlice";
 
 export default function CategoriesPicker({
   form,
   handleCategoryChange,
 }) {
+    const dispatch = useDispatch()
     const { globalStyles } = useThemeStyles();
     const db = useSQLiteContext();
     const router = useRouter();
     const isFocused = useIsFocused()
     const [categories, setCategories] = useState([]);
+    const recentlyCreatedCategoryId = useSelector((state) => state.entitySelection.recentlyCreatedCategoryId);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -30,6 +34,18 @@ export default function CategoriesPicker({
 
     fetchCategories();
   }, [isFocused]);
+
+  useEffect(() => {
+      if (recentlyCreatedCategoryId && categories.length > 0) {
+  
+        const category = categories.find((c) => c.id === recentlyCreatedCategoryId);
+        console.log(category,"hello cate")
+        if (category) {
+          handleCategoryChange(category);
+          dispatch(clearRecentlyCreatedCategoryId());
+        }
+      }
+    }, [categories,recentlyCreatedCategoryId,]);
 
   // Special value for Add Category button
   const ADD_CATEGORY_VALUE = "__add_category__";
