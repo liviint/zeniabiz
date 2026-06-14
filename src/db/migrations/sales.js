@@ -16,4 +16,13 @@ export const applySalesMigrationsV2 = async (db) => {
         "item_type",
         "TEXT"
     );
+
+    // Backfill existing data
+    await db.runAsync(`
+        UPDATE sale_items
+        SET item_type = CASE
+        WHEN batch_id IS NOT NULL THEN 'product'
+        ELSE 'service'
+        END
+    `);
 };

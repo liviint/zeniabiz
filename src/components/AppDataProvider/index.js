@@ -444,7 +444,7 @@ const migrateDbIfNeeded = async (db) => {
     currentVersion = 5;
     await setSetting(db, "db_version", currentVersion);
   }
-  
+
   if(currentVersion < 6){
     await applySalesMigrationsV2(db);
     currentVersion = 6;
