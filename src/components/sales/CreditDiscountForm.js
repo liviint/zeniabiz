@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import {
     View,
     Pressable,
@@ -15,14 +16,22 @@ import CustomersPicker from "../credit/CustomersPicker";
 
 const CreditDiscountForm = ({
     total,
-    styles, 
-    handleSave, 
-    checkoutModalVisible, 
+    styles,
+    handleSave,
+    checkoutModalVisible,
     setCheckoutModalVisible,
     paymentsForm,
-    setPaymentsForm
+    setPaymentsForm,
 }) => {
     const { globalStyles } = useThemeStyles();
+
+    const [draftForm, setDraftForm] = useState(paymentsForm);
+
+    useEffect(() => {
+        if (checkoutModalVisible) {
+            setDraftForm(paymentsForm);
+        }
+    }, [checkoutModalVisible, paymentsForm]);
 
     const toNumber = (value) => {
         const n = parseFloat(value);
@@ -30,7 +39,7 @@ const CreditDiscountForm = ({
     };
 
     const handleCustomerChange = (customer) => {
-        setPaymentsForm((prev) => ({
+        setDraftForm((prev) => ({
             ...prev,
             customer_id: customer?.id || null,
         }));
@@ -39,8 +48,8 @@ const CreditDiscountForm = ({
     const handleValidationAndSaving = () => {
         const safeTotal = Number(total || 0);
 
-        const discount = toNumber(paymentsForm.discount);
-        const amountPaid = toNumber(paymentsForm.amountPaid);
+        const discount = toNumber(draftForm.discount);
+        const amountPaid = toNumber(draftForm.amountPaid);
 
         if (discount < 0) {
             return alert("Discount cannot be negative");
@@ -60,81 +69,97 @@ const CreditDiscountForm = ({
             return alert("Amount paid cannot exceed remaining amount");
         }
 
-        handleSave(true);
+        console.log(draftForm,"hello draft form")
+        setPaymentsForm(prev => ({...prev,...draftForm}));
+
+        handleSave(true,draftForm);
     };
 
-    return (
+    const handleCancel = () => {
+        setCheckoutModalVisible(false);
+    };
 
-        <Modal 
-            visible={checkoutModalVisible} 
-            transparent 
+    const balance =
+        total -
+        (draftForm.amountPaid || 0) -
+        (draftForm.discount || 0);
+
+    return (
+        <Modal
+            visible={checkoutModalVisible}
+            transparent
             animationType="slide"
         >
-        <ScrollView contentContainerStyle={styles.modalContainer}
-        >
-            <Card style={styles.modalCard}>
+            <ScrollView contentContainerStyle={styles.modalContainer}>
+                <Card style={styles.modalCard}>
+                    <BodyText>Checkout</BodyText>
 
-            <BodyText>Checkout</BodyText>
+                    <View style={globalStyles.formGroup}>
+                        <FormLabel>Total</FormLabel>
+                        <BodyText>{total.toFixed(2)}</BodyText>
+                    </View>
 
-            <View style={globalStyles.formGroup}>
-                <FormLabel>Total</FormLabel>
-                <BodyText>{total.toFixed(2)}</BodyText>
-            </View>
+                    <View style={globalStyles.formGroup}>
+                        <FormLabel>Amount Paid</FormLabel>
+                        <Input
+                            keyboardType="numeric"
+                            value={String(draftForm.amountPaid ?? 0)}
+                            onChangeText={(v) =>
+                                setDraftForm((prev) => ({
+                                    ...prev,
+                                    amountPaid: toNumber(v),
+                                }))
+                            }
+                        />
+                    </View>
 
-            <View style={globalStyles.formGroup}>
-                <FormLabel>Amount Paid</FormLabel>
-                <Input
-                keyboardType="numeric"
-                value={String(paymentsForm.amountPaid)}
-                onChangeText={(v) => setPaymentsForm(prev => ({...prev,amountPaid:toNumber(v)}))}
-                />
-            </View>
+                    <View style={globalStyles.formGroup}>
+                        <FormLabel>Discount</FormLabel>
+                        <Input
+                            keyboardType="numeric"
+                            value={String(draftForm.discount ?? 0)}
+                            onChangeText={(v) =>
+                                setDraftForm((prev) => ({
+                                    ...prev,
+                                    discount: toNumber(v),
+                                }))
+                            }
+                        />
+                    </View>
 
-            <View style={globalStyles.formGroup}>
-                <FormLabel>Discount</FormLabel>
-                <Input
-                    keyboardType="numeric"
-                    value={String(paymentsForm.discount)}
-                    onChangeText={(v) => setPaymentsForm(prev => ({...prev,discount:toNumber(v) || 0}))}
-                />
-            </View>
+                    <View style={globalStyles.formGroup}>
+                        <FormLabel>Balance (Credit)</FormLabel>
+                        <BodyText style={{ color: "#FF6B6B" }}>
+                            {balance.toFixed(2)}
+                        </BodyText>
+                    </View>
 
-            <View style={globalStyles.formGroup}>
-                <FormLabel>Balance (Credit)</FormLabel>
-                <BodyText style={{ color: "#FF6B6B" }}>
-                {(total - paymentsForm.amountPaid - paymentsForm.discount)?.toFixed(2) || 0}
-                </BodyText>
-            </View>
+                    <CustomersPicker
+                        form={draftForm}
+                        handleCustomerChange={handleCustomerChange}
+                    />
 
-            
-            <CustomersPicker
-                form={paymentsForm}
-                handleCustomerChange={handleCustomerChange}
-            />
+                    <View style={globalStyles.formGroup}>
+                        <Pressable
+                            style={globalStyles.primaryBtn}
+                            onPress={handleValidationAndSaving}
+                        >
+                            <BodyText style={globalStyles.primaryBtnText}>
+                                Complete Sale
+                            </BodyText>
+                        </Pressable>
+                    </View>
 
-            <View style={globalStyles.formGroup}>
-                <Pressable
-                style={globalStyles.primaryBtn}
-                onPress={() => handleValidationAndSaving(true)}
-            >
-                <BodyText style={globalStyles.primaryBtnText}>
-                    Complete Sale
-                </BodyText>
-            </Pressable>
-            </View>
-            
-
-            <Pressable
-                style={globalStyles.secondaryBtn}
-                onPress={() => setCheckoutModalVisible(false)}
-            >
-                <BodyText>Cancel</BodyText>
-            </Pressable>
-
-            </Card>
-        </ScrollView>
+                    <Pressable
+                        style={globalStyles.secondaryBtn}
+                        onPress={handleCancel}
+                    >
+                        <BodyText>Cancel</BodyText>
+                    </Pressable>
+                </Card>
+            </ScrollView>
         </Modal>
     );
-}
+};
 
-export default CreditDiscountForm
+export default CreditDiscountForm;

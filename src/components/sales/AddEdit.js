@@ -146,12 +146,10 @@ export default function SellPage() {
   );
 
   useEffect(() => {
-    if (!sale) {
-      setPaymentsForm(prev => ({
-        ...prev,
-        amountPaid: total,
-      }));
-    }
+    setPaymentsForm(prev => ({
+      ...prev,
+      amountPaid: total,
+    }));
   }, [cart]);
 
   useEffect(() => {
@@ -164,7 +162,8 @@ export default function SellPage() {
     } 
   }, [sale]);
 
-  const handleSave = async (fromCreditDiscount = false) => {
+  const handleSave = async (fromCreditDiscount = false,draftForm = null) => {
+    const form = draftForm || paymentsForm;
     if (!fromCreditDiscount && (sale?.balance_due ?? 0) > 0) {
       return Alert.alert(
         "Unpaid Balance",
@@ -177,12 +176,11 @@ export default function SellPage() {
       }
 
       const totalAfterDiscount = Math.max(
-        total - (paymentsForm.discount || 0),
+        total - (form.discount || 0),
         0
       );
 
-      const credit =  totalAfterDiscount - (paymentsForm.amountPaid || 0);
-
+      const credit =  totalAfterDiscount - (form.amountPaid || 0);
       const saleData = {
         items: cart,
         sale_id: id,
@@ -194,13 +192,13 @@ export default function SellPage() {
         date,
 
         subtotal:total,
-        customer_id: paymentsForm.customer_id,
-        discount: paymentsForm.discount || 0,
+        customer_id: form.customer_id,
+        discount: form.discount || 0,
         total_amount: totalAfterDiscount,
-        amount_paid:  paymentsForm.amountPaid || 0,
+        amount_paid:  form.amountPaid || 0,
         balance_due: credit,
         payment_status:
-          credit === 0 ? "PAID" : paymentsForm.amountPaid > 0 ? "PARTIAL" : "UNPAID",
+          credit === 0 ? "PAID" : form.amountPaid > 0 ? "PARTIAL" : "UNPAID",
       };
 
       await createOrUpdateSale(db, saleData);
