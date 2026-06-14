@@ -450,7 +450,7 @@ export async function handleSaleItems(db, {
   now
 }) {
   for (const item of items) {
-    if (item.item_type === "service") {
+    if (!item.batch_id) {
       await createServiceSaleItem(db, {
         saleId,
         company,
