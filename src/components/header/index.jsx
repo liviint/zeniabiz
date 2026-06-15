@@ -50,6 +50,12 @@ export default function Header() {
             label="Profile" 
             path="/auth/profile" 
             isActive={isActive("/(tabs)/profile")} 
+          />  
+
+          <NavLink 
+            label="Feedback" 
+            path="/feedback" 
+            isActive={isActive("/(tabs)/feedback")} 
           />   
 
           {/* <View style={{ height: 1, backgroundColor: "rgba(255,255,255,0.2)", width: "80%", marginVertical: 10 }} />
