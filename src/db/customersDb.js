@@ -1,14 +1,118 @@
 import { newUuid, getActiveContextSync, withTransaction } from "./utils";
 import { enqueueSync } from "../cloudSync/syncEvent";
 
-export async function getCustomers(db) {
-  return await db.getAllAsync(
+export async function getCustomers(
+  db,
+  {
+    filter = "all",
+    sort = "name_asc",
+  } = {}
+) {
+  let whereClauses = ["deleted_at IS NULL"];
+  let params = [];
+
+
+  // Sorting
+  let orderBy = "name ASC";
+
+  switch (sort) {
+    case "newest":
+      orderBy = "created_at DESC";
+      break;
+
+    case "oldest":
+      orderBy = "created_at ASC";
+      break;
+
+    case "name_desc":
+      orderBy = "name DESC";
+      break;
+
+    case "name_asc":
+    default:
+      orderBy = "name ASC";
+      break;
+  }
+
+  const query = `
+    SELECT *
+    FROM customers
+    WHERE ${whereClauses.join(" AND ")}
+    ORDER BY ${orderBy}
+  `;
+
+  return await db.getAllAsync(query, params);
+}
+
+
+export async function getCustomerById(db, id) {
+  return await db.getFirstAsync(
     `
     SELECT *
     FROM customers
-    WHERE deleted_at IS NULL
-    ORDER BY name ASC
+    WHERE id = ?
+      AND deleted_at IS NULL
+    `,
+    [id]
+  );
+}
+
+
+export async function getCustomerStats(
+  db,
+  customerId
+) {
+  return await db.getFirstAsync(
     `
+    SELECT
+      (
+        SELECT COUNT(*)
+        FROM sales
+        WHERE customer_id = ?
+          AND deleted_at IS NULL
+      ) AS sales_count,
+
+      (
+        SELECT COALESCE(SUM(total_amount),0)
+        FROM sales
+        WHERE customer_id = ?
+          AND deleted_at IS NULL
+      ) AS total_sales,
+
+      (
+        SELECT COALESCE(SUM(amount_paid),0)
+        FROM sales
+        WHERE customer_id = ?
+          AND deleted_at IS NULL
+      ) AS total_paid,
+
+      (
+        SELECT COALESCE(SUM(balance_due),0)
+        FROM sales
+        WHERE customer_id = ?
+          AND deleted_at IS NULL
+      ) AS balance_due
+    `,
+    [
+      customerId,
+      customerId,
+      customerId,
+      customerId,
+    ]
+  );
+}
+
+
+export async function getCustomerSales(db, customerId) {
+  return await db.getAllAsync(
+    `
+    SELECT *
+    FROM sales
+    WHERE customer_id = ?
+      AND deleted_at IS NULL
+    ORDER BY date DESC
+    `,
+    [customerId]
   );
 }
 
