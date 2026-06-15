@@ -56,6 +56,7 @@ const MODEL_CONFIG = {
       "product_id",
       "purchase_movement_id",
       "batch_id",
+      "item_type",
       "quantity",
       "price",
       "cost_price",
