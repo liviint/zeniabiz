@@ -44,7 +44,6 @@ export async function getCustomers(
   return await db.getAllAsync(query, params);
 }
 
-
 export async function getCustomerById(db, id) {
   return await db.getFirstAsync(
     `
@@ -56,7 +55,6 @@ export async function getCustomerById(db, id) {
     [id]
   );
 }
-
 
 export async function getCustomerStats(
   db,
