@@ -637,7 +637,7 @@ const createInitialPayment = async(db,{
   }
 }
 
-export async function getSales(db, timeState) {
+export async function getSales(db, { timeState, filter, sort }) {
   const { company } = getActiveContextSync();
 
   let sql = `
@@ -649,6 +649,11 @@ export async function getSales(db, timeState) {
 
   const params = [company];
 
+  /**
+   * =========================
+   * TIME FILTER
+   * =========================
+   */
   if (timeState) {
     const { startDate, endDate } = normalizeRange(timeState);
 
@@ -660,9 +665,50 @@ export async function getSales(db, timeState) {
     params.push(startDate, endDate);
   }
 
-  sql += `
-    ORDER BY datetime(date) DESC
-  `;
+  /**
+   * =========================
+   * FILTERS
+   * =========================
+   */
+  if (filter && filter !== "all") {
+    switch (filter) {
+      case "credit":
+        sql += ` AND is_credit_sale = 1 `;
+        break;
+
+      case "cash":
+        sql += ` AND is_credit_sale = 0 `;
+        break;
+    }
+  }
+
+  /**
+   * =========================
+   * SORTING
+   * =========================
+   */
+  switch (sort) {
+    case "oldest":
+      sql += ` ORDER BY datetime(date) ASC `;
+      break;
+
+    case "high_amount":
+      sql += ` ORDER BY total_amount DESC `;
+      break;
+
+    case "low_amount":
+      sql += ` ORDER BY total_amount ASC `;
+      break;
+
+    case "high_balance":
+      sql += ` ORDER BY balance_due DESC `;
+      break;
+
+    case "newest":
+    default:
+      sql += ` ORDER BY datetime(date) DESC `;
+      break;
+  }
 
   return await db.getAllAsync(sql, params);
 }

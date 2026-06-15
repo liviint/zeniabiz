@@ -19,6 +19,8 @@ import TimeNavigator from "../../../src/components/common/TimeNavigator"
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 import { StatCard } from "../../../src/components/common/StatCard";
 import { getCahsCollcted } from "../../../src/db/paymentsDb";
+import FilterComponent from "../../../src/components/common/FilterComponent";
+import SortComponent from "../../../src/components/common/SortComponent";
 
 export default function SalesList() {
   const { onRefresh, refreshing } = useManualSync();
@@ -33,23 +35,78 @@ export default function SalesList() {
   const [timeState, setTimeState] = useState(createRange("month"));
   const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
 
+  const [filter, setFilter] = useState("all");
+  const [sort, setSort] = useState("newest")
+
+  const filterOptions = [
+    {
+      label: "All",
+      action: () => setFilter("all"),
+      key: "all",
+    },
+    
+    {
+      label: "Credit Sales",
+      action: () => setFilter("credit"),
+      key: "credit",
+    },
+    {
+      label: "Cash Sales",
+      action: () => setFilter("cash"),
+      key: "cash",
+    },
+  ];
+
+
+  const sortOptions = [
+    {
+      label: "Newest",
+      key: "newest",
+      action: () => setSort("newest"),
+    },
+    {
+      label: "Oldest",
+      key: "oldest",
+      action: () => setSort("oldest"),
+    },
+    {
+      label: "Highest Amount",
+      key: "high_amount",
+      action: () => setSort("high_amount"),
+    },
+    {
+      label: "Lowest Amount",
+      key: "low_amount",
+      action: () => setSort("low_amount"),
+    },
+    {
+      label: "Highest Balance",
+      key: "high_balance",
+      action: () => setSort("high_balance"),
+    },
+  ];
+
   useEffect(() => {
     if (!db) return;
+    console.log(filter,"hello filter");
     (async () => {
       setIsLoading(true);
-      const data = await getSales(db, timeState);
+      const data = await getSales(db, {timeState,filter,sort});
+      console.log(data,"hello data")
       setSales(data);
       setIsLoading(false);
     })();
-  }, [isFocused, timeState,lastSyncedAt]);
+  }, [isFocused, timeState,lastSyncedAt,filter,sort]);
 
 
   useEffect(() => {
     const getStats = async() => {
-      let cashCollected = await getCahsCollcted(db,timeState)
+      const cashCollected = sales.reduce((sum, item) => sum + (item.amount_paid || 0),
+  0);
+      console.log(cashCollected,"hello cash")
         setStats({
           count: sales.length,
-          cashCollected:cashCollected.cashCollected
+          cashCollected:cashCollected
         });
       }
     getStats()
@@ -84,6 +141,18 @@ export default function SalesList() {
           state={timeState}
           onChange={setTimeState}
       />
+
+      <View style={globalStyles.filterSortContainer}>
+        <FilterComponent 
+          filterOptions={filterOptions}
+          activeFilter={filter}
+        />
+
+        <SortComponent 
+          sortOptions={sortOptions}
+          activeSort={sort}
+        />
+      </View>
 
       {sales.length ? 
         <View style={styles.statsRow}>
