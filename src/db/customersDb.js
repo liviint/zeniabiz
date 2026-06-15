@@ -166,3 +166,37 @@ export async function createCustomer(
     return id;
   })
 }
+
+export async function deleteCustomer(db, id) {
+  const now = new Date().toISOString();
+
+  if (!id) {
+    throw new Error("Customer id is required");
+  }
+
+  await db.runAsync("BEGIN TRANSACTION");
+
+  try {
+    // 1️⃣ Soft delete (NOT hard delete)
+    await db.runAsync(
+      `
+      UPDATE customers
+      SET deleted_at = ?, updated_at = ?
+      WHERE id = ?
+      `,
+      [now, now, id]
+    );
+
+    await enqueueSync(db,{
+      model:"customers",
+      record_id:id,
+      operation:"delete",
+    })
+
+    await db.runAsync("COMMIT");
+
+  } catch (error) {
+    await db.runAsync("ROLLBACK");
+    throw error;
+  }
+}

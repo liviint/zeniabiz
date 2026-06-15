@@ -19,10 +19,10 @@ import {
 } from "../../../../src/components/ThemeProvider/components";
 
 import {
-  getCustomerById,
-  getCustomerStats,
-  getCustomerSales,
-  deleteCustomer,
+    getCustomerById,
+    getCustomerStats,
+    getCustomerSales,
+    deleteCustomer,
 } from "../../../../src/db/customersDb";
 
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
