@@ -38,7 +38,7 @@ export default function SalesList() {
     (async () => {
       setIsLoading(true);
       const data = await getSales(db, timeState);
-      setSales(data.sort((a, b) => new Date(b.date) - new Date(a.date)));
+      setSales(data);
       setIsLoading(false);
     })();
   }, [isFocused, timeState,lastSyncedAt]);
@@ -130,7 +130,7 @@ export default function SalesList() {
               >
                 <SecondaryText>{formatDate(item.date)}</SecondaryText>
                 <BodyText style={{ fontWeight: "700" }}>
-                  {item.amount}
+                  {item.amount_paid}
                 </BodyText>
               </View>
             </Card>

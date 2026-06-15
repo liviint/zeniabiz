@@ -141,14 +141,15 @@ export default function SellPage() {
   };
 
   const total = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+    (sum, item) => sum + item.price * item.quantity,0);
+
+  const markedPrice = cart.reduce(
+    (sum, item) => sum + item.price * item.quantity,0);
 
   useEffect(() => {
     setPaymentsForm(prev => ({
       ...prev,
-      amountPaid: total,
+      amountPaid: markedPrice,
     }));
   }, [cart]);
 
@@ -175,13 +176,20 @@ export default function SellPage() {
         return Alert.alert("Add items first");
       }
 
-      const totalAfterDiscount = Math.max(
-        total - (form.discount || 0),
+      const discountedPrice = Math.max(
+        markedPrice - (form.discount || 0),
         0
       );
 
-      let tempCredit = totalAfterDiscount - form.amountPaid ;
-      const credit =  tempCredit >= 0 ? tempCredit : 0
+      const totalAmount = Math.max(
+        discountedPrice,
+        form.amountPaid || 0
+      );
+
+      const credit = Math.max(
+        totalAmount - (form.amountPaid || 0),
+        0
+      );
 
       const saleData = {
         items: cart,
@@ -193,10 +201,10 @@ export default function SellPage() {
 
         date,
 
-        subtotal:total,
+        markedPrice:markedPrice,
         customer_id: form.customer_id,
         discount: form.discount || 0,
-        total_amount: totalAfterDiscount,
+        total_amount: totalAmount,
         amount_paid:  form.amountPaid || 0,
         balance_due: credit,
         payment_status:
@@ -261,7 +269,7 @@ export default function SellPage() {
         <BodyText style={{ fontWeight: "600" }}>
           Cart ({cart.length}) {cartExpanded ? "▼" : "▲"}
         </BodyText>
-        <BodyText>Total: {total.toFixed(2)}</BodyText>
+        <BodyText>Total: {markedPrice.toFixed(2)}</BodyText>
       </Pressable>
 
       {/* CART LIST */}
@@ -346,7 +354,7 @@ export default function SellPage() {
       />
 
       <CreditDiscountForm 
-        total={total}
+        markedPrice={markedPrice}
         styles={styles}
         handleSave={handleSave}
         checkoutModalVisible={checkoutModalVisible}

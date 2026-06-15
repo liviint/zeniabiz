@@ -257,11 +257,11 @@ const migrateDbIfNeeded = async (db) => {
 
     title TEXT,
     note TEXT,
-    amount REAL,
+    amount REAL,--marked price
     customer_id TEXT,
 
-    total_amount REAL NOT NULL DEFAULT 0,
-    amount_paid REAL NOT NULL DEFAULT 0,
+    total_amount REAL NOT NULL DEFAULT 0,--total to be paid(actual revenue)
+    amount_paid REAL NOT NULL DEFAULT 0,--cash received
     balance_due REAL NOT NULL DEFAULT 0,
     is_credit_sale INTEGER DEFAULT 0,
 

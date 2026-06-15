@@ -232,27 +232,42 @@ export async function getFinancialStats(db, timeState) {
   // 1. Revenue & Cost
   // -------------------------
 
-  const revenueAndCost = await db.getFirstAsync(
-    `
-    SELECT 
-      COALESCE(SUM(si.price * si.quantity), 0) AS revenue,
+const revenueResult = await db.getFirstAsync(
+  `
+  SELECT
+    COALESCE(SUM(total_amount), 0) AS revenue
 
-      COALESCE(SUM(si.cost_price * si.quantity), 0) AS cost
+  FROM sales
+
+  WHERE company = ?
+    AND deleted_at IS NULL
+    AND date >= ?
+    AND date < ?
+  `,
+  [company, startDate, endDate]
+);
+
+  const costResult = await db.getFirstAsync(
+    `
+    SELECT
+      COALESCE(
+        SUM(si.cost_price * si.quantity),
+        0
+      ) AS cost
 
     FROM sale_items si
 
-    JOIN sales s 
+    JOIN sales s
       ON s.id = si.sale_id
-      AND s.company = ?
-      AND s.deleted_at IS NULL
 
-    WHERE si.company = ?
+    WHERE s.company = ?
+      AND s.deleted_at IS NULL
       AND si.deleted_at IS NULL
       AND s.date >= ?
       AND s.date < ?
     `,
-    [company, company, startDate, endDate]
-  );
+    [company, startDate, endDate]
+);
 
 
   const discountResult = await db.getFirstAsync(
@@ -314,9 +329,9 @@ export async function getFinancialStats(db, timeState) {
     [company, startDate, endDate]
   );
 
-  const revenue = (revenueAndCost?.revenue - discountResult?.discounts) || 0 ;
+  const revenue = (revenueResult?.revenue - discountResult?.discounts) || 0 ;
 
-  const cost = revenueAndCost?.cost || 0;
+  const cost = costResult?.cost || 0;
 
   const cashCollected =
     paymentsResult?.cashCollected || 0;

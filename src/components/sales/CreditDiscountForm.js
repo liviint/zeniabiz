@@ -15,7 +15,7 @@ import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import CustomersPicker from "../credit/CustomersPicker";
 
 const CreditDiscountForm = ({
-    total,
+    markedPrice,
     styles,
     handleSave,
     checkoutModalVisible,
@@ -46,7 +46,7 @@ const CreditDiscountForm = ({
     };
 
     const handleValidationAndSaving = () => {
-        const safeTotal = Number(total || 0);
+        const safeTotal = Number(markedPrice || 0);
 
         const discount = toNumber(draftForm.discount);
         const amountPaid = toNumber(draftForm.amountPaid);
@@ -73,7 +73,7 @@ const CreditDiscountForm = ({
         setCheckoutModalVisible(false);
     };
 
-    const balance = (total - draftForm.amountPaid  - draftForm.discount)
+    const balance = (markedPrice - draftForm.amountPaid  - draftForm.discount)
     const balanceUi = balance >= 0  ? balance : 0
 
     return (
@@ -87,8 +87,8 @@ const CreditDiscountForm = ({
                     <BodyText>Checkout</BodyText>
 
                     <View style={globalStyles.formGroup}>
-                        <FormLabel>Total</FormLabel>
-                        <BodyText>{total.toFixed(2)}</BodyText>
+                        <FormLabel>Marked Price</FormLabel>
+                        <BodyText>{markedPrice.toFixed(2)}</BodyText>
                     </View>
 
                     <View style={globalStyles.formGroup}>

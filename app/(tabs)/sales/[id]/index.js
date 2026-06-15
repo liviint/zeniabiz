@@ -88,7 +88,7 @@ export default function SaleDetails() {
             <BodyText style={styles.totalAmount}>
               KES{" "}
               {Number(
-                sale?.total_amount || 0
+                sale?.amount || 0
               ).toLocaleString()}
             </BodyText>
           </View>
