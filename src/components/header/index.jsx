@@ -17,16 +17,20 @@ export default function Header() {
   );
 
   return (
+    <View >
+
     <View style={styles.headerContainer}>
       <Pressable onPress={() => router.push("/")}>
         <Text style={styles.logoText}>ZeniaBiz</Text>
       </Pressable>
-    <TouchableOpacity 
-      onPress={() => setMenuOpen(!menuOpen)} 
-      style={styles.menuButton}
-    >
-      <Text style={styles.menuText}>{menuOpen ? "✖" : "☰"}</Text>
-    </TouchableOpacity>
+
+      <TouchableOpacity 
+        onPress={() => setMenuOpen(!menuOpen)} 
+        style={styles.menuButton}
+      >
+        <Text style={styles.menuText}>{menuOpen ? "✖" : "☰"}</Text>
+      </TouchableOpacity>
+    </View>
 
     {menuOpen && (
       <View style={styles.overlay}>
@@ -100,12 +104,13 @@ const styles = StyleSheet.create({
   },
   navLink: {
     color: "#FAF9F7",
-    fontSize: 16,
+    fontSize: 17,
+    fontWeight: "600",
+    paddingVertical: 12,
   },
   activeNav: {
-    borderBottomWidth: 2,
-    borderBottomColor: "#FF6B6B",
-    paddingBottom: 2,
+    color: "#FF6B6B",
+    fontWeight: "700",
   },
   menuButton: {
     padding: 8,
@@ -123,9 +128,11 @@ const styles = StyleSheet.create({
     right: 0,
     height:"100%",
     zIndex: 998,
+    backgroundColor: "#2E8B8B",
   },
   navSmall: {
     backgroundColor: "#2E8B8B",
+    
     paddingVertical: 20,
     alignItems: "center",
     gap: 16,
