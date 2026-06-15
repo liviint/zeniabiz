@@ -114,22 +114,22 @@ export async function getCustomerSales(db, customerId) {
   );
 }
 
-export async function createCustomer(
+export async function upsertCustomer(
   db,
   {
+    id,
     name,
     phone = null,
     note = null,
   }
 ) {
-
-  return withTransaction(db,async ()=> {
+  return withTransaction(db, async () => {
     const { company, user_id } =
-    getActiveContextSync(db);
+      getActiveContextSync(db);
 
     const now = new Date().toISOString();
 
-    const id = newUuid();
+    const customer_id = id || newUuid();
 
     await db.runAsync(
       `
@@ -144,9 +144,15 @@ export async function createCustomer(
         updated_at
       )
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name,
+        phone = excluded.phone,
+        note = excluded.note,
+        updated_at = excluded.updated_at
       `,
       [
-        id,
+        customer_id,
         company,
         name,
         phone,
@@ -159,12 +165,12 @@ export async function createCustomer(
 
     await enqueueSync(db, {
       model: "customers",
-      record_id: id,
+      record_id: customer_id,
       operation: "upsert",
     });
 
-    return id;
-  })
+    return customer_id;
+  });
 }
 
 export async function deleteCustomer(db, id) {
