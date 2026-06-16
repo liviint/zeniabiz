@@ -12,7 +12,7 @@ import {
 import {migrateSalesCreditFieldsV1, migratePaymentsFromSalesV1} from "../../db/migrations/credit"
 import { applySalesMigrationsV1, applySalesMigrationsV2 } from "../../db/migrations/sales"
 import { applySyncMigrationsV1, rebuildSyncQueue } from "../../db/migrations/sync"
-import { getSetting, setSetting } from "@/src/db/settingsDb";
+import { getSetting, setSetting } from "@/src/db/query/settings";
 
 const migrateDbIfNeeded = async (db) => {
   let currentVersion = Number((await getSetting(db, "db_version")) || 0);

@@ -5,7 +5,7 @@ import { useThemeStyles } from "@/src/hooks/useThemeStyles";
 import { Card, BodyText } from "@/src/components/ThemeProvider/components";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { getSetting, setSetting } from "@/src/db/settingsDb";
+import { getSetting, setSetting } from "@/src/db/query/settings";
 import * as LocalAuthentication from "expo-local-authentication";
 import GoogleBakUp from "@/src/components/settings/GoogleBakUp"
 

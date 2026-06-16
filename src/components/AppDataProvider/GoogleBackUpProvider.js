@@ -1,16 +1,16 @@
-import { useEffect, useRef } from "react";
-import { Alert, AppState } from "react-native";
-import { useSQLiteContext } from "expo-sqlite";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  determineSyncAction,
-  uploadBackup,
-  restoreBackup,
-} from "@/src/utils/googleDriveBackupService";
 import { loadActiveContext } from "@/src/db/utils";
 import { clearSyncRequest } from "@/src/store/features/googleDriveSyncSlice";
+import {
+    determineSyncAction,
+    restoreBackup,
+    uploadBackup,
+} from "@/src/utils/googleDriveBackupService";
 import NetInfo from "@react-native-community/netinfo";
-import { setSetting } from "../../db/settingsDb";
+import { useSQLiteContext } from "expo-sqlite";
+import { useEffect, useRef } from "react";
+import { Alert, AppState } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { setSetting } from "../../db/query/settings";
 
 const AUTO_SYNC_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
 

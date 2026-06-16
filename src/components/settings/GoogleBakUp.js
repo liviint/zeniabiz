@@ -20,7 +20,7 @@ import {
   getAccessToken,
 } from "@/src/utils/googleDriveBackupService";
 
-import { getSetting, setSetting } from "../../db/settingsDb";
+import { getSetting, setSetting } from "../../db/query/settings";
 
 const GoogleBackUp = () => {
   const db = useSQLiteContext();

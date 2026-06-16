@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
-import { AppState, View, StyleSheet } from "react-native";
 import * as LocalAuthentication from "expo-local-authentication";
 import { useSQLiteContext } from "expo-sqlite";
-import { getSetting } from "../../db/settingsDb";
+import { useEffect, useState } from "react";
+import { AppState, StyleSheet, View } from "react-native";
+import PageLoader from "../../components/common/PageLoader";
+import { getSetting } from "../../db/query/settings";
 import LockedScreen from "./AppLocked";
-import PageLoader from "../../components/common/PageLoader"
 
 export default function AppLockProvider({ children }) {
     const db = useSQLiteContext();

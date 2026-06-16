@@ -1,6 +1,6 @@
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { exportDatabase, importDatabase } from "../db/query/googleDrive";
-import { getSetting, setSetting } from "../db/settingsDb";
+import { getSetting, setSetting } from "../db/query/settings";
 
 const FILE_NAME = "ZeniaBiz_Backup.json";
 
