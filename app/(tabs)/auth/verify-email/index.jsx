@@ -6,7 +6,7 @@ import { setUserDetails } from "../../../../store/features/userSlice";
 import { api } from "../../../../api";
 import { safeLocalStorage } from "../../../../utils/storage";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
-import { upsertLocalUser, createSession } from "../../../../src/db/usersDb";
+import { upsertLocalUser, createSession } from "../../../../src/db/query/users";
 import { loadActiveContext } from "../../../../src/db/utils";
 import { useSQLiteContext } from "expo-sqlite";
 import { triggerSync } from "../../../../src/store/features/syncSlice";

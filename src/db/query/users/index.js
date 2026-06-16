@@ -1,4 +1,4 @@
-import { newUuid } from "./utils";
+import { newUuid } from "../../utils";
 
 export async function ensureLocalUser(db) {
   const existing = await db.getFirstAsync(
