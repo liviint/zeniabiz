@@ -18,8 +18,8 @@ import PageLoader from "../../../../src/components/common/PageLoader";
 import { useIsFocused } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { getActiveContextSync, loadActiveContext } from "../../../../src/db/utils";
-import { debugActiveSession,  debugSessionIntegrity} from "../../../../src/db/testingDb";
-import { createSession } from "../../../../src/db/usersDb";
+import { debugActiveSession,  debugSessionIntegrity} from "../../../../src/db/query/testing";
+import { createSession } from "../../../../src/db/query/users";
 
 const ProfileView = () => {
   const db = useSQLiteContext()

@@ -1,4 +1,5 @@
-import { getActiveContextSync } from "./utils";
+import { getActiveContextSync } from "../../utils";
+
 export const testSetUp = async(db) => {
     try {
       console.log("🚀 Checking app initialization...");
