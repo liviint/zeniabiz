@@ -16,13 +16,13 @@ import {
   SecondaryText,
 } from "../../../src/components/ThemeProvider/components";
 import { getCategories } from "../../../src/db/query/categories";
+import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import { getProducts } from "../../db/query/inventory";
 import {
   createOrUpdateSale,
   getSaleById,
   getSaleItems,
-} from "../../../src/db/salesDb";
-import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
-import { getProducts } from "../../db/query/inventory";
+} from "../../db/query/sales";
 import CreditDiscountForm from "./CreditDiscountForm";
 import EditSaleForm from "./EditSaleForm";
 

@@ -1,6 +1,6 @@
-import { getActiveContextSync, withTransaction, newUuid } from "./utils";
-import { normalizeRange } from "../utils/timeNavigatorHelpers";
-import { enqueueSync } from "../cloudSync/syncEvent";
+import { enqueueSync } from "../../../cloudSync/syncEvent";
+import { normalizeRange } from "../../../utils/timeNavigatorHelpers";
+import { getActiveContextSync, newUuid, withTransaction } from "../../utils";
 
 export async function restoreFIFO(db, purchaseId, qty) {
   const row = await db.getFirstAsync(

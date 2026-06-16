@@ -22,7 +22,7 @@ import {
   getSaleById,
   getSaleItems,
   deleteSale,
-} from "../../../../src/db/salesDb";
+} from "../../../../src/db/query/sales";
 
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 

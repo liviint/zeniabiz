@@ -1,25 +1,25 @@
-import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { View, SectionList, Pressable, RefreshControl, StyleSheet, } from "react-native";
 import { useIsFocused } from "@react-navigation/native";
-import {
-  Card,
-  BodyText,
-  SecondaryText,
-} from "../../../src/components/ThemeProvider/components";
-import { useSQLiteContext } from "expo-sqlite";
 import { useRouter } from "expo-router";
-import { getSales } from "../../../src/db/salesDb"; 
-import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import { useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
+import { Pressable, RefreshControl, SectionList, StyleSheet, View, } from "react-native";
+import { useSelector } from "react-redux";
 import { AddButton } from "../../../src/components/common/AddButton";
 import EmptyState from "../../../src/components/common/EmptyState";
-import { groupDataIntoSections } from "../../../src/helpers";
-import { useManualSync } from "../../../src/hooks/useManualSync";
-import TimeNavigator from "../../../src/components/common/TimeNavigator"
-import { createRange } from "../../../src/utils/timeNavigatorHelpers";
-import { StatCard } from "../../../src/components/common/StatCard";
 import FilterComponent from "../../../src/components/common/FilterComponent";
 import SortComponent from "../../../src/components/common/SortComponent";
+import { StatCard } from "../../../src/components/common/StatCard";
+import TimeNavigator from "../../../src/components/common/TimeNavigator";
+import {
+  BodyText,
+  Card,
+  SecondaryText,
+} from "../../../src/components/ThemeProvider/components";
+import { getSales } from "../../../src/db/query/sales";
+import { groupDataIntoSections } from "../../../src/helpers";
+import { useManualSync } from "../../../src/hooks/useManualSync";
+import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 
 export default function SalesList() {
   const { onRefresh, refreshing } = useManualSync();
