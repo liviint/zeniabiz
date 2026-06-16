@@ -6,6 +6,7 @@ import {
     Pressable,
     RefreshControl,
     StyleSheet,
+    Text
 } from "react-native";
 import { useIsFocused } from "@react-navigation/native";
 import {
@@ -46,6 +47,7 @@ export default function CustomersList() {
     );
 
     const sortOptions = [
+        
         {
             label: "Newest",
             key: "newest",
@@ -55,6 +57,11 @@ export default function CustomersList() {
             label: "Oldest",
             key: "oldest",
             action: () => setSort("oldest"),
+        },
+        {
+            label: "Top Customers",
+            key: "top_customers",
+            action: () => setSort("top_customers"),
         },
         {
             label: "A-Z",
@@ -75,7 +82,7 @@ export default function CustomersList() {
         setIsLoading(true);
 
         const data = await getCustomers(db, {sort,});
-
+        console.log(data,"hello data")
         setCustomers(data || []);
         setIsLoading(false);
 
@@ -127,7 +134,7 @@ export default function CustomersList() {
         {customers.length > 0 && (
             <View style={styles.statsRow}>
             <StatCard
-                label="Count"
+                label="Total"
                 value={stats.count?.toLocaleString()}
                 subText=""
             />
@@ -153,31 +160,76 @@ export default function CustomersList() {
                 {section.title}
             </BodyText>
             )}
-            renderItem={({ item }) => (
-            <Pressable
-                onPress={() =>
-                router.push(`/customers/${item.id}`)
-                }
-            >
-                <Card style={{ marginBottom: 10 }}>
-                <BodyText
-                    style={{ fontWeight: "600" }}
-                >
-                    {item.name}
-                </BodyText>
+            renderItem={({ item }) => {
+                const totalPaid = Number(item.total_paid || 0);
+                const totalSales = Number(item.total_revenue || 0);
+                const outstanding = Math.max(totalSales - totalPaid, 0);
+                const isOwing = outstanding > 0;
 
-                {!!item.phone && (
-                    <SecondaryText>
-                    {item.phone}
-                    </SecondaryText>
-                )}
+                return (
+                    <Pressable
+                    onPress={() => router.push(`/customers/${item.id}`)}
+                    style={({ pressed }) => [
+                        { opacity: pressed ? 0.7 : 1 },
+                    ]}
+                    >
+                    <View
+                        style={[
+                        styles.customerCard,
+                        isOwing && styles.owingCard,
+                        ]}
+                    >
+                        
+                        {/* Avatar */}
+                        <View style={styles.avatar}>
+                        <Text style={styles.avatarText}>
+                            {item.name?.charAt(0)?.toUpperCase()}
+                        </Text>
+                        </View>
 
-                <SecondaryText>
-                    Added {formatDate(item.created_at)}
-                </SecondaryText>
-                </Card>
-            </Pressable>
-            )}
+                        {/* Content */}
+                        <View style={styles.customerInfo}>
+                        
+                        {/* Name */}
+                        <Text style={styles.customerName}>
+                            {item.name}
+                        </Text>
+
+                        {/* Phone */}
+                        <Text style={styles.customerMeta}>
+                            {item.phone ? item.phone : "No phone added"}
+                        </Text>
+
+                        {/* Paid */}
+                        <Text style={styles.customerMoney}>
+                                Paid: {totalPaid.toLocaleString()}
+                        </Text>
+
+                        {isOwing &&
+                            <Text
+                                style={[
+                                styles.customerOutstanding,
+                                isOwing && styles.owingText,
+                                ]}
+                            >
+                            Owes: {outstanding.toLocaleString()}
+                            </Text>
+                            }
+
+                        {/* Date */}
+                        <Text style={styles.customerSub}>
+                            Added {formatDate(item.created_at)}
+                        </Text>
+
+                        </View>
+
+                        {/* Arrow */}
+                        <Text style={styles.arrow}>›</Text>
+
+                    </View>
+                    </Pressable>
+                );
+            }}
             ListEmptyComponent={
             <EmptyState
                 title="No customers yet"
@@ -201,5 +253,88 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
+    },
+    customerCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#FFFFFF",
+        padding: 14,
+        borderRadius: 14,
+        marginBottom: 10,
+
+        // soft shadow (iOS + Android)
+        shadowColor: "#000",
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+        elevation: 2,
+    },
+
+    avatar: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: "#2E8B8B",
+        alignItems: "center",
+        justifyContent: "center",
+        marginRight: 12,
+    },
+
+    avatarText: {
+        color: "#FAF9F7",
+        fontWeight: "700",
+        fontSize: 16,
+    },
+
+    customerInfo: {
+        flex: 1,
+    },
+
+    customerName: {
+        fontSize: 16,
+        fontWeight: "700",
+        color: "#333333",
+        marginBottom: 2,
+    },
+
+    customerMeta: {
+        fontSize: 13,
+        color: "#666",
+    },
+
+    customerSub: {
+        fontSize: 12,
+        color: "#999",
+        marginTop: 2,
+    },
+
+    arrow: {
+        fontSize: 22,
+        color: "#999",
+        paddingLeft: 10,
+    },
+
+    customerMoney: {
+        marginTop: 4,
+        fontSize: 13,
+        fontWeight: "600",
+        color: "#2E8B8B",
+    },
+
+    customerOutstanding: {
+        fontSize: 13,
+        marginTop: 2,
+        color: "#666",
+        fontWeight: "500",
+    },
+
+    owingText: {
+        color: "#D9534F",
+        fontWeight: "700",
+    },
+
+    owingCard: {
+        borderLeftWidth: 4,
+        borderLeftColor: "#D9534F",
+        backgroundColor: "#FFF5F5",
     },
 });

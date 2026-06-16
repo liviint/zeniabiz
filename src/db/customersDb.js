@@ -4,102 +4,52 @@ import { enqueueSync } from "../cloudSync/syncEvent";
 export async function getCustomers(
   db,
   {
-    filter = "all",
     sort = "name_asc",
   } = {}
 ) {
-  let whereClauses = ["deleted_at IS NULL"];
-  let params = [];
+  const whereClauses = ["c.deleted_at IS NULL"];
+  const params = [];
 
-
-  // Sorting
-  let orderBy = "name ASC";
+  let orderBy = "c.name ASC";
 
   switch (sort) {
     case "newest":
-      orderBy = "created_at DESC";
+      orderBy = "c.created_at DESC";
       break;
 
     case "oldest":
-      orderBy = "created_at ASC";
+      orderBy = "c.created_at ASC";
       break;
 
     case "name_desc":
-      orderBy = "name DESC";
+      orderBy = "c.name DESC";
       break;
 
     case "name_asc":
-    default:
-      orderBy = "name ASC";
+      orderBy = "c.name ASC";
+      break;
+
+    case "top_customers":
+      orderBy = "total_revenue DESC";
       break;
   }
 
   const query = `
-    SELECT *
-    FROM customers
+    SELECT 
+      c.*,
+      COALESCE(SUM(s.total_amount), 0) AS total_revenue,
+      COALESCE(SUM(s.amount_paid), 0) AS total_paid
+    FROM customers c
+    LEFT JOIN sales s
+      ON s.customer_id = c.id
+      AND s.deleted_at IS NULL
     WHERE ${whereClauses.join(" AND ")}
+    GROUP BY c.id
     ORDER BY ${orderBy}
   `;
 
   return await db.getAllAsync(query, params);
 }
-
-export async function getCustomerById(db, id) {
-  return await db.getFirstAsync(
-    `
-    SELECT *
-    FROM customers
-    WHERE id = ?
-      AND deleted_at IS NULL
-    `,
-    [id]
-  );
-}
-
-export async function getCustomerStats(
-  db,
-  customerId
-) {
-  return await db.getFirstAsync(
-    `
-    SELECT
-      (
-        SELECT COUNT(*)
-        FROM sales
-        WHERE customer_id = ?
-          AND deleted_at IS NULL
-      ) AS sales_count,
-
-      (
-        SELECT COALESCE(SUM(total_amount),0)
-        FROM sales
-        WHERE customer_id = ?
-          AND deleted_at IS NULL
-      ) AS total_sales,
-
-      (
-        SELECT COALESCE(SUM(amount_paid),0)
-        FROM sales
-        WHERE customer_id = ?
-          AND deleted_at IS NULL
-      ) AS total_paid,
-
-      (
-        SELECT COALESCE(SUM(balance_due),0)
-        FROM sales
-        WHERE customer_id = ?
-          AND deleted_at IS NULL
-      ) AS balance_due
-    `,
-    [
-      customerId,
-      customerId,
-      customerId,
-      customerId,
-    ]
-  );
-}
-
 
 export async function getCustomerSales(db, customerId) {
   return await db.getAllAsync(
