@@ -1,6 +1,6 @@
-import { getActiveContextSync, newUuid, withTransaction } from "./utils";
-import { normalizeRange } from "../utils/timeNavigatorHelpers";
-import { enqueueSync } from "../cloudSync/syncEvent";
+import { enqueueSync } from "../../../cloudSync/syncEvent";
+import { normalizeRange } from "../../../utils/timeNavigatorHelpers";
+import { getActiveContextSync, newUuid, withTransaction } from "../../utils";
 
 export async function upsertExpense(
   db,

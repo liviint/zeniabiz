@@ -1,7 +1,6 @@
-import { normalizeRange } from "../utils/timeNavigatorHelpers";
-import { getTotalStockValue } from "./inventoryDb";
-import { getCahsCollcted } from "./paymentsDb";
-import { getActiveContextSync } from "./utils";
+import { normalizeRange } from "../../../utils/timeNavigatorHelpers";
+import { getActiveContextSync } from "../../utils";
+import { getCahsCollcted } from "../../query/payments";
 
 export const getCashFlow = async (db, timeState) => {
   const { company } = getActiveContextSync();

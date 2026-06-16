@@ -16,7 +16,7 @@ import {
     Card,
     SecondaryText,
 } from "../../../../src/components/ThemeProvider/components";
-import { getTransactionTemplates } from "../../../../src/db/transactionsTempsDb";
+import { getTransactionTemplates } from "../../../../src/db/query/expenses/templates";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import { useSelector } from "react-redux";
 

@@ -4,7 +4,7 @@ import { View, StyleSheet } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { StatCard } from "../common/StatCard";
-import {getFinancialStats } from "../../db/dashboardDb";
+import {getFinancialStats } from "../../db/query/dashboard";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { SecondaryText } from "../ThemeProvider/components";
 

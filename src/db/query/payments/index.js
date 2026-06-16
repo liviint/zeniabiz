@@ -1,5 +1,5 @@
-import { getActiveContextSync } from "./utils";
-import { normalizeRange } from "../utils/timeNavigatorHelpers";
+import { normalizeRange } from "../../../utils/timeNavigatorHelpers";
+import { getActiveContextSync } from "../../utils";
 
 export const getCahsCollcted = async (db,timeState) => {
     const { company } = getActiveContextSync();

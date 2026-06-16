@@ -18,7 +18,6 @@ import { useManualSync } from "../../../src/hooks/useManualSync";
 import TimeNavigator from "../../../src/components/common/TimeNavigator"
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 import { StatCard } from "../../../src/components/common/StatCard";
-import { getCahsCollcted } from "../../../src/db/paymentsDb";
 import FilterComponent from "../../../src/components/common/FilterComponent";
 import SortComponent from "../../../src/components/common/SortComponent";
 

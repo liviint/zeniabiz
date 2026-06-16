@@ -1,5 +1,5 @@
-import { getActiveContextSync , newUuid, withTransaction} from "./utils";
-import { enqueueSync } from "../cloudSync/syncEvent";
+import { getActiveContextSync , newUuid, withTransaction} from "../../utils";
+import { enqueueSync } from "../../../cloudSync/syncEvent";
 
 export const upsertExpenseTemplate = async (db, template) => {
 

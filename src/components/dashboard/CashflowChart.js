@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { chartConfig } from "../../helpers";
 import { Card, BodyText } from "../ThemeProvider/components";
-import { getCashFlow } from "../../db/dashboardDb";
+import { getCashFlow } from "../../db/query/dashboard";
 
 const screenWidth = Dimensions.get("window").width;
 export default function CashflowChart({timeState}) {

@@ -1,23 +1,23 @@
 import { useIsFocused } from "@react-navigation/native";
-import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { Pressable, SectionList, StyleSheet, View, RefreshControl } from "react-native";
+import { Pressable, RefreshControl, SectionList, StyleSheet, View } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 import { BodyText, Card, SecondaryText } from "../../../src/components/ThemeProvider/components";
 import { AddButton } from "../../../src/components/common/AddButton";
 import ButtonLinks from "../../../src/components/common/ButtonLinks";
 import EmptyState from "../../../src/components/common/EmptyState";
-import { getExpenses } from "../../../src/db/expensesDb"
+import { StatCard } from "../../../src/components/common/StatCard";
+import TimeNavigator from "../../../src/components/common/TimeNavigator";
 import { getCategories } from "../../../src/db/query/categories";
-import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
-import { dateFormat } from "../../../utils/dateFormat";
+import { getExpenses } from "../../../src/db/query/expenses";
 import { groupDataIntoSections } from "../../../src/helpers";
 import { useManualSync } from "../../../src/hooks/useManualSync";
+import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { setCategoriesMap } from "../../../src/store/features/cetegoriesSlice";
-import TimeNavigator from "../../../src/components/common/TimeNavigator"
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
-import { StatCard } from "../../../src/components/common/StatCard";
+import { dateFormat } from "../../../utils/dateFormat";
 
 export default function FinanceListPage() {
     const { onRefresh, refreshing } = useManualSync();

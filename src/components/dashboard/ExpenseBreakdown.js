@@ -5,7 +5,7 @@ import { PieChart } from "react-native-chart-kit";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { Card,BodyText } from "../ThemeProvider/components";
-import { getExpensesBreakDown } from "../../db/dashboardDb";
+import { getExpensesBreakDown } from "../../db/query/dashboard";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 
 const screenWidth = Dimensions.get("window").width;

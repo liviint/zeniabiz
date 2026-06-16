@@ -10,7 +10,7 @@ import {
 import {
     getTransactionTemplateByid,
     upsertExpenseTemplate,
-} from "../../db/transactionsTempsDb";
+} from "../../db/query/expenses/templates";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import CategoriesPicker from "../common/CategoriesPicker";
 import { BodyText, Card, FormLabel, Input } from "../ThemeProvider/components";
