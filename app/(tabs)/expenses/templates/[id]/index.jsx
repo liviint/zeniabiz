@@ -14,7 +14,7 @@ import PageLoader from "../../../../../src/components/common/PageLoader";
 import {
     deleteTransactionTemplate,
     getTransactionTemplateByid,
-} from "../../../../../src/db/transactionsTempsDb";
+} from "../../../../../src/db/query/expenses/templates";
 import { useThemeStyles } from "../../../../../src/hooks/useThemeStyles";
 import { dateFormat } from "../../../../../utils/dateFormat";
 

@@ -12,7 +12,7 @@ import {
 import {
   deleteExpense,
   getTransactionById,
-} from "../../../../src/db/expensesDb";
+} from "../../../../src/db/query/expenses";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import { dateFormat } from "../../../../utils/dateFormat";
 
