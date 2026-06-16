@@ -3,7 +3,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useState, useEffect } from "react";
 import { Alert, Pressable, StyleSheet, View , Modal, TouchableOpacity,  } from "react-native";
 import { BodyText, Card, Input , FormLabel, SecondaryText} from "../../components/ThemeProvider/components";
-import { getProductById, restockProduct , upsertBatch} from "../../db/inventoryDb";
+import { getProductById, restockProduct , upsertBatch} from "../../db/query/inventory";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import DateTimePicker from "@react-native-community/datetimepicker";
 

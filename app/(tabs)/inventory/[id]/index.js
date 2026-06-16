@@ -5,7 +5,7 @@ import { Alert, Pressable, StyleSheet, View, ScrollView } from "react-native";
 import { useIsFocused } from "@react-navigation/native";
 import DeleteButton from "../../../../src/components/common/DeleteButton";
 import { BodyText, Card, SecondaryText } from "../../../../src/components/ThemeProvider/components";
-import { deleteProduct, getProductById, getProductBatches } from "../../../../src/db/inventoryDb";
+import { deleteProduct, getProductById, getProductBatches } from "../../../../src/db/query/inventory";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import RestockForm from "../../../../src/components/inventory/RestockForm";
 import { dateFormat } from "../../../../utils/dateFormat";

@@ -1,28 +1,28 @@
-import { useEffect, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
 import {
-  View,
-  StyleSheet,
+  Alert,
   FlatList,
   Pressable,
-  Alert,
+  StyleSheet,
+  View,
 } from "react-native";
 import {
-  Card,
   BodyText,
-  SecondaryText,
+  Card,
   Input,
+  SecondaryText,
 } from "../../../src/components/ThemeProvider/components";
-import { useSQLiteContext } from "expo-sqlite";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { getProducts } from "../../../src/db/inventoryDb";
+import { getCategories } from "../../../src/db/query/categories";
 import {
   createOrUpdateSale,
-  getSaleItems,
   getSaleById,
+  getSaleItems,
 } from "../../../src/db/salesDb";
-import { getCategories } from "../../../src/db/query/categories";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import { getProducts } from "../../db/query/inventory";
 import CreditDiscountForm from "./CreditDiscountForm";
 import EditSaleForm from "./EditSaleForm";
 

@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View , RefreshControl} from "react-native";
 import { BodyText, Card, SecondaryText, Input } from "../../../src/components/ThemeProvider/components";
 import { AddButton } from "../../../src/components/common/AddButton";
-import { getProducts } from "../../../src/db/inventoryDb";
+import { getProducts } from "../../../src/db/query/inventory";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import EmptyState from "../../../src/components/common/EmptyState";
 import { StatCard } from "../../../src/components/common/StatCard";

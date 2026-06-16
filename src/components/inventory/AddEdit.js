@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { BodyText, Card, FormLabel, Input , SecondaryText} from "../../../src/components/ThemeProvider/components";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
-import { upsertProductAndRestocking , getProductById} from "../../db/inventoryDb";
+import { upsertProductAndRestocking , getProductById} from "../../db/query/inventory";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
