@@ -12,7 +12,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { BodyText } from "../../../../src/components/ThemeProvider/components";
 import { getActiveContextSync, loadActiveContext } from "../../../../src/db/utils";
 import { api } from "../../../../api";
-import { createSession } from "../../../../src/db/usersDb";
+import { createSession } from "../../../../src/db/query/users";
 import { useSQLiteContext } from "expo-sqlite";
 
 export default function AcceptInviteScreen() {

@@ -13,7 +13,7 @@ import { validateEmail } from "../../../../src/helpers";
 import { Card, FormLabel, Input, BodyText } from "../../../../src/components/ThemeProvider/components";
 import { useRouter } from "expo-router";
 import { safeLocalStorage } from "../../../../utils/storage";
-import { getLocalUser } from "../../../../src/db/usersDb";
+import { getLocalUser } from "../../../../src/db/query/users";
 import { getActiveContextSync } from "../../../../src/db/utils";
 import { useSQLiteContext } from "expo-sqlite";
 
