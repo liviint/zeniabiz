@@ -4,7 +4,7 @@ import { View } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { FormLabel, CustomPicker } from "../ThemeProvider/components";
 import { useSQLiteContext } from "expo-sqlite";
-import { getCategories } from "../../db/categoriesDb";
+import { getCategories } from "../../db/query/categories";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";

@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet} from "reac
 import { useEffect, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import {getCategoryById, deleteCategory} from "../../../../../src/db/categoriesDb"
+import {getCategoryById, deleteCategory} from "../../../../../src/db/query/categories"
 import { useSQLiteContext } from "expo-sqlite";
 import { useThemeStyles } from "../../../../../src/hooks/useThemeStyles";
 import { BodyText, SecondaryText } from "../../../../../src/components/ThemeProvider/components";

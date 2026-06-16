@@ -1,31 +1,29 @@
+import { useIsFocused } from "@react-navigation/native";
+import { useRouter } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import {
-    View,
     FlatList,
     Pressable,
     RefreshControl,
     StyleSheet,
-    Text
+    Text,
+    View
 } from "react-native";
-import { useIsFocused } from "@react-navigation/native";
+import { useSelector } from "react-redux";
 import {
-    Card,
-    BodyText,
-    SecondaryText,
+    BodyText
 } from "../../../src/components/ThemeProvider/components";
-import { useSQLiteContext } from "expo-sqlite";
-import { useRouter } from "expo-router";
 
-import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { AddButton } from "../../../src/components/common/AddButton";
 import EmptyState from "../../../src/components/common/EmptyState";
-import { useManualSync } from "../../../src/hooks/useManualSync";
-import { createRange } from "../../../src/utils/timeNavigatorHelpers";
-import { StatCard } from "../../../src/components/common/StatCard";
 import SortComponent from "../../../src/components/common/SortComponent";
+import { StatCard } from "../../../src/components/common/StatCard";
+import { useManualSync } from "../../../src/hooks/useManualSync";
+import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 
-import { getCustomers } from "../../../src/db/customersDb";
+import { getCustomers } from "../../../src/db/query/customers";
 
 export default function CustomersList() {
     const { onRefresh, refreshing } = useManualSync();

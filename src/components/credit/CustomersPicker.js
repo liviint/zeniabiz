@@ -10,7 +10,7 @@ import {
   CustomPicker,
 } from "../ThemeProvider/components";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
-import { getCustomers } from "../../db/customersDb";
+import { getCustomers } from "../../db/query/customers";
 import { clearRecentlyCreatedCustomerId } from "../../store/features/entitySelectionSlice";
 
 export default function CustomersPicker({

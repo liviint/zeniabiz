@@ -15,7 +15,7 @@ import {
     Card,
 } from "../ThemeProvider/components"
 import { useThemeStyles } from "../../hooks/useThemeStyles";
-import { upsertCustomer, getCustomerById } from "../../db/customersDb";
+import { upsertCustomer, getCustomerById } from "../../db/query/customers";
 import { setRecentlyCreatedCustomerId } from "../../store/features/entitySelectionSlice"
 import { useDispatch } from "react-redux";
 import { useIsFocused } from "@react-navigation/native";

@@ -28,7 +28,7 @@ import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 import { dateFormat } from "../../../utils/dateFormat";
 
 import FilterComponent from "../../../src/components/common/FilterComponent";
-import { getCredits, getCreditStats } from "../../../src/db/creditsDb";
+import { getCredits, getCreditStats } from "../../../src/db/query/credits";
 import { StatCard } from "../../../src/components/common/StatCard";
 import { formatNumber } from "../../../src/db/utils";
 

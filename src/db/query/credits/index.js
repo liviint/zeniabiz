@@ -1,5 +1,5 @@
-import { newUuid } from "./utils";
-import { normalizeRange } from "../utils/timeNavigatorHelpers";
+import { newUuid } from "../../utils";
+import { normalizeRange } from "../../../utils/timeNavigatorHelpers";
 
 export async function getCredits(
   db,

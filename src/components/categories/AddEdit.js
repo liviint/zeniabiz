@@ -11,7 +11,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { BodyText, FormLabel, Input , Card } from "../ThemeProvider/components";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { getCategoryById, upsertCategory } from "../../db/categoriesDb";
+import { getCategoryById, upsertCategory } from "../../db/query/categories";
 import { COLORS } from "../../../utils/constants";
 import { setRecentlyCreatedCategoryId } from "../../store/features/entitySelectionSlice"
 

@@ -9,7 +9,7 @@ import { AddButton } from "../../../src/components/common/AddButton";
 import ButtonLinks from "../../../src/components/common/ButtonLinks";
 import EmptyState from "../../../src/components/common/EmptyState";
 import { getExpenses } from "../../../src/db/expensesDb"
-import { getCategories } from "../../../src/db/categoriesDb";
+import { getCategories } from "../../../src/db/query/categories";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { dateFormat } from "../../../utils/dateFormat";
 import { groupDataIntoSections } from "../../../src/helpers";

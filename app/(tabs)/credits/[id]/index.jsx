@@ -15,7 +15,7 @@ import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 
 import { dateFormat } from "../../../../utils/dateFormat";
 
-import { getCreditById, offsetCreditBalance } from "../../../../src/db/creditsDb";
+import { getCreditById, offsetCreditBalance } from "../../../../src/db/query/credits";
 import { CreditActionsCard } from "../../../../src/components/credit/CreditActionsCard";
 
 export default function CreditDetailPage() {

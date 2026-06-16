@@ -12,7 +12,7 @@ import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import { SecondaryText , BodyText} from "../../../../src/components/ThemeProvider/components";
 import { syncManager } from "../../../../utils/syncManager";
 import { AddButton } from "../../../../src/components/common/AddButton";
-import { getCategories } from "../../../../src/db/categoriesDb";
+import { getCategories } from "../../../../src/db/query/categories";
 
 export default function CategoriesListScreen({ navigation }) {
   const db = useSQLiteContext();

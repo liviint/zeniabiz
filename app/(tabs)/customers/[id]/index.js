@@ -20,7 +20,7 @@ import {
     getCustomerStats,
     getCustomerSales,
     deleteCustomer,
-} from "../../../../src/db/customersDb";
+} from "../../../../src/db/query/customers";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import DeleteButton from "../../../../src/components/common/DeleteButton";
 import { dateFormat } from "../../../../src/utils/dateFormat";

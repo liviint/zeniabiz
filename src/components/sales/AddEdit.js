@@ -21,7 +21,7 @@ import {
   getSaleItems,
   getSaleById,
 } from "../../../src/db/salesDb";
-import { getCategories } from "../../../src/db/categoriesDb";
+import { getCategories } from "../../../src/db/query/categories";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import CreditDiscountForm from "./CreditDiscountForm";
 import EditSaleForm from "./EditSaleForm";

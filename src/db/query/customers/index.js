@@ -1,5 +1,5 @@
-import { newUuid, getActiveContextSync, withTransaction } from "./utils";
-import { enqueueSync } from "../cloudSync/syncEvent";
+import { enqueueSync } from "../../../cloudSync/syncEvent";
+import { getActiveContextSync, newUuid, withTransaction } from "../../utils";
 
 export async function getCustomers(
   db,

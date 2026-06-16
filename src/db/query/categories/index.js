@@ -1,5 +1,5 @@
-import { getActiveContextSync, newUuid, withTransaction } from "./utils";
-import { enqueueSync } from "../cloudSync/syncEvent";
+import { getActiveContextSync, newUuid, withTransaction } from "../../utils";
+import { enqueueSync } from "../../../cloudSync/syncEvent";
 
 export const getCategoryById = async (db, id) => {
   const { company } = getActiveContextSync();
