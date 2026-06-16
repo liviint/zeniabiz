@@ -51,6 +51,62 @@ export async function getCustomers(
   return await db.getAllAsync(query, params);
 }
 
+export async function getCustomerById(db, id) {
+  return await db.getFirstAsync(
+    `
+    SELECT *
+    FROM customers
+    WHERE id = ?
+      AND deleted_at IS NULL
+    `,
+    [id]
+  );
+}
+
+export async function getCustomerStats(
+  db,
+  customerId
+) {
+  return await db.getFirstAsync(
+    `
+    SELECT
+      (
+        SELECT COUNT(*)
+        FROM sales
+        WHERE customer_id = ?
+          AND deleted_at IS NULL
+      ) AS sales_count,
+
+      (
+        SELECT COALESCE(SUM(total_amount),0)
+        FROM sales
+        WHERE customer_id = ?
+          AND deleted_at IS NULL
+      ) AS total_sales,
+
+      (
+        SELECT COALESCE(SUM(amount_paid),0)
+        FROM sales
+        WHERE customer_id = ?
+          AND deleted_at IS NULL
+      ) AS total_paid,
+
+      (
+        SELECT COALESCE(SUM(balance_due),0)
+        FROM sales
+        WHERE customer_id = ?
+          AND deleted_at IS NULL
+      ) AS balance_due
+    `,
+    [
+      customerId,
+      customerId,
+      customerId,
+      customerId,
+    ]
+  );
+}
+
 export async function getCustomerSales(db, customerId) {
   return await db.getAllAsync(
     `
