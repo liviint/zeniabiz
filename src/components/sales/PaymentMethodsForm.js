@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
+import { useThemeStyles } from "../../hooks/useThemeStyles";
 import {
     BodyText,
-    Input,
     FormLabel,
-} from "../../../src/components/ThemeProvider/components";
-import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+    Input,
+} from "../ThemeProvider/components";
 import PaymentMethodPicker from "./PaymentMethodsPicker";
 
 const PaymentMethodsForm = ({

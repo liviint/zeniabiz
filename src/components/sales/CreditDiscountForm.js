@@ -1,19 +1,20 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-    View,
-    Pressable,
     Modal,
+    Pressable,
     ScrollView,
+    View,
 } from "react-native";
 import {
-    Card,
     BodyText,
-    Input,
+    Card,
     FormLabel,
+    Input,
 } from "../../../src/components/ThemeProvider/components";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import CustomersPicker from "../credit/CustomersPicker";
-import PaymentMethodsForm from "./PaymentMethodsForm2";
+import PaymentMethodsForm from "./PaymentMethodsForm";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const CreditDiscountForm = ({
     markedPrice,
@@ -94,8 +95,11 @@ const CreditDiscountForm = ({
             transparent
             animationType="slide"
         >
-            <ScrollView 
-                contentContainerStyle={styles.modalContainer}
+            <KeyboardAwareScrollView
+                contentContainerStyle={{...styles.modalContainer, paddingBottom: 43}}
+                /* contentContainerStyle={{  }} */
+                enableOnAndroid
+                extraScrollHeight={20}
                 keyboardShouldPersistTaps="handled"
             >
                 <Card style={styles.modalCard}>
@@ -171,7 +175,7 @@ const CreditDiscountForm = ({
                         <BodyText>Cancel</BodyText>
                     </Pressable>
                 </Card>
-            </ScrollView>
+            </KeyboardAwareScrollView>
         </Modal>
     );
 };
