@@ -76,6 +76,21 @@ const CreditDiscountForm = ({
             return alert("Amount paid cannot be negative");
         }
 
+        const paymentSum = paymentMethodsDraft.reduce(
+            (sum, p) => sum + Number(p.amount || 0),
+            0
+        );
+
+        const diff = Math.abs(paymentSum - amountPaid);
+
+        if (diff > 0.01) {
+            return alert(
+                `Payment mismatch: methods total (${paymentSum.toFixed(
+                    2
+                )}) does not match amount paid (${amountPaid.toFixed(2)})`
+            );
+        }
+
         setPaymentsForm(prev => ({...prev,...draftForm}));
 
         let paymentMethods;
