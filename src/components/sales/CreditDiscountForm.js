@@ -15,6 +15,7 @@ import {
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import CustomersPicker from "../credit/CustomersPicker";
 import PaymentMethodPicker from "./PaymentMethodsPicker";
+import PaymentMethodsForm from "./PaymentMethodsForm2";
 
 const CreditDiscountForm = ({
     markedPrice,
@@ -29,6 +30,11 @@ const CreditDiscountForm = ({
     const { globalStyles } = useThemeStyles();
 
     const [draftForm, setDraftForm] = useState(paymentsForm);
+
+    const [paymentDraft, setPaymentDraft] = useState({
+        payment_method: "cash",
+        amount: 0,
+    });
 
     useEffect(() => {
         if (checkoutModalVisible) {
@@ -134,23 +140,12 @@ const CreditDiscountForm = ({
                         handleCustomerChange={handleCustomerChange}
                     />
 
-                    <PaymentMethodPicker
-                        form={draftForm.payments}
-                        handleMethodChange={(method) =>
-                            setDraftForm((prev) => ({
-                                ...prev,
-                                payments: [...prev.payments, method],
-                            }))
-                        }
+                    <PaymentMethodsForm 
+                        draftForm={draftForm} 
+                        setDraftForm={setDraftForm}
+                        paymentDraft={paymentDraft}
+                        setPaymentDraft={setPaymentDraft}
                     />
-                    <Pressable
-                        style={globalStyles.secondaryBtn}
-                        onPress={() => setPaymentModalVisible(true)}
-                    >
-                        <BodyText style={globalStyles.secondaryBtnText}>
-                            Add multiple payment methods
-                        </BodyText>
-                    </Pressable>
 
                     <View style={globalStyles.formGroup}>
                         <Pressable

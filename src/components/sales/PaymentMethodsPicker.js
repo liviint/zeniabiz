@@ -4,7 +4,7 @@ import { FormLabel, CustomPicker } from "../ThemeProvider/components";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 
 export default function PaymentMethodPicker({
-  form,
+  value,
   handleMethodChange,
 }) {
   const { globalStyles } = useThemeStyles();
@@ -26,7 +26,7 @@ export default function PaymentMethodPicker({
       <FormLabel>Payment Method</FormLabel>
 
       <CustomPicker
-        selectedValue={form.payment_method}
+        selectedValue={value}
         onValueChange={(value) => handleSelect(value)}
       >
         {/* Placeholder */}
