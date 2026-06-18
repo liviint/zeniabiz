@@ -10,11 +10,9 @@ import {
     BodyText,
     Input,
     FormLabel,
-    CustomPicker,
 } from "../../../src/components/ThemeProvider/components";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import CustomersPicker from "../credit/CustomersPicker";
-import PaymentMethodPicker from "./PaymentMethodsPicker";
 import PaymentMethodsForm from "./PaymentMethodsForm2";
 
 const CreditDiscountForm = ({
@@ -35,7 +33,7 @@ const CreditDiscountForm = ({
         [
             {
                 method: "cash",
-                amount: 0,
+                amount: markedPrice,
                 id:Date.now().toString(),
             }
         ]

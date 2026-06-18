@@ -1,13 +1,11 @@
 import { View } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { FormLabel, CustomPicker } from "../ThemeProvider/components";
-import { useThemeStyles } from "../../hooks/useThemeStyles";
 
 export default function PaymentMethodPicker({
   value,
   handleMethodChange,
 }) {
-  const { globalStyles } = useThemeStyles();
 
   const paymentMethods = [
     { label: "Cash", value: "cash" },
@@ -22,7 +20,7 @@ export default function PaymentMethodPicker({
   };
 
   return (
-    <View style={globalStyles.formGroup}>
+    <View >
       <FormLabel>Payment Method</FormLabel>
 
       <CustomPicker

@@ -25,7 +25,6 @@ import {
 } from "../../db/query/sales";
 import CreditDiscountForm from "./CreditDiscountForm";
 import EditSaleForm from "./EditSaleForm";
-import PaymentMethodsForm from "./PaymentMethodsForm";
 
 export default function SellPage() {
   const db = useSQLiteContext();
@@ -373,13 +372,6 @@ export default function SellPage() {
         paymentsForm={paymentsForm}
         setPaymentsForm={setPaymentsForm}
         setPaymentModalVisible={setPaymentModalVisible}
-      />
-
-      <PaymentMethodsForm
-        visible={paymentModalVisible}
-        setVisible={setPaymentModalVisible}
-        paymentsForm={paymentsForm}
-        setPaymentsForm={setPaymentsForm}
       />
 
     </View>
