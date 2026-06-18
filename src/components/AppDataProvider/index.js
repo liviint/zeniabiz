@@ -14,31 +14,38 @@ import { applySalesMigrationsV1, applySalesMigrationsV2 } from "../../db/migrati
 import { applySyncMigrationsV1, rebuildSyncQueue } from "../../db/migrations/sync"
 import { getSetting, setSetting } from "@/src/db/query/settings";
 
-import { createCompaniesTables } from "../../db/schema/companies"
-import { createUsersTables } from "../../db/schema/users"
-import { createSessionTables } from "../../db/schema/session"
-import { createExpensesTables } from "../../db/schema/expenses"
-import { createInventoryTables } from "../../db/schema/inventory"
-import { createSalesTables } from "../../db/schema/sales"
-import { createPaymentsTables } from "../../db/schema/payments"
-import { createCustomerTables } from "../../db/schema/customers"
-import { createSettingsTables } from "../../db/schema/settings"
-import { createSyncTables } from "../../db/schema/sync"
+import {
+  createCompaniesTables,
+  createUsersTables,
+  createSessionTables,
+  createExpensesTables,
+  createInventoryTables,
+  createSalesTables,
+  createPaymentsTables,
+  createCustomerTables,
+  createSettingsTables,
+  createSyncTables,
+} from "../../db/schema"
 
 const migrateDbIfNeeded = async (db) => {
   let currentVersion = Number((await getSetting(db, "db_version")) || 0);
 
     await db.execAsync(`PRAGMA journal_mode = WAL;`);
 
+    //CORE
     await createCompaniesTables(db)
     await createUsersTables(db)
     await createSessionTables(db)
+    await createSettingsTables(db)
+
+    //BUSINESS
     await createExpensesTables(db)
     await createInventoryTables(db)
     await createSalesTables(db)
     await createPaymentsTables(db)
     await createCustomerTables(db)
-    await createSettingsTables(db)
+
+    //INFRA
     await createSyncTables(db)
 
 
