@@ -606,6 +606,7 @@ const createInitialPayment = async (
 
 
   for (const p of payments) {
+    if (!p || Number(p.amount) <= 0) continue;
     const paymentId = newUuid();
       await db.runAsync(
         `
