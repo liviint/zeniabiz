@@ -1,4 +1,4 @@
-import { Pressable } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import {
     BodyText,
     Input,
@@ -17,6 +17,7 @@ const PaymentMethodsForm = ({
 
     return (
         <>
+        <View styles={globalStyles.formGroup}>
             <PaymentMethodPicker
                 value={paymentDraft.payment_method}
                 onChange={(method) =>
@@ -38,9 +39,11 @@ const PaymentMethodsForm = ({
                     }))
                 }
             />
-
+        </View>
+            
+        <View style={{...globalStyles.formGroup,margiBottomn:10}}>
             <Pressable
-                style={globalStyles.secondaryBtn}
+                style={styles.btn}
                 onPress={() => {
                     setDraftForm((prev) => ({
                         ...prev,
@@ -56,10 +59,26 @@ const PaymentMethodsForm = ({
                     });
                 }}
             >
-                <BodyText>Add Payment</BodyText>
+                <BodyText style={styles.btnText}>
+                    + Add another payment method
+                </BodyText>
             </Pressable>
+        </View>
         </>
     );
 };
+
+const styles = StyleSheet.create({
+    btn: {
+        marginTop: 8,
+        alignSelf: "flex-start",
+        paddingVertical: 4,
+    },
+
+    btnText: {
+        color: "#2E8B8B",
+        fontWeight: "500",
+    },
+})
 
 export default PaymentMethodsForm
