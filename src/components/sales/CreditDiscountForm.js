@@ -34,7 +34,7 @@ const CreditDiscountForm = ({
         [
             {
                 method: "cash",
-                amount: markedPrice,
+                amount: paymentsForm.amountPaid,
                 id:Date.now().toString(),
             }
         ]
@@ -76,10 +76,21 @@ const CreditDiscountForm = ({
             return alert("Amount paid cannot be negative");
         }
 
-        console.log(draftForm,"hello draft form")
         setPaymentsForm(prev => ({...prev,...draftForm}));
 
-        handleSave(true,draftForm);
+        let paymentMethods;
+
+        if (paymentMethodsDraft.length === 1) {
+            paymentMethods = [
+                {
+                    ...paymentMethodsDraft[0],
+                    amount: amountPaid,
+                },
+            ];
+        } else paymentMethods = paymentMethodsDraft;
+
+        handleSave(true,draftForm,paymentMethods);
+
     };
 
     const handleCancel = () => {

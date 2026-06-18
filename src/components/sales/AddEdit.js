@@ -165,7 +165,11 @@ export default function SellPage() {
     } 
   }, [sale]);
 
-  const handleSave = async (fromCreditDiscount = false,draftForm = null) => {
+  const handleSave = async (
+    fromCreditDiscount = false,
+    draftForm = null,
+     paymentMethods = []
+  ) => {
     const form = draftForm || paymentsForm;
     if (!fromCreditDiscount && (sale?.balance_due ?? 0) > 0) {
       return Alert.alert(
@@ -211,6 +215,7 @@ export default function SellPage() {
         balance_due: credit,
         payment_status:
           credit === 0 ? "PAID" : form.amountPaid > 0 ? "PARTIAL" : "UNPAID",
+        payments: paymentMethods,
       };
 
       await createOrUpdateSale(db, saleData);
@@ -320,36 +325,24 @@ export default function SellPage() {
       )}
 
       <View style={styles.footer}>
-        <Pressable
-          style={globalStyles.secondaryBtn}
-          onPress={() => setPaymentModalVisible(true)}
-        >
-          <BodyText style={globalStyles.secondaryBtnText}>
-            Payments
-          </BodyText>
-        </Pressable>
 
         <Pressable
-          style={globalStyles.secondaryBtn}
+          style={globalStyles.primaryBtn} 
           onPress={() => setCheckoutModalVisible(true)}
         >
-          <BodyText style={globalStyles.secondaryBtnText}>
-            Credit / Discount
+          <BodyText style={globalStyles.primaryBtnText}>
+            Checkout
           </BodyText>
         </Pressable>
 
-        <Pressable 
+        {/* <Pressable 
           style={globalStyles.primaryBtn} 
           onPress={() => handleSave()}
         >
           <BodyText style={globalStyles.primaryBtnText}>
             Complete Sale
           </BodyText>
-        </Pressable>
-      </View>
-
-      <View style={styles.footer}>
-        
+        </Pressable> */}
       </View>
 
       <EditSaleForm 

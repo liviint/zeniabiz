@@ -275,6 +275,7 @@ export async function createOrUpdateSale(
     markedPrice,
     balance_due,
     payment_status,
+    payments,
     total_amount,
     customer_id,
   }
@@ -325,6 +326,7 @@ export async function createOrUpdateSale(
       amount_paid: amount_paid,
       saleDate,
       now,
+      payments
     });
 
     return id;
@@ -588,54 +590,60 @@ const handleProductSaleItem = async(db,{
   }
 }
 
-const createInitialPayment = async(db,{
+const createInitialPayment = async (
+  db,
+{
   saleId,
   company,
   user_id,
   customer_id,
   amount_paid,
+  payments = [],
   saleDate,
-  now
-}) => {
-  if ((amount_paid || 0) > 0) {
-    const paymentId = newUuid();
-
-    await db.runAsync(
-      `
-      INSERT INTO payments
-      (
-        id, company, created_by, updated_by,
-        sale_id, customer_id, payment_type,
-        amount, payment_method, note,
-        date, created_at, updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
-      [
-        paymentId,
-        company,
-        user_id,
-        user_id,
-        saleId,
-        customer_id,
-        "INITIAL",
-        amount_paid,
-        "cash",
-        "Auto-created from sale",
-        saleDate,
-        now,
-        now,
-      ]
-    );
-
-    await enqueueSync(db, {
-      model: "payments",
-      record_id: paymentId,
-      operation: "upsert",
-    });
-
-  }
+  now,
 }
+) => {
+
+
+  for (const p of payments) {
+    const paymentId = newUuid();
+      await db.runAsync(
+        `
+        INSERT INTO payments
+        (
+          id, company, created_by, updated_by,
+          sale_id, customer_id, payment_type,
+          amount, payment_method, note,
+          date, created_at, updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+        [
+          paymentId,
+          company,
+          user_id,
+          user_id,
+          saleId,
+          customer_id,
+          "SPLIT",
+          p.amount,
+          p.method,
+          "Auto-created from sale",
+          saleDate,
+          now,
+          now,
+        ]
+      );
+
+      await enqueueSync(db, {
+        model: "payments",
+        record_id: paymentId,
+        operation: "upsert",
+      });
+  }
+  return;
+};
+
 
 export async function getSales(db, { timeState, filter, sort }) {
   const { company } = getActiveContextSync();
