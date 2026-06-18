@@ -18,6 +18,7 @@ import {
 import { newUuid } from "../../db/utils";
 import { useSQLiteContext } from "expo-sqlite";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import PaymentMethodPicker from "../sales/PaymentMethodsPicker";
 
 export default function RecordPaymentModal({
   visible,
@@ -36,8 +37,7 @@ export default function RecordPaymentModal({
     remainingBalance.toString()
   );
 
-  const [paymentMethod, setPaymentMethod] =
-    useState("cash");
+  const [paymentMethod, setPaymentMethod] = useState("cash");
 
   const [note, setNote] = useState("");
 
@@ -201,19 +201,10 @@ export default function RecordPaymentModal({
               />
             </View>
 
-            {/* Payment Method */}
-            <View style={globalStyles.formGroup}>
-              <SecondaryText style={styles.label}>
-                Payment Method
-              </SecondaryText>
-
-              <Input
-                value={paymentMethod}
-                onChangeText={setPaymentMethod}
-                placeholder="cash"
-                style={styles.input}
-              />
-            </View>
+            <PaymentMethodPicker 
+              value={paymentMethod}
+              handleMethodChange={(val) => setPaymentMethod(val)}
+            />
 
             {/* Note */}
             <View style={globalStyles.formGroup}>
