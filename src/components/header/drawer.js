@@ -3,9 +3,10 @@ import {
     View,
     Text,
     TouchableOpacity,
-    StyleSheet,
     Modal,
     Pressable,
+    Linking,
+    StyleSheet,
 } from "react-native";
 import { useRouter, usePathname } from "expo-router";
 
@@ -14,12 +15,28 @@ export default function Header({ menuOpen, setMenuOpen }) {
     const pathname = usePathname();
 
     const items = [
-        { label: "Credit", path: "/credits" },
-        { label: "Customers", path: "/customers" },
-        { label: "Settings", path: "/settings" },
-        { label: "Profile", path: "/auth/profile" },
-        { label: "Feedback", path: "/feedback" },
+        { label: "Credit", path: "/credits", type: "internal" },
+        { label: "Customers", path: "/customers", type: "internal" },
+        { label: "Settings", path: "/settings", type: "internal" },
+        { label: "Profile", path: "/auth/profile", type: "internal" },
+        { label: "Feedback", path: "/feedback", type: "internal" },
+
+        {
+            label: "Learning Center",
+            path: "https://zeniabiz.com/learning-center",
+            type: "external",
+        },
     ];
+
+    const handlePress = (item) => {
+        setMenuOpen(false);
+
+        if (item.type === "external") {
+            Linking.openURL(item.path);
+        } else {
+            router.push(item.path);
+        }
+    };
 
     return (
         <View>
@@ -31,29 +48,26 @@ export default function Header({ menuOpen, setMenuOpen }) {
             >
                 {/* BACKDROP */}
                 <Pressable
-                style={styles.backdrop}
-                onPress={() => setMenuOpen(false)}
+                    style={styles.backdrop}
+                    onPress={() => setMenuOpen(false)}
                 >
-                {/* DRAWER (stop propagation so clicks inside don’t close) */}
-                <Pressable style={styles.drawer}>
-                    {items.map((item) => (
-                    <TouchableOpacity
-                        key={item.path}
-                        style={[
-                        styles.link,
-                        pathname === item.path && styles.active,
-                        ]}
-                        onPress={() => {
-                        setMenuOpen(false);
-                        router.push(item.path);
-                        }}
-                    >
-                        <Text style={styles.linkText}>
-                        {item.label}
-                        </Text>
-                    </TouchableOpacity>
-                    ))}
-                </Pressable>
+                    {/* DRAWER */}
+                    <Pressable style={styles.drawer}>
+                        {items.map((item) => (
+                            <TouchableOpacity
+                                key={item.label}
+                                style={[
+                                    styles.link,
+                                    pathname === item.path && styles.active,
+                                ]}
+                                onPress={() => handlePress(item)}
+                            >
+                                <Text style={styles.linkText}>
+                                    {item.label}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </Pressable>
                 </Pressable>
             </Modal>
         </View>
