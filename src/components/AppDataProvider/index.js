@@ -8,6 +8,7 @@ import {
   applyInventoryMovementsMigrationsV1,
   migrateMovementsToBatches,
   applyExpansionOfProductsToServices,
+  applyAddBarCodeToProducts,
 } from "../../db/migrations/inventory"
 import {migrateSalesCreditFieldsV1, migratePaymentsFromSalesV1} from "../../db/migrations/credit"
 import { applySalesMigrationsV1, applySalesMigrationsV2 } from "../../db/migrations/sales"
@@ -91,6 +92,12 @@ const migrateDbIfNeeded = async (db) => {
   if(currentVersion < 6){
     await applySalesMigrationsV2(db);
     currentVersion = 6;
+    await setSetting(db, "db_version", currentVersion);
+  }
+
+  if(currentVersion < 7){
+    await applyAddBarCodeToProducts(db);
+    currentVersion = 7;
     await setSetting(db, "db_version", currentVersion);
   }
 

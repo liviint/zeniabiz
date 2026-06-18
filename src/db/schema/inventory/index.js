@@ -9,6 +9,8 @@ export async function createInventoryTables(db) {
 
       name TEXT NOT NULL,
       sku TEXT,
+      barcode TEXT,
+
       selling_price REAL NOT NULL,
       cost_price REAL DEFAULT 0,
       minimum_quantity INTEGER NOT NULL DEFAULT 5,

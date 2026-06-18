@@ -286,5 +286,11 @@ export const applyExpansionOfProductsToServices = async(db) => {
     );
 }
 
-
-
+export const applyAddBarCodeToProducts = async(db) => {
+  await addColumnIfNotExists(
+    db,
+    "products",
+    "barcode",
+    "TEXT"
+  );
+}
