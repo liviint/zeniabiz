@@ -8,6 +8,7 @@ import ExpenseBreakdown from "../../../src/components/dashboard/ExpenseBreakdown
 import TimeNavigator from "../../../src/components/common/TimeNavigator"
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 import { useManualSync } from "../../../src/hooks/useManualSync";
+import PaymentMethodsBreakdown from "../../../src/components/dashboard/PaymentMethodsBreakdown";
 
 export default function DashboardScreen() {
     const { globalStyles } = useThemeStyles()
@@ -38,6 +39,10 @@ export default function DashboardScreen() {
                 <ExpenseBreakdown 
                     timeState={timeState}
                 /> 
+
+                <PaymentMethodsBreakdown 
+                    timeState={timeState}
+                />
 
                 <CashflowChart 
                     timeState={timeState}

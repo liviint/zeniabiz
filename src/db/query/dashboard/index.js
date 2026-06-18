@@ -363,3 +363,39 @@ const revenueResult = await db.getFirstAsync(
     netProfit,
   };
 }
+
+export const getPaymentsBreakdown = async (db, timeState) => {
+  const { company } = getActiveContextSync();
+
+  const { startDate, endDate } = normalizeRange(timeState);
+
+  if (!startDate || !endDate) {
+    throw new Error("Invalid time range");
+  }
+
+  const result = await db.getAllAsync(
+    `
+    SELECT 
+      p.payment_method,
+      SUM(p.amount) as total
+
+    FROM payments p
+
+    WHERE p.deleted_at IS NULL
+      AND p.company = ?
+      AND p.date >= ?
+      AND p.date < ?
+
+    GROUP BY p.payment_method
+
+    ORDER BY total DESC
+    `,
+    [
+      company,
+      startDate,
+      endDate
+    ]
+  );
+
+  return result;
+};
