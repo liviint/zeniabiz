@@ -10,9 +10,11 @@ import {
     BodyText,
     Input,
     FormLabel,
+    CustomPicker,
 } from "../../../src/components/ThemeProvider/components";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import CustomersPicker from "../credit/CustomersPicker";
+import PaymentMethodPicker from "./PaymentMethodsPicker";
 
 const CreditDiscountForm = ({
     markedPrice,
@@ -22,6 +24,7 @@ const CreditDiscountForm = ({
     setCheckoutModalVisible,
     paymentsForm,
     setPaymentsForm,
+    setPaymentModalVisible,
 }) => {
     const { globalStyles } = useThemeStyles();
 
@@ -130,6 +133,24 @@ const CreditDiscountForm = ({
                         form={draftForm}
                         handleCustomerChange={handleCustomerChange}
                     />
+
+                    <PaymentMethodPicker
+                        form={draftForm.payments}
+                        handleMethodChange={(method) =>
+                            setDraftForm((prev) => ({
+                                ...prev,
+                                payments: [...prev.payments, method],
+                            }))
+                        }
+                    />
+                    <Pressable
+                        style={globalStyles.secondaryBtn}
+                        onPress={() => setPaymentModalVisible(true)}
+                    >
+                        <BodyText style={globalStyles.secondaryBtnText}>
+                            Add multiple payment methods
+                        </BodyText>
+                    </Pressable>
 
                     <View style={globalStyles.formGroup}>
                         <Pressable

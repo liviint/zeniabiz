@@ -372,6 +372,7 @@ export default function SellPage() {
         setCheckoutModalVisible={setCheckoutModalVisible}
         paymentsForm={paymentsForm}
         setPaymentsForm={setPaymentsForm}
+        setPaymentModalVisible={setPaymentModalVisible}
       />
 
       <PaymentMethodsForm

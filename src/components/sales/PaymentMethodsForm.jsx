@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Modal, View, Pressable } from "react-native";
 import { BodyText, Input, FormLabel } from "../../../src/components/ThemeProvider/components";
+import PaymentMethodPicker from "./PaymentMethodsPicker";
 
 export default function PaymentMethodsForm({
   visible,
@@ -33,26 +34,10 @@ export default function PaymentMethodsForm({
 
           <BodyText>Payment Methods</BodyText>
 
-          {/* METHOD SELECT */}
-          <View style={{ flexDirection: "row", gap: 10, marginVertical: 10 }}>
-            <Pressable onPress={() => setMethod("cash")}>
-              <BodyText style={{ fontWeight: method === "cash" ? "700" : "400" }}>
-                Cash
-              </BodyText>
-            </Pressable>
-
-            <Pressable onPress={() => setMethod("mpesa")}>
-              <BodyText style={{ fontWeight: method === "mpesa" ? "700" : "400" }}>
-                M-Pesa
-              </BodyText>
-            </Pressable>
-
-            <Pressable onPress={() => setMethod("card")}>
-              <BodyText style={{ fontWeight: method === "card" ? "700" : "400" }}>
-                Card
-              </BodyText>
-            </Pressable>
-          </View>
+        <PaymentMethodPicker 
+            form={{payment_method:method,amount}} 
+            handleMethodChange={(val) => setMethod(val)}
+        />
 
           {/* AMOUNT */}
           <FormLabel>Amount</FormLabel>
