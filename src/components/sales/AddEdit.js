@@ -25,6 +25,7 @@ import {
 } from "../../db/query/sales";
 import CreditDiscountForm from "./CreditDiscountForm";
 import EditSaleForm from "./EditSaleForm";
+import PaymentMethodsForm from "./PaymentMethodsForm";
 
 export default function SellPage() {
   const db = useSQLiteContext();
@@ -45,6 +46,7 @@ export default function SellPage() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [editSaleModalVisible, setEditSaleModalVisible] = useState(false);
   const [checkoutModalVisible, setCheckoutModalVisible] = useState(false);
+  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
 
   const [cartExpanded, setCartExpanded] = useState(true);
 
@@ -53,6 +55,7 @@ export default function SellPage() {
     paymentMethod:"",
     discount:"",
     customer_id:null,
+    payments:[],
   })
 
   // Fetch products
@@ -318,6 +321,14 @@ export default function SellPage() {
       )}
 
       <View style={styles.footer}>
+        <Pressable
+          style={globalStyles.secondaryBtn}
+          onPress={() => setPaymentModalVisible(true)}
+        >
+          <BodyText style={globalStyles.secondaryBtnText}>
+            Payments
+          </BodyText>
+        </Pressable>
 
         <Pressable
           style={globalStyles.secondaryBtn}
@@ -359,6 +370,13 @@ export default function SellPage() {
         handleSave={handleSave}
         checkoutModalVisible={checkoutModalVisible}
         setCheckoutModalVisible={setCheckoutModalVisible}
+        paymentsForm={paymentsForm}
+        setPaymentsForm={setPaymentsForm}
+      />
+
+      <PaymentMethodsForm
+        visible={paymentModalVisible}
+        setVisible={setPaymentModalVisible}
         paymentsForm={paymentsForm}
         setPaymentsForm={setPaymentsForm}
       />
