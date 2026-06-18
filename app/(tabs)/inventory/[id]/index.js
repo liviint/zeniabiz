@@ -100,6 +100,11 @@ export default function ProductViewPage() {
               />
 
               <DetailRow
+                label="Batch Number"
+                value={batch.batch_number ? batch.batch_number : "-"}
+              />
+
+              <DetailRow
                 label="Expiry Date"
                 value={batch.expiry_date ? dateFormat(batch.expiry_date) : "-"}
               />

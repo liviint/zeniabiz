@@ -27,6 +27,7 @@ export default function AddProduct({isProduct=true}) {
     minimum_quantity:"",
     created_at:"",
     expiry_date:null,
+    batch_number:"",
     unit:"",
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -182,6 +183,17 @@ const showInventoryFields =
               value={String(form.minimum_quantity)} 
               keyboardType="numeric" 
               onChangeText={(v) => handleChange("minimum_quantity", v)} 
+            />
+          </View>
+        }
+
+        {
+          showInventoryFields &&
+          <View style={globalStyles.formGroup}>
+            <FormLabel>Batch Number</FormLabel>
+            <Input 
+              value={form.batch_number} 
+              onChangeText={(v) => handleChange("batch_number", v)} 
             />
           </View>
         }

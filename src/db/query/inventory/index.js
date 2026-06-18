@@ -10,6 +10,7 @@ export async function upsertProductAndRestocking(
     selling_price = 0,
     stock_quantity = 0,
     minimum_quantity = 5,
+    batch_number,
     expiry_date = null,
     item_type = "product",
     unit,
@@ -54,6 +55,7 @@ export async function upsertProductAndRestocking(
                 stock_quantity: initialStock,
                 cost_price: unitCost,
                 selling_price: sellPrice,
+                batch_number,
                 expiry_date:expiry_date ? expiry_date.toISOString() : null,
               }
             );

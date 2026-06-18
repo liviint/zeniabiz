@@ -24,6 +24,7 @@ export default function RestockForm({
         stock_quantity:0,
         selling_price:"",
         cost_price:"",
+        batch_number:"",
         expiry_date:null,
     }
     const [form,setForm] = useState(initialForm)
@@ -83,6 +84,7 @@ export default function RestockForm({
                 cost_price: cost,
                 selling_price: price,
                 expiry_date,
+                batch_number:form.batch_number,
             }); 
             const updated = await getProductById(db, id);
             setProduct(updated);
@@ -103,6 +105,7 @@ export default function RestockForm({
         setForm({
             stock_quantity: String(batch.quantity_on_hand),
             cost_price: String(batch.cost_price),
+            batch_number:batch.batch_number,
             selling_price: String(batch.selling_price),
             expiry_date: batch.expiry_date
             ? new Date(batch.expiry_date)
@@ -157,6 +160,15 @@ export default function RestockForm({
                         keyboardType="numeric"
                         value={form.selling_price}
                         onChangeText={(val) => handleFormChange("selling_price",val)}
+                        style={styles.input}
+                    />
+                </View>
+
+                <View style={globalStyles.formGroup}>
+                    <FormLabel>Batch Number</FormLabel>
+                    <Input 
+                        value={form.batch_number} 
+                        onChangeText={(v) => handleFormChange("batch_number", v)} 
                         style={styles.input}
                     />
                 </View>
