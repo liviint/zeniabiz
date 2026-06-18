@@ -64,7 +64,10 @@ const EditSaleForm = ({
             transparent 
             animationType="slide"
         >
-        <View style={styles.modalContainer}>
+        <View 
+            style={styles.modalContainer}
+            keyboardShouldPersistTaps="handled"
+        >
             <Card style={styles.modalCard}>
             <BodyText>Edit Item</BodyText>
 

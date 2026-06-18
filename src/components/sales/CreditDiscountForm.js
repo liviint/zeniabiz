@@ -31,10 +31,15 @@ const CreditDiscountForm = ({
 
     const [draftForm, setDraftForm] = useState(paymentsForm);
 
-    const [paymentDraft, setPaymentDraft] = useState({
-        payment_method: "cash",
-        amount: 0,
-    });
+    const [paymentMethodsDraft, setPaymentMethodsDraft] = useState(
+        [
+            {
+                method: "cash",
+                amount: 0,
+                id:Date.now().toString(),
+            }
+        ]
+    );
 
     useEffect(() => {
         if (checkoutModalVisible) {
@@ -91,7 +96,10 @@ const CreditDiscountForm = ({
             transparent
             animationType="slide"
         >
-            <ScrollView contentContainerStyle={styles.modalContainer}>
+            <ScrollView 
+                contentContainerStyle={styles.modalContainer}
+                keyboardShouldPersistTaps="handled"
+            >
                 <Card style={styles.modalCard}>
                     <BodyText>Checkout</BodyText>
 
@@ -143,8 +151,8 @@ const CreditDiscountForm = ({
                     <PaymentMethodsForm 
                         draftForm={draftForm} 
                         setDraftForm={setDraftForm}
-                        paymentDraft={paymentDraft}
-                        setPaymentDraft={setPaymentDraft}
+                        paymentMethodsDraft={paymentMethodsDraft} 
+                        setPaymentMethodsDraft={setPaymentMethodsDraft}
                     />
 
                     <View style={globalStyles.formGroup}>
