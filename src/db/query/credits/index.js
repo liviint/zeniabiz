@@ -1,5 +1,6 @@
 import { newUuid } from "../../utils";
 import { normalizeRange } from "../../../utils/timeNavigatorHelpers";
+import { enqueueSync } from "../../../cloudSync/syncEvent";
 
 export async function getCredits(
   db,
@@ -141,6 +142,7 @@ export async function offsetCreditBalance(db, saleId) {
   const now = new Date().toISOString();
 
   await db.runAsync("BEGIN");
+  let paymentId = newUuid()
 
   try {
     // Create payment record
@@ -162,7 +164,7 @@ export async function offsetCreditBalance(db, saleId) {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
-        newUuid(),
+        paymentId,
         sale.company,
         sale.id,
         sale.customer_id,
@@ -175,6 +177,12 @@ export async function offsetCreditBalance(db, saleId) {
         now,
       ]
     );
+
+    await enqueueSync(db, {
+      model: "payments",
+      record_id: paymentId,
+      operation: "upsert",
+    });
 
     // Update sale
     await db.runAsync(
@@ -189,6 +197,12 @@ export async function offsetCreditBalance(db, saleId) {
       `,
       [now, sale.id]
     );
+
+    await enqueueSync(db, {
+      model: "sales",
+      record_id: sale.id,
+      operation: "upsert",
+    });
 
     await db.runAsync("COMMIT");
   } catch (err) {
@@ -218,4 +232,103 @@ export function getCreditStats(
     totalAmount,
     count,
   };
+}
+
+export async function recordCreditPayment(
+  db,
+  {
+    credit,
+    amount,
+    paymentMethod,
+    note,
+  }
+) {
+  const now = new Date().toISOString();
+
+  const newAmountPaid =
+    Number(credit.amount_paid || 0) + amount;
+
+  const newBalance =
+    Number(credit.total_amount || 0) - newAmountPaid;
+
+  const paymentStatus =
+    newBalance <= 0 ? "PAID" : "PARTIAL";
+
+  await db.runAsync("BEGIN");
+  let paymentId  = newUuid()
+
+  try {
+    await db.runAsync(
+      `
+      INSERT INTO payments (
+        id,
+        company,
+        sale_id,
+        customer_id,
+        payment_type,
+        amount,
+        payment_method,
+        note,
+        date,
+        created_at,
+        updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        paymentId,
+        credit.company,
+        credit.id,
+        credit.customer_id,
+        "Offset",
+        amount,
+        paymentMethod,
+        note || null,
+        now,
+        now,
+        now,
+      ]
+    );
+    await enqueueSync(db, {
+      model: "payments",
+      record_id: paymentId,
+      operation: "upsert",
+    });
+
+    await db.runAsync(
+      `
+      UPDATE sales
+      SET
+        amount_paid = ?,
+        balance_due = ?,
+        payment_status = ?,
+        updated_at = ?
+      WHERE id = ?
+      `,
+      [
+        newAmountPaid,
+        Math.max(newBalance, 0),
+        paymentStatus,
+        now,
+        credit.id,
+      ]
+    );
+
+    await enqueueSync(db, {
+      model: "sales",
+      record_id: credit.id,
+      operation: "upsert",
+    });
+
+    await db.runAsync("COMMIT");
+
+    return {
+      amountPaid: newAmountPaid,
+      balanceDue: Math.max(newBalance, 0),
+      paymentStatus,
+    };
+  } catch (error) {
+    await db.runAsync("ROLLBACK");
+    throw error;
+  }
 }

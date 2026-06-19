@@ -41,6 +41,14 @@ const CreditDiscountForm = ({
     );
 
     useEffect(() => {
+        if(paymentMethodsDraft.length === 1){
+            setPaymentMethodsDraft(prev => {
+                return [{...prev[0],amount:draftForm.amountPaid}]
+            })
+        }
+    },[draftForm.amountPaid])
+
+    useEffect(() => {
         if (checkoutModalVisible) {
             setDraftForm(paymentsForm);
         }

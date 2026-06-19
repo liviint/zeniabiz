@@ -15,10 +15,10 @@ import {
   TextArea,
   FormLabel
 } from "../../../src/components/ThemeProvider/components";
-import { newUuid } from "../../db/utils";
 import { useSQLiteContext } from "expo-sqlite";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import PaymentMethodPicker from "../sales/PaymentMethodsPicker";
+import { recordCreditPayment } from "../../../src/db/query/credits";
 
 export default function RecordPaymentModal({
   visible,
@@ -51,117 +51,48 @@ export default function RecordPaymentModal({
     }
   }, [visible, remainingBalance]);
 
-    const handleSave = async () => {
-        try {
-            const parsedAmount = Number(amount || 0);
+  const handleSave = async () => {
+    try {
+      const parsedAmount = Number(amount || 0);
 
-            if (!parsedAmount || parsedAmount <= 0) {
-                Alert.alert(
-                "Invalid Amount",
-                "Enter a valid payment amount."
-                );
-                return;
-            }
-
-            if (parsedAmount > remainingBalance) {
-                Alert.alert(
-                "Amount Too Large",
-                "Payment cannot exceed remaining balance."
-                );
-                return;
-            }
-
-            setLoading(true);
-
-            const now = new Date().toISOString();
-
-            const newAmountPaid =
-                Number(credit.amount_paid || 0) +
-                parsedAmount;
-
-            const newBalance =
-                Number(credit.total_amount || 0) -
-                newAmountPaid;
-
-            const paymentStatus =
-                newBalance <= 0 ? "PAID" : "PARTIAL";
-
-        await db.runAsync("BEGIN");
-
-        try {
-            // 1. Insert payment
-            await db.runAsync(
-            `
-            INSERT INTO payments (
-                id,
-                company,
-                sale_id,
-                customer_id,
-                payment_type,
-                amount,
-                payment_method,
-                note,
-                date,
-                created_at,
-                updated_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `,
-            [
-                newUuid(),
-                credit.company,
-                credit.id,
-                credit.customer_id,
-                "OFFSET",
-                parsedAmount,
-                paymentMethod,
-                note || null,
-                now,
-                now,
-                now,
-            ]
-            );
-
-            // 2. Update sale
-            await db.runAsync(
-            `
-            UPDATE sales
-            SET
-                amount_paid = ?,
-                balance_due = ?,
-                payment_status = ?,
-                updated_at = ?
-            WHERE id = ?
-            `,
-            [
-                newAmountPaid,
-                Math.max(newBalance, 0),
-                paymentStatus,
-                now,
-                credit.id,
-            ]
-            );
-
-            await db.runAsync("COMMIT");
-
-            onSuccess?.();
-
-            onClose?.();
-        } catch (err) {
-            await db.runAsync("ROLLBACK");
-            throw err;
-        }
-        } catch (err) {
-        console.log(err);
-
+      if (!parsedAmount || parsedAmount <= 0) {
         Alert.alert(
-            "Failed",
-            "Could not record payment."
+          "Invalid Amount",
+          "Enter a valid payment amount."
         );
-        } finally {
-        setLoading(false);
-        }
-    };
+        return;
+      }
+
+      if (parsedAmount > remainingBalance) {
+        Alert.alert(
+          "Amount Too Large",
+          "Payment cannot exceed remaining balance."
+        );
+        return;
+      }
+
+      setLoading(true);
+
+      await recordCreditPayment(db, {
+        credit,
+        amount: parsedAmount,
+        paymentMethod,
+        note,
+      });
+
+      onSuccess?.();
+      onClose?.();
+    } catch (err) {
+      console.log(err);
+
+      Alert.alert(
+        "Failed",
+        "Could not record payment."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Modal
