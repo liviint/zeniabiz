@@ -42,6 +42,7 @@ export function CreditActionsCard({
       ]
     );
   };
+  if(isFullyPaid) return
 
   return (
     <Card style={styles.card}>
@@ -60,8 +61,9 @@ export function CreditActionsCard({
           </BodyText>
         </Pressable>
 
+
         {/* Offset Remaining */}
-        {!isFullyPaid && (
+        {/* {!isFullyPaid && (
           <Pressable
             style={[styles.button, styles.secondaryButton]}
             onPress={handleMarkPaid}
@@ -70,7 +72,7 @@ export function CreditActionsCard({
               Offset Balance
             </BodyText>
           </Pressable>
-        )}
+        )} */}
         
       </View>
 
