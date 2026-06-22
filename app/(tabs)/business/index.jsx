@@ -51,7 +51,7 @@ const BusinessPage = () => {
       />
 
       <InvitedMembers 
-        setRefreshData={setRefreshData}
+        refreshData={refreshData}
       />
 
       <InviteModal
