@@ -13,13 +13,13 @@
   },
   "jest": {
     "jest": {
-    "preset": "jest-expo",
-    "testPathIgnorePatterns": [
-      "/node_modules/",
-      "/android/",
-      "/ios/"
-    ]
-  }
+      "preset": "jest-expo",
+      "testPathIgnorePatterns": [
+        "/node_modules/",
+        "/android/",
+        "/ios/"
+      ]
+    }
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -37,6 +37,7 @@
     "@reduxjs/toolkit": "^2.11.2",
     "@testing-library/react-native": "^13.3.3",
     "axios": "^1.15.2",
+    "eventemitter3": "^5.0.4",
     "expo": "~54.0.34",
     "expo-constants": "~18.0.13",
     "expo-dev-client": "~6.0.21",

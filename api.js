@@ -1,5 +1,8 @@
 import axios from "axios";
 import { getActiveContextSync } from "./src/db/utils";
+import EventEmitter from "eventemitter3";
+
+export const authEvents = new EventEmitter();
 
 // const baseURL = "http://192.168.1.166:8000/api"
 const baseURL = "https://api.zeniabiz.com/api"
@@ -32,7 +35,7 @@ api.interceptors.response.use(
   error => {
     
     if (error.response && error.response.status === 401) {
-      //window.location.href = '/';
+      authEvents.emit("unauthorized");
     }
     return Promise.reject(error);
   }

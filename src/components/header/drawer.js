@@ -17,7 +17,7 @@ export default function Header({ menuOpen, setMenuOpen }) {
     const items = [
         { label: "Credit", path: "/credits", type: "internal" },
         { label: "Customers", path: "/customers", type: "internal" },
-        { label: "My Business", path: "/business", type: "internal" },
+        { label: "Business", path: "/business", type: "internal" },
         { label: "Settings", path: "/settings", type: "internal" },
         { label: "Profile", path: "/auth/profile", type: "internal" },
         { label: "Feedback", path: "/feedback", type: "internal" },

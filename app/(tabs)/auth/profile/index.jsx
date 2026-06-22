@@ -7,9 +7,8 @@ import {
   ScrollView,
   Alert
 } from "react-native";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useRouter ,  useLocalSearchParams} from "expo-router";
-import { clearUserDetails } from "@/store/features/userSlice";
 import { api } from "../../../../api";
 import AccountInfoPage from "../../../../src/components/common/AccountInfoPage";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
@@ -17,9 +16,8 @@ import { Card, BodyText } from "../../../../src/components/ThemeProvider/compone
 import PageLoader from "../../../../src/components/common/PageLoader";
 import { useIsFocused } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
-import { getActiveContextSync, loadActiveContext } from "../../../../src/db/utils";
-import { debugActiveSession,  debugSessionIntegrity} from "../../../../src/db/query/testing";
-import { createSession } from "../../../../src/db/query/users";
+import { getActiveContextSync } from "../../../../src/db/utils";
+import { logoutUser } from "../../../../src/utils/auth/logout";
 
 const ProfileView = () => {
   const db = useSQLiteContext()
@@ -32,19 +30,13 @@ const ProfileView = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(false);
 
-const handleLogoutOk = () => {
-  api({
-      url: "accounts/logout/",
-      method: "POST",
-      data: { refresh: activeContext?.refresh_token },
-    })
-      .catch(error => console.log(error))
-      .finally(async() => {
-        dispatch(clearUserDetails());
-        await createSession(db, {});
-        await loadActiveContext(db)
-        router.push("/auth/profile");
-      });
+const handleLogoutOk = async() => {
+  await logoutUser({
+    db,
+    dispatch,
+    router,
+    refreshToken: activeContext?.refresh_token,
+  });
 }
 const handleTriggerLogout = () => {
   Alert.alert(
@@ -92,14 +84,6 @@ const handleTriggerLogout = () => {
       else setUserData(null)
   },[activeContext, refresh, isFocused])
 
-useEffect(() => {
-  (async () => {
-    // testSetUp(db)
-    debugActiveSession(db)
-    // debugSessionIntegrity(db)
-  })();
-}, [isFocused]);
-
   if (loading) return <PageLoader />
 
   if (!userData) return <AccountInfoPage />
@@ -120,15 +104,6 @@ useEffect(() => {
             }}
           >
             <Text style={styles.btnText}>Update Profile</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => {
-              router.push("/business");
-            }}
-          >
-            <Text style={styles.btnText}>My Business</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
