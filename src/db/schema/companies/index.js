@@ -7,8 +7,16 @@ export async function createCompaniesTables(db) {
       owner_id TEXT NOT NULL,
 
       logo TEXT,
+      
+      phone TEXT,
+      email TEXT,
+      address TEXT,
+      country TEXT,
+
       currency TEXT DEFAULT 'KES',
-      timezone TEXT DEFAULT 'Africa/Nairobi',
+      timezone TEXT,
+
+      receipt_footer TEXT,
 
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),

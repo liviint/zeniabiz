@@ -10,6 +10,7 @@ import {
   applyExpansionOfProductsToServices,
   applyAddBarCodeToProducts,
 } from "../../db/migrations/inventory"
+import { addFieledsToCompaniesTable_22_06_2026 } from "../../db/migrations/companies"
 import {migrateSalesCreditFieldsV1, migratePaymentsFromSalesV1} from "../../db/migrations/credit"
 import { applySalesMigrationsV1, applySalesMigrationsV2 } from "../../db/migrations/sales"
 import { applySyncMigrationsV1, rebuildSyncQueue } from "../../db/migrations/sync"
@@ -98,6 +99,13 @@ const migrateDbIfNeeded = async (db) => {
   if(currentVersion < 7){
     await applyAddBarCodeToProducts(db);
     currentVersion = 7;
+    await setSetting(db, "db_version", currentVersion);
+  }
+
+  //
+  if(currentVersion < 8){
+    await addFieledsToCompaniesTable_22_06_2026(db);
+    currentVersion = 8;
     await setSetting(db, "db_version", currentVersion);
   }
 
