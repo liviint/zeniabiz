@@ -1,0 +1,82 @@
+import { useIsFocused } from "@react-navigation/native";
+import { useEffect, useState } from "react";
+import {
+    FlatList,
+    StyleSheet,
+    View,
+} from "react-native";
+import { api } from "../../../../api";
+import {
+    BodyText,
+    Card,
+} from "../../../../src/components/ThemeProvider/components";
+
+const BusinessPage = ({
+    refreshData
+}) => {
+    const isFocused = useIsFocused();
+
+    const [invites, setInvites] = useState([]);
+
+    const loadBusinessData = async () => {
+        try {
+            const invitesRes = await api.get(`/core/company-invites`);
+            setInvites(invitesRes.data.results);
+        } catch (err) {
+        console.log(
+            "Failed to load business data:",
+            err?.response?.data || err.message,
+        );
+        }
+    };
+
+    useEffect(() => {
+        loadBusinessData();
+    }, [isFocused, refreshData]);
+
+    return (
+        <Card>
+            <BodyText style={styles.sectionTitle}>Invited Members</BodyText>
+
+            <FlatList
+                data={invites}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                <View style={styles.memberRow}>
+                    <BodyText style={styles.memberText}>{item?.email}</BodyText>
+                    <BodyText style={styles.role}>
+                    {item?.accepted ? "Member" : "Pending"}
+                    </BodyText>
+                </View>
+                )}
+            />
+        </Card>
+    );
+};
+
+export default BusinessPage;
+
+const styles = StyleSheet.create({
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: "600",
+        marginBottom: 12,
+    },
+
+    memberRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+        borderColor: "#eee",
+    },
+
+    memberText: {
+        fontSize: 14,
+    },
+
+    role: {
+        fontSize: 12,
+        opacity: 0.6,
+    },
+});
