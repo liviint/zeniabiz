@@ -11,7 +11,7 @@ import {
     Card,
 } from "../../../../src/components/ThemeProvider/components";
 
-const BusinessPage = ({
+const InvitedMembers = ({
     refreshData
 }) => {
     const isFocused = useIsFocused();
@@ -54,7 +54,7 @@ const BusinessPage = ({
     );
 };
 
-export default BusinessPage;
+export default InvitedMembers;
 
 const styles = StyleSheet.create({
     sectionTitle: {

@@ -11,7 +11,7 @@ import { BodyText, Card, CustomPicker,Input, FormLabel } from "../../ThemeProvid
 import { api } from "../../../../api";
 import { Picker } from "@react-native-picker/picker";
 
-const BusinessPage = ({
+const InviteModal = ({
     inviteModal, 
     setInviteModal,
     setRefreshData
@@ -86,7 +86,7 @@ const BusinessPage = ({
     );
 };
 
-export default BusinessPage;
+export default InviteModal;
 
 const styles = StyleSheet.create({
 
