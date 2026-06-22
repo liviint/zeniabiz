@@ -4,8 +4,8 @@ import EventEmitter from "eventemitter3";
 
 export const authEvents = new EventEmitter();
 
-const baseURL = "http://192.168.1.166:8000/api"
-// const baseURL = "https://api.zeniabiz.com/api"
+// const baseURL = "http://192.168.1.166:8000/api"
+const baseURL = "https://api.zeniabiz.com/api"
 export let api = axios.create({baseURL})
 
 api.interceptors.request.use(
