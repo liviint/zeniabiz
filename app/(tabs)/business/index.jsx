@@ -11,6 +11,7 @@ import {
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import BusinessOverview from "../../../src/components/business/overview";
 import EditBusinessModal from "../../../src/components/business/overview/edit";
+import RolesAndPermissions from "../../../src/components/business/rolesAndPermissions";
 
 const BusinessPage = () => {
 
@@ -37,6 +38,8 @@ const BusinessPage = () => {
       <InvitedMembers 
         refreshData={refreshData}
       />
+
+      <RolesAndPermissions />
 
       <InviteModal
         inviteModal={inviteModal}
