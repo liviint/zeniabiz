@@ -1,4 +1,4 @@
-import { addColumnIfNotExists } from "./helpers"
+import { addColumnIfNotExists, deleteColumnIfExists } from "./helpers"
 
 export const addFieledsToCompaniesTable_22_06_2026 = async (db) => {
     await addColumnIfNotExists(
@@ -53,6 +53,47 @@ export const addFieledsToCompaniesTable_22_06_2026 = async (db) => {
         db,
         "companies",
         "default_tax_rate",
+        "TEXT"
+    );
+
+    await addColumnIfNotExists(
+        db,
+        "company_members",
+        "username",
+        "TEXT"
+    );
+
+    await addColumnIfNotExists(
+        db,
+        "company_members",
+        "email",
+        "TEXT"
+    );
+
+    await deleteColumnIfExists(
+        db,
+        "company_members",
+        "role",
+    );
+
+    await addColumnIfNotExists(
+        db,
+        "company_members",
+        "role",
+        "TEXT"
+    );
+
+    await addColumnIfNotExists(
+        db,
+        "company_members",
+        "is_active",
+        "INTEGER NOT NULL DEFAULT 1"
+    );
+
+    await addColumnIfNotExists(
+        db,
+        "company_members",
+        "joined_at",
         "TEXT"
     );
 };

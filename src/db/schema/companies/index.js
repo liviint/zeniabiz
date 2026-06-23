@@ -34,11 +34,17 @@ export async function createCompaniesTables(db) {
       company TEXT NOT NULL,
       user_id TEXT NOT NULL,
 
+      username TEXT,
+      email TEXT,
+      is_active INTEGER NOT NULL DEFAULT 1,
+
       role TEXT NOT NULL CHECK(role IN ('owner', 'admin', 'staff')),
 
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       deleted_at TEXT,
+      deleted_at TEXT,
+      joined_at TEXT,
 
       FOREIGN KEY (company) REFERENCES companies(uuid)
     );

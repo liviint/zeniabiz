@@ -2,7 +2,6 @@ import { useIsFocused } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
-    FlatList,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -11,6 +10,7 @@ import {
 import { api } from "../../../../api";
 import { getActiveContextSync } from "../../../db/utils";
 import { BodyText, Card } from "../../ThemeProvider/components";
+import { getCompanyMembers, upsertCompanyMembers } from "../../../db/query/companies";
 
 const CompanyMembers = ({ setInviteModal }) => {
     const db = useSQLiteContext();
@@ -18,20 +18,47 @@ const CompanyMembers = ({ setInviteModal }) => {
     const [members, setMembers] = useState([]);
     const [isOwner, setIsOwner] = useState(false);
 
+
     const loadBusinessData = async () => {
-        const { user_id } = await getActiveContextSync(db);
-        try {
-            const membersRes = await api.get(`/core/company-members`);
-            setMembers(membersRes.data.results);
-            let owners = membersRes.data.results.filter(
-                (member) => member.role === "owner",
+        const { company, user_id } = await getActiveContextSync(db);
+
+        // Load cached members first
+        const localMembers =  await getCompanyMembers(db, company);
+        console.log(localMembers,"hello local members")
+        if (localMembers.length) {
+            setMembers(localMembers);
+
+            const owner = localMembers.find(
+            (member) =>
+                member.role === "owner" &&
+                member.user_id === user_id
             );
-            let ownerObj = owners.find((owner) => owner.user.uuid === user_id);
-            setIsOwner(!!ownerObj);
+            setIsOwner(!!owner);
+        }
+
+        try {
+            const membersRes = await api.get("/core/company-members");
+
+            const apiMembers = membersRes.data.results;
+            console.log(apiMembers,"hello members")
+
+            await upsertCompanyMembers(db,company,apiMembers);
+
+            setMembers(apiMembers);
+
+            const owner = apiMembers.find(
+            (member) =>
+                member.role === "owner" &&
+                member.user.uuid === user_id
+            );
+
+            setIsOwner(!!owner);
+
         } catch (err) {
             console.log(
-                "Failed to load business data:",
-                err?.response?.data || err.message,
+            "Failed to load company members:",
+            err?.response?.data ||
+            err.message
             );
         }
     };
@@ -45,13 +72,13 @@ const CompanyMembers = ({ setInviteModal }) => {
             <BodyText style={styles.sectionTitle}>Company Members</BodyText>
 
             {members.map((item) => (
-                <View key={item.id} style={styles.memberRow}>
+                <View key={item.id || item.uuid} style={styles.memberRow}>
                     <BodyText style={styles.memberText}>
-                    {item?.user?.username}
+                        {item?.user?.username || item?.username}
                     </BodyText>
 
                     <BodyText style={styles.role}>
-                    {item.role}
+                        {item.role}
                     </BodyText>
                 </View>
                 ))}

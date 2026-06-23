@@ -76,6 +76,75 @@ export async function getCompany(db, companyId) {
   );
 }
 
+export async function upsertCompanyMember(
+  db,
+  company,
+  member
+) {
+  await db.runAsync(
+    `
+    INSERT INTO company_members (
+      uuid,
+      company,
+      user_id,
+      username,
+      email,
+      role,
+      is_active,
+      joined_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+
+    ON CONFLICT(uuid) DO UPDATE SET
+      company = excluded.company,
+      user_id = excluded.user_id,
+      username = excluded.username,
+      email = excluded.email,
+      role = excluded.role,
+      is_active = excluded.is_active,
+      joined_at = excluded.joined_at
+    `,
+    [
+      member.id,
+      company,
+      member.user.uuid,
+      member.user.username,
+      member.user.email,
+      member.role,
+      member.is_active ? 1 : 0,
+      member.joined_at,
+    ]
+  );
+}
+
+export async function upsertCompanyMembers(
+  db,
+  company,
+  members
+) {
+  await db.withTransactionAsync(async () => {
+    for (const member of members) {
+      await upsertCompanyMember(db,company, member);
+    }
+  });
+}
+
+export async function getCompanyMembers(
+  db,
+  companyId
+) {
+  return await db.getAllAsync(
+    `
+    SELECT *
+    FROM company_members
+    WHERE company = ?
+      AND deleted_at IS NULL
+    ORDER BY username ASC
+    `,
+    [companyId]
+  );
+}
+
 export async function ensureLocalCompany(db, userUuid) {
   const existing = await db.getFirstAsync(
     `SELECT * FROM companies LIMIT 1`
