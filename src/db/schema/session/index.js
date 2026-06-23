@@ -5,6 +5,7 @@ export async function createSessionTables(db) {
 
             user_uuid TEXT UNIQUE,
             company_uuid TEXT,
+            company_role TEXT,
 
             access_token TEXT,
             refresh_token TEXT,

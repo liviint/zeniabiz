@@ -64,9 +64,9 @@ export default function Index() {
       });
 
 
-    const { access, refresh, user, company_uuid } = response.data;
+    const { access, refresh, user, company_uuid,company_role } = response.data;
     await upsertLocalUser(db, user);
-    await createSession(db, { user, access, refresh,company_uuid });
+    await createSession(db, { user, access, refresh,company_uuid ,company_role});
     await loadActiveContext(db)
     dispatch(triggerSync());
     dispatch(setUserDetails(response.data));

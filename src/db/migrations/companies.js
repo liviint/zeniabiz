@@ -96,4 +96,10 @@ export const addFieledsToCompaniesTable_22_06_2026 = async (db) => {
         "joined_at",
         "TEXT"
     );
+    await addColumnIfNotExists(
+        db,
+        "app_session",
+        "company_role",
+        "TEXT"
+    );
 };

@@ -89,7 +89,7 @@ export async function getSessionCompany(db, user) {
   return session?.company_uuid || user?.company_id || null;
 }
 
-export async function createSession(db, { user, access, refresh, company_uuid = null  }) {
+export async function createSession(db, { user, access, refresh, company_uuid = null ,company_role=null  }) {
   const now = new Date().toISOString();
 
   try {
@@ -115,16 +115,18 @@ export async function createSession(db, { user, access, refresh, company_uuid = 
       INSERT INTO app_session (
         user_uuid,
         company_uuid,
+        company_role,
         access_token,
         refresh_token,
         created_at,
         updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
       `,
       [
         user?.uuid,   // MUST NEVER BE NULL
         companyUuid,
+        company_role,
         access,
         refresh,
         now,

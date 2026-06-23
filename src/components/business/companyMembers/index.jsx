@@ -24,7 +24,6 @@ const CompanyMembers = ({ setInviteModal }) => {
 
         // Load cached members first
         const localMembers =  await getCompanyMembers(db, company);
-        console.log(localMembers,"hello local members")
         if (localMembers.length) {
             setMembers(localMembers);
 
