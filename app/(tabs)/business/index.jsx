@@ -13,8 +13,7 @@ import BusinessOverview from "../../../src/components/business/overview";
 import EditBusinessModal from "../../../src/components/business/overview/edit";
 
 const BusinessPage = () => {
-
-
+  
   const { globalStyles } = useThemeStyles();
   const [inviteModal, setInviteModal] = useState(false);
   const [refreshData, setRefreshData] = useState(0);

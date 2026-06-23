@@ -4,12 +4,12 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
-    Modal,
 } from "react-native";
 import { useThemeStyles } from "../../../hooks/useThemeStyles";
-import { BodyText, Card, CustomPicker,Input, FormLabel } from "../../ThemeProvider/components";
+import { BodyText, CustomPicker,Input, FormLabel } from "../../ThemeProvider/components";
 import { api } from "../../../../api";
 import { Picker } from "@react-native-picker/picker";
+import AddEditModal from "../../common/addEditModal";
 
 const InviteModal = ({
     inviteModal, 
@@ -34,12 +34,12 @@ const InviteModal = ({
     };
 
     return (
-        <Modal visible={inviteModal} transparent animationType="slide">
-            <View style={styles.modalOverlay}>
-            <Card style={styles.modal}>
-                <BodyText style={styles.sectionTitle}>Invite User</BodyText>
+        <AddEditModal
+            visible={inviteModal}
+        >
+            <BodyText style={styles.sectionTitle}>Invite User</BodyText>
 
-                <View style={globalStyles.formGroup}>
+            <View style={globalStyles.formGroup}>
                 <FormLabel >Email address</FormLabel>
                 <Input
                     value={inviteFormData.email}
@@ -48,24 +48,24 @@ const InviteModal = ({
                     autoCapitalize="none"
                     keyboardType="email-address"
                 />
-                </View>
-                
+            </View>
+            
 
-                <View style={globalStyles.formGroup}>
-                    <FormLabel >Select Role</FormLabel>
-                    <CustomPicker
+            <View style={globalStyles.formGroup}>
+                <FormLabel >Select Role</FormLabel>
+                <CustomPicker
                     selectedValue={inviteFormData.role}
                     onValueChange={(value) =>
                         setinviteFormData(prev => ({ ...prev, role: value }))
-                    }
-                    >
+                }
+                >
                     <Picker.Item label="Staff" value="staff" />
                     <Picker.Item label="Manager" value="manager" />
-                    </CustomPicker>
-                </View>
+                </CustomPicker>
+            </View>
 
-                {/* Actions */}
-                <View style={styles.modalActions}>
+            {/* Actions */}
+            <View style={styles.modalActions}>
                 <TouchableOpacity
                     onPress={() => setInviteModal(false)}
                     style={globalStyles.secondaryBtn}
@@ -79,10 +79,8 @@ const InviteModal = ({
                 >
                     <Text style={globalStyles.primaryBtnText}>Send</Text>
                 </TouchableOpacity>
-                </View>
-            </Card>
             </View>
-        </Modal>
+        </AddEditModal>
     );
 };
 
@@ -94,17 +92,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "600",
         marginBottom: 12,
-    },
-
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: "rgba(0,0,0,0.4)",
-        justifyContent: "center",
-        padding: 20,
-    },
-
-    modal: {
-        borderRadius: 12,
     },
 
     input: {
