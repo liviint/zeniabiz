@@ -1,5 +1,81 @@
 import { newUuid } from "../../utils";
 
+export async function upsertCompany(db, company) {
+  await db.runAsync(
+    `
+    INSERT INTO companies (
+      uuid,
+      name,
+      owner_id,
+      logo,
+      phone,
+      email,
+      address,
+      country,
+      tax_pin,
+      business_registration_number,
+      website,
+      default_tax_rate,
+      currency,
+      timezone,
+      receipt_footer,
+      created_at,
+      updated_at,
+      deleted_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+
+    ON CONFLICT(uuid) DO UPDATE SET
+      name = excluded.name,
+      owner_id = excluded.owner_id,
+      logo = excluded.logo,
+      phone = excluded.phone,
+      email = excluded.email,
+      address = excluded.address,
+      country = excluded.country,
+      tax_pin = excluded.tax_pin,
+      business_registration_number = excluded.business_registration_number,
+      website = excluded.website,
+      default_tax_rate = excluded.default_tax_rate,
+      currency = excluded.currency,
+      timezone = excluded.timezone,
+      receipt_footer = excluded.receipt_footer,
+      updated_at = excluded.updated_at,
+      deleted_at = excluded.deleted_at
+    `,
+    [
+      company.id,
+      company.name,
+      company.owner,
+      company.logo,
+      company.phone,
+      company.email,
+      company.address,
+      company.country,
+      company.tax_pin,
+      company.business_registration_number,
+      company.website,
+      company.default_tax_rate,
+      company.currency,
+      company.timezone,
+      company.receipt_footer,
+      company.created_at,
+      company.updated_at,
+      company.deleted_at,
+    ]
+  );
+}
+export async function getCompany(db, companyId) {
+  return await db.getFirstAsync(
+    `
+    SELECT *
+    FROM companies
+    WHERE uuid = ?
+    `,
+    [companyId]
+  );
+}
+
 export async function ensureLocalCompany(db, userUuid) {
   const existing = await db.getFirstAsync(
     `SELECT * FROM companies LIMIT 1`

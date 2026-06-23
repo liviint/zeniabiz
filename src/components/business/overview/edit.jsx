@@ -16,6 +16,7 @@ import {
 import AddEditModal from "../../common/addEditModal";
 import { getActiveContextSync } from "../../../db/utils";
 import { useSQLiteContext } from "expo-sqlite";
+import { upsertCompany } from "../../../db/query/companies";
 
 
 const EditBusinessModal = ({
@@ -61,6 +62,7 @@ const EditBusinessModal = ({
             `/core/companies/${company}/`,
             formData
         );
+        await upsertCompany(formData)
         setRefreshData(prev => prev + 1)
         setVisible(false);
         if (onSuccess) {

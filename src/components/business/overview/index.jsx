@@ -13,6 +13,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { api } from "../../../../api";
 import { dateFormat } from "../../../utils/dateFormat";
 import { useThemeStyles } from "../../../hooks/useThemeStyles";
+import { getCompany , upsertCompany} from "../../../db/query/companies"
 
 const BusinessOverview = ({
   setEditBusiness,
@@ -26,20 +27,33 @@ const BusinessOverview = ({
 
   const [company, setCompany] = useState(null);
 
-
   const loadBusinessData = async () => {
-    const { company } = await getActiveContextSync(db);
+    const { company: companyId } = await getActiveContextSync(db);
+
+    const localCompany = await getCompany(db, companyId);
+    if (localCompany) {
+      setCompany(localCompany);
+      setBusinessData(localCompany);
+    }
+
     try {
-      const companyRes = await api.get(`/core/companies/${company}`);
-      setCompany(companyRes.data);
-      setBusinessData(companyRes.data)
+      const companyRes = await api.get(
+        `/core/companies/${companyId}`
+      );
+
+      const companyData = companyRes.data;
+      await upsertCompany(db, companyData);
+
+      setCompany(companyData);
+      setBusinessData(companyData);
+
     } catch (err) {
       console.log(
-        "Failed to load business data:",
-        err?.response?.data || err.message,
+        "Failed to load company from API:",
+        err?.response?.data || err.message
       );
     }
-  };
+};
 
   const handleEdit = () => {
     setEditBusiness(true)
