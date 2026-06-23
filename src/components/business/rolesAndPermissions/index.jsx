@@ -27,13 +27,13 @@ const RolesAndPermissions = () => {
 
       <RoleItem
         name="Manager"
-        description="Manage inventory, sales, expenses and customers."
+        description="Manage inventory, sales, customers, expenses, and view reports."
       />
 
       <RoleItem
         name="Staff"
-        description="Create sales and view business information."
-      />
+        description="View and add products, services, customers, and create sales."
+        />
     </Card>
   );
 };
