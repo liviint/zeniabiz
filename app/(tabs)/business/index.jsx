@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  StyleSheet,
   View,
 } from "react-native";
 import InviteModal from "../../../src/components/business/inviteModal";
@@ -11,6 +10,7 @@ import {
 } from "../../../src/components/ThemeProvider/components";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import BusinessOverview from "../../../src/components/business/overview";
+import EditBusinessModal from "../../../src/components/business/overview/edit";
 
 const BusinessPage = () => {
 
@@ -18,12 +18,15 @@ const BusinessPage = () => {
   const { globalStyles } = useThemeStyles();
   const [inviteModal, setInviteModal] = useState(false);
   const [refreshData, setRefreshData] = useState(0);
+  const [editBusiness,setEditBusiness] = useState(false)
 
   return (
-    <View style={[globalStyles.container, styles.container]}>
+    <View style={globalStyles.container}>
       <BodyText style={globalStyles.title}>Business Overview</BodyText>
 
-      <BusinessOverview />
+      <BusinessOverview 
+        setEditBusiness={setEditBusiness}
+      />
 
       <CompanyMembers 
         setInviteModal={setInviteModal}
@@ -38,14 +41,16 @@ const BusinessPage = () => {
         setInviteModal={setInviteModal}
         setRefreshData={setRefreshData}
       />
+
+      <EditBusinessModal 
+        visible={editBusiness}
+        setVisible={setEditBusiness}
+      />
+
     </View>
   );
 };
 
 export default BusinessPage;
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-  },
-});
+

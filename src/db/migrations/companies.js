@@ -31,4 +31,28 @@ export const addFieledsToCompaniesTable_22_06_2026 = async (db) => {
         "receipt_footer",
         "TEXT"
     );
+    await addColumnIfNotExists(
+        db,
+        "companies",
+        "tax_pin",
+        "TEXT"
+    );
+    await addColumnIfNotExists(
+        db,
+        "companies",
+        "business_registration_number",
+        "TEXT"
+    );
+    await addColumnIfNotExists(
+        db,
+        "companies",
+        "website",
+        "TEXT"
+    );
+    await addColumnIfNotExists(
+        db,
+        "companies",
+        "default_tax_rate",
+        "TEXT"
+    );
 };

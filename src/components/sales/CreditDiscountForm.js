@@ -1,24 +1,20 @@
 import { useEffect, useState } from "react";
 import {
-    Modal,
     Pressable,
-    ScrollView,
     View,
 } from "react-native";
 import {
     BodyText,
-    Card,
     FormLabel,
     Input,
 } from "../../../src/components/ThemeProvider/components";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import CustomersPicker from "../credit/CustomersPicker";
 import PaymentMethodsForm from "./PaymentMethodsForm";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import AddEditModal from "../common/addEditModal";
 
 const CreditDiscountForm = ({
     markedPrice,
-    styles,
     handleSave,
     checkoutModalVisible,
     setCheckoutModalVisible,
@@ -124,93 +120,82 @@ const CreditDiscountForm = ({
     const balanceUi = balance >= 0  ? balance : 0
 
     return (
-        <Modal
+        <AddEditModal
             visible={checkoutModalVisible}
-            transparent
-            animationType="slide"
         >
-            <KeyboardAwareScrollView
-                contentContainerStyle={{...styles.modalContainer, paddingBottom: 43}}
-                /* contentContainerStyle={{  }} */
-                enableOnAndroid
-                extraScrollHeight={20}
-                keyboardShouldPersistTaps="handled"
+            <BodyText>Checkout</BodyText>
+
+            <View style={globalStyles.formGroup}>
+                <FormLabel>Marked Price</FormLabel>
+                <BodyText>{markedPrice.toFixed(2)}</BodyText>
+            </View>
+
+            <View style={globalStyles.formGroup}>
+                <FormLabel>Amount Paid</FormLabel>
+                <Input
+                    keyboardType="numeric"
+                    value={String(draftForm.amountPaid ?? 0)}
+                    onChangeText={(v) =>
+                        setDraftForm((prev) => ({
+                            ...prev,
+                            amountPaid: toNumber(v),
+                        }))
+                    }
+                />
+            </View>
+
+            <View style={globalStyles.formGroup}>
+                <FormLabel>Discount</FormLabel>
+                <Input
+                    keyboardType="numeric"
+                    value={String(draftForm.discount ?? 0)}
+                    onChangeText={(v) =>
+                        setDraftForm((prev) => ({
+                            ...prev,
+                            discount: toNumber(v),
+                        }))
+                    }
+                />
+            </View>
+
+            <View style={globalStyles.formGroup}>
+                <FormLabel>Balance (Credit)</FormLabel>
+                <BodyText style={{ color: "#FF6B6B" }}>
+                    {balanceUi.toFixed(2)}
+                </BodyText>
+            </View>
+
+            <CustomersPicker
+                form={draftForm}
+                handleCustomerChange={handleCustomerChange}
+            />
+
+            <PaymentMethodsForm 
+                draftForm={draftForm} 
+                setDraftForm={setDraftForm}
+                paymentMethodsDraft={paymentMethodsDraft} 
+                setPaymentMethodsDraft={setPaymentMethodsDraft}
+            />
+
+            <View style={globalStyles.formGroup}>
+                <Pressable
+                    style={globalStyles.primaryBtn}
+                    onPress={handleValidationAndSaving}
+                >
+                    <BodyText style={globalStyles.primaryBtnText}>
+                        Complete Sale
+                    </BodyText>
+                </Pressable>
+            </View>
+
+            <Pressable
+                style={globalStyles.secondaryBtn}
+                onPress={handleCancel}
             >
-                <Card style={styles.modalCard}>
-                    <BodyText>Checkout</BodyText>
+                <BodyText>Cancel</BodyText>
+            </Pressable>
 
-                    <View style={globalStyles.formGroup}>
-                        <FormLabel>Marked Price</FormLabel>
-                        <BodyText>{markedPrice.toFixed(2)}</BodyText>
-                    </View>
-
-                    <View style={globalStyles.formGroup}>
-                        <FormLabel>Amount Paid</FormLabel>
-                        <Input
-                            keyboardType="numeric"
-                            value={String(draftForm.amountPaid ?? 0)}
-                            onChangeText={(v) =>
-                                setDraftForm((prev) => ({
-                                    ...prev,
-                                    amountPaid: toNumber(v),
-                                }))
-                            }
-                        />
-                    </View>
-
-                    <View style={globalStyles.formGroup}>
-                        <FormLabel>Discount</FormLabel>
-                        <Input
-                            keyboardType="numeric"
-                            value={String(draftForm.discount ?? 0)}
-                            onChangeText={(v) =>
-                                setDraftForm((prev) => ({
-                                    ...prev,
-                                    discount: toNumber(v),
-                                }))
-                            }
-                        />
-                    </View>
-
-                    <View style={globalStyles.formGroup}>
-                        <FormLabel>Balance (Credit)</FormLabel>
-                        <BodyText style={{ color: "#FF6B6B" }}>
-                            {balanceUi.toFixed(2)}
-                        </BodyText>
-                    </View>
-
-                    <CustomersPicker
-                        form={draftForm}
-                        handleCustomerChange={handleCustomerChange}
-                    />
-
-                    <PaymentMethodsForm 
-                        draftForm={draftForm} 
-                        setDraftForm={setDraftForm}
-                        paymentMethodsDraft={paymentMethodsDraft} 
-                        setPaymentMethodsDraft={setPaymentMethodsDraft}
-                    />
-
-                    <View style={globalStyles.formGroup}>
-                        <Pressable
-                            style={globalStyles.primaryBtn}
-                            onPress={handleValidationAndSaving}
-                        >
-                            <BodyText style={globalStyles.primaryBtnText}>
-                                Complete Sale
-                            </BodyText>
-                        </Pressable>
-                    </View>
-
-                    <Pressable
-                        style={globalStyles.secondaryBtn}
-                        onPress={handleCancel}
-                    >
-                        <BodyText>Cancel</BodyText>
-                    </Pressable>
-                </Card>
-            </KeyboardAwareScrollView>
-        </Modal>
+        </AddEditModal>
     );
 };
 

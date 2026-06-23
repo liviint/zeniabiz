@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
+  TouchableOpacity
 } from "react-native";
 import {
   BodyText,
@@ -11,11 +12,15 @@ import { getActiveContextSync } from "../../../db/utils";
 import { useSQLiteContext } from "expo-sqlite";
 import { api } from "../../../../api";
 import { dateFormat } from "../../../utils/dateFormat";
+import { useThemeStyles } from "../../../hooks/useThemeStyles";
 
-const BusinessOverview = () => {
+const BusinessOverview = ({
+  setEditBusiness
+}) => {
 
   const db = useSQLiteContext();
   const isFocused = useIsFocused();
+  const { globalStyles } = useThemeStyles()
 
   const [company, setCompany] = useState(null);
 
@@ -34,46 +39,62 @@ const BusinessOverview = () => {
     }
   };
 
+  const handleEdit = () => {
+    setEditBusiness(true)
+  }
+
   useEffect(() => {
     loadBusinessData();
   }, [isFocused]);
 
   return (
-    <View style={styles.overviewCard}>
+  <View style={styles.overviewCard}>
 
-      <View style={styles.row}>
-        <BodyText>Name</BodyText>
-        <BodyText>{company?.name}</BodyText>
-      </View>
+    <View style={styles.header}>
+      <BodyText style={styles.title}>Business Overview</BodyText>
+      <TouchableOpacity style={globalStyles.editBtn} onPress={handleEdit}>
+        <BodyText style={styles.editBtnText}>Edit</BodyText>
+      </TouchableOpacity>
+    </View>
 
-      <View style={styles.row}>
-        <BodyText>Currency</BodyText>
-        <BodyText>{company?.currency}</BodyText>
-      </View>
+    <View style={styles.row}>
+      <BodyText>Name</BodyText>
+      <BodyText>{company?.name}</BodyText>
+    </View>
 
+    <View style={styles.row}>
+      <BodyText>Currency</BodyText>
+      <BodyText>{company?.currency}</BodyText>
+    </View>
 
-      <View style={styles.row}>
-        <BodyText>Created</BodyText>
-        <BodyText>
-          {dateFormat(company?.created_at)}
-        </BodyText>
-      </View>
-</View>
-  );
+    <View style={styles.row}>
+      <BodyText>Created</BodyText>
+      <BodyText>{dateFormat(company?.created_at)}</BodyText>
+    </View>
+
+  </View>
+);
 };
 
 export default BusinessOverview;
 
 const styles = StyleSheet.create({
-  overviewCard: {
-  padding: 16,
-  borderRadius: 12,
-  marginBottom: 20,
-},
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
 
-row: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  marginBottom: 10,
-},
+  overviewCard: {
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
 });

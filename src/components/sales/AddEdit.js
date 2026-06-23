@@ -358,7 +358,6 @@ export default function SellPage() {
 
       <CreditDiscountForm 
         markedPrice={markedPrice}
-        styles={styles}
         handleSave={handleSave}
         checkoutModalVisible={checkoutModalVisible}
         setCheckoutModalVisible={setCheckoutModalVisible}
@@ -409,14 +408,5 @@ const styles = StyleSheet.create({
     justifyContent:"flex-end",
     gap:8,
     flexWrap:"wrap",
-  },
-  modalContainer: {
-    flexGrow: 1,
-    justifyContent: "center",
-    padding: 16,
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  modalCard: {
-    padding: 16,
   },
 });

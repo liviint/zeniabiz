@@ -13,6 +13,11 @@ export async function createCompaniesTables(db) {
       address TEXT,
       country TEXT,
 
+      tax_pin TEXT,
+      business_registration_number TEXT,
+      website TEXT,
+      default_tax_rate TEXT,
+
       currency TEXT DEFAULT 'KES',
       timezone TEXT,
 
