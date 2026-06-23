@@ -19,6 +19,7 @@ const BusinessPage = () => {
   const [inviteModal, setInviteModal] = useState(false);
   const [refreshData, setRefreshData] = useState(0);
   const [editBusiness,setEditBusiness] = useState(false)
+  const [businessData,setBusinessData] = useState(null)
 
   return (
     <View style={globalStyles.container}>
@@ -26,6 +27,8 @@ const BusinessPage = () => {
 
       <BusinessOverview 
         setEditBusiness={setEditBusiness}
+        setBusinessData={setBusinessData}
+        refreshData={refreshData}
       />
 
       <CompanyMembers 
@@ -45,6 +48,8 @@ const BusinessPage = () => {
       <EditBusinessModal 
         visible={editBusiness}
         setVisible={setEditBusiness}
+        businessData={businessData}
+        setRefreshData={setRefreshData}
       />
 
     </View>

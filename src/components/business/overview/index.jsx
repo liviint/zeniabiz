@@ -15,7 +15,9 @@ import { dateFormat } from "../../../utils/dateFormat";
 import { useThemeStyles } from "../../../hooks/useThemeStyles";
 
 const BusinessOverview = ({
-  setEditBusiness
+  setEditBusiness,
+  setBusinessData,
+  refreshData,
 }) => {
 
   const db = useSQLiteContext();
@@ -30,7 +32,7 @@ const BusinessOverview = ({
     try {
       const companyRes = await api.get(`/core/companies/${company}`);
       setCompany(companyRes.data);
-
+      setBusinessData(companyRes.data)
     } catch (err) {
       console.log(
         "Failed to load business data:",
@@ -45,7 +47,7 @@ const BusinessOverview = ({
 
   useEffect(() => {
     loadBusinessData();
-  }, [isFocused]);
+  }, [isFocused,refreshData]);
 
   return (
   <View style={styles.overviewCard}>

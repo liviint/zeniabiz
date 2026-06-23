@@ -4,29 +4,30 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
-    Modal,
 } from "react-native";
 
 import { api } from "../../../../api";
 import { useThemeStyles } from "../../../hooks/useThemeStyles";
 import {
     BodyText,
-    Card,
     FormLabel,
     Input,
 } from "../../ThemeProvider/components";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import AddEditModal from "../../common/addEditModal";
+import { getActiveContextSync } from "../../../db/utils";
+import { useSQLiteContext } from "expo-sqlite";
+
 
 const EditBusinessModal = ({
     visible,
     setVisible,
-    company,
     onSuccess,
+    businessData,
+    setRefreshData,
 }) => {
+    const db = useSQLiteContext();
     const { globalStyles } = useThemeStyles();
-
-    const [formData, setFormData] = useState({
+    const initialForm =  {
         name: "",
         phone: "",
         email: "",
@@ -35,22 +36,13 @@ const EditBusinessModal = ({
         currency: "KES",
         timezone: "",
         receipt_footer: "",
-    });
+    }
+    const [formData, setFormData] = useState(initialForm);
 
     useEffect(() => {
-        if (!company) return;
+        setFormData(businessData ? businessData : initialForm)
+    },[businessData])
 
-        setFormData({
-        name: company.name || "",
-        phone: company.phone || "",
-        email: company.email || "",
-        address: company.address || "",
-        country: company.country || "",
-        currency: company.currency || "KES",
-        timezone: company.timezone || "",
-        receipt_footer: company.receipt_footer || "",
-        });
-    }, [company]);
 
     const updateField = (field, value) => {
         setFormData(prev => ({
@@ -63,15 +55,14 @@ const EditBusinessModal = ({
         if (!formData.name.trim()) {
         return alert("Business name is required");
         }
-
+        const { company } =  await getActiveContextSync(db);
         try {
         await api.patch(
-            `/core/companies/${company.uuid}/`,
+            `/core/companies/${company}/`,
             formData
         );
-
+        setRefreshData(prev => prev + 1)
         setVisible(false);
-
         if (onSuccess) {
             onSuccess();
         }
