@@ -44,18 +44,17 @@ const CompanyMembers = ({ setInviteModal }) => {
         <Card>
             <BodyText style={styles.sectionTitle}>Company Members</BodyText>
 
-            <FlatList
-                data={members}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                <View style={styles.memberRow}>
+            {members.map((item) => (
+                <View key={item.id} style={styles.memberRow}>
                     <BodyText style={styles.memberText}>
                     {item?.user?.username}
                     </BodyText>
-                    <BodyText style={styles.role}>{item.role}</BodyText>
+
+                    <BodyText style={styles.role}>
+                    {item.role}
+                    </BodyText>
                 </View>
-                )}
-            />
+                ))}
 
             {isOwner ? (
                 <TouchableOpacity

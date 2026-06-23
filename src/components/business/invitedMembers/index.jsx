@@ -37,19 +37,17 @@ const InvitedMembers = ({
     return (
         <Card>
             <BodyText style={styles.sectionTitle}>Invited Members</BodyText>
+            {invites.map((item) => (
+                <View key={item.id} style={styles.memberRow}>
+                    <BodyText style={styles.memberText}>
+                    {item?.email}
+                    </BodyText>
 
-            <FlatList
-                data={invites}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                <View style={styles.memberRow}>
-                    <BodyText style={styles.memberText}>{item?.email}</BodyText>
                     <BodyText style={styles.role}>
-                    {item?.accepted ? "Member" : "Pending"}
+                    {item.role}
                     </BodyText>
                 </View>
-                )}
-            />
+            ))}
         </Card>
     );
 };

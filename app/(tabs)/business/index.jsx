@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  View,
+  ScrollView,
 } from "react-native";
 import InviteModal from "../../../src/components/business/inviteModal";
 import CompanyMembers from "../../../src/components/business/companyMembers"
@@ -13,7 +13,7 @@ import BusinessOverview from "../../../src/components/business/overview";
 import EditBusinessModal from "../../../src/components/business/overview/edit";
 
 const BusinessPage = () => {
-  
+
   const { globalStyles } = useThemeStyles();
   const [inviteModal, setInviteModal] = useState(false);
   const [refreshData, setRefreshData] = useState(0);
@@ -21,8 +21,8 @@ const BusinessPage = () => {
   const [businessData,setBusinessData] = useState(null)
 
   return (
-    <View style={globalStyles.container}>
-      <BodyText style={globalStyles.title}>Business Overview</BodyText>
+    <ScrollView style={globalStyles.container}>
+      <BodyText style={globalStyles.title}>Business Profile</BodyText>
 
       <BusinessOverview 
         setEditBusiness={setEditBusiness}
@@ -51,7 +51,7 @@ const BusinessPage = () => {
         setRefreshData={setRefreshData}
       />
 
-    </View>
+    </ScrollView>
   );
 };
 
