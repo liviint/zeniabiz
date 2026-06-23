@@ -3,9 +3,13 @@ import { Tabs } from "expo-router";
 import React from "react";
 import { HapticTab } from "../../src/components/haptic-tab";
 import { useThemeStyles } from "../../src/hooks/useThemeStyles";
+import {  canViewReports } from "../../src/utils/rolesAndPermissions/index"
 
 export default function TabLayout() {
   const { colors } = useThemeStyles();
+
+  const isAllowedToViewReports = canViewReports()
+
   return (
     <>
       <Tabs
@@ -34,6 +38,7 @@ export default function TabLayout() {
           }}
         />
 
+        {isAllowedToViewReports ? 
         <Tabs.Screen
           name="dashboard"
           options={{
@@ -43,6 +48,14 @@ export default function TabLayout() {
             ),
           }}
         />
+        :
+        <Tabs.Screen
+          name="dashboard"
+          options={{
+            href: null,
+          }}
+        />
+      }
 
         <Tabs.Screen
           name="sales"
