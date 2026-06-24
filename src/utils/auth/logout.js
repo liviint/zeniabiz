@@ -27,7 +27,7 @@ export async function logoutUser({
 
         dispatch(clearUserDetails());
 
-        await createSession(db, {company_role:ctx.company_role, is_authenticated:false,company_uuid:ctx.company_uuid});
+        await createSession(db, {company_role:ctx.company_role,company_uuid:ctx.company_uuid});
 
         await loadActiveContext(db)
 

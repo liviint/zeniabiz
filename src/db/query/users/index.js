@@ -124,11 +124,11 @@ export async function createSession(db, { user, access, refresh, company_uuid = 
       VALUES (?, ?, ?, ?, ?, ?, ?)
       `,
       [
-        user?.uuid,   // MUST NEVER BE NULL
+        user?.uuid,   
         companyUuid,
         company_role,
-        access,
-        refresh,
+        access ? access : null,
+        refresh ? refresh : null,
         now,
         now
       ]

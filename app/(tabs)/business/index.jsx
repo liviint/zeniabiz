@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ScrollView,
 } from "react-native";
@@ -13,8 +13,11 @@ import BusinessOverview from "../../../src/components/business/overview";
 import EditBusinessModal from "../../../src/components/business/overview/edit";
 import RolesAndPermissions from "../../../src/components/business/rolesAndPermissions";
 import { canViewReports, isLoggedIn } from "../../../src/utils/rolesAndPermissions"
+import { useIsFocused } from "@react-navigation/native";
 
 const BusinessPage = () => {
+
+  const isFocused = useIsFocused()
 
   const { globalStyles } = useThemeStyles();
   const [inviteModal, setInviteModal] = useState(false);
@@ -22,8 +25,13 @@ const BusinessPage = () => {
   const [editBusiness,setEditBusiness] = useState(false)
   const [businessData,setBusinessData] = useState(null)
 
-  const isAllowedToViewReports = canViewReports()
-  const isUserLoggedIn = isLoggedIn()
+  const [isAllowedToViewReports,setIsAllowedToViewReport] = useState(canViewReports())
+  const [isUserLoggedIn,setIsUserLoggedIn] = useState(isLoggedIn())
+
+  useEffect(() => {
+    setIsUserLoggedIn(isLoggedIn())
+    setIsAllowedToViewReport(canViewReports())
+  },[isFocused])
 
   return (
     <ScrollView style={globalStyles.container}>
