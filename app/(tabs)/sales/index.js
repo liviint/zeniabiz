@@ -2,7 +2,14 @@ import { useIsFocused } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { Pressable, RefreshControl, SectionList, StyleSheet, View, } from "react-native";
+import { 
+    Pressable, 
+    RefreshControl, 
+    SectionList, 
+    StyleSheet, 
+    View,
+    FlatList, 
+} from "react-native";
 import { useSelector } from "react-redux";
 import { AddButton } from "../../../src/components/common/AddButton";
 import EmptyState from "../../../src/components/common/EmptyState";
@@ -134,6 +141,8 @@ export default function SalesList() {
     { title: "Older", data: grouped.older },
   ].filter(section => section.data.length > 0);
 
+  const useSections = sort === "newest" 
+
   return (
     <View style={globalStyles.container}>
       <RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>
@@ -173,55 +182,76 @@ export default function SalesList() {
         :""
       }
 
-    <SectionList
-      sections={sections}
-      keyExtractor={(item) => item.id}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      renderSectionHeader={({ section }) => (
-        <BodyText style={{ fontWeight: "700", marginVertical: 6 }}>
-          {section.title}
-        </BodyText>
-      )}
-      renderItem={({ item }) => {
-        const fallbackTitle = `Sale - ${item.amount}`;
-
-        return (
-          <Pressable onPress={() => router.push(`/sales/${item.id}`)}>
-            <Card style={{ marginBottom: 10 }}>
-              <BodyText style={{ fontWeight: "600" }}>
-                {item.title || fallbackTitle}
-              </BodyText>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  marginTop: 4,
-                }}
-              >
-                <SecondaryText>{formatDate(item.date)}</SecondaryText>
-                <BodyText style={{ fontWeight: "700" }}>
-                  {item.amount_paid}
-                </BodyText>
-              </View>
-            </Card>
-          </Pressable>
-        );
-      }}
-
-      ListEmptyComponent={
-        <EmptyState 
-            title="No sales yet"
-            description="Start by recording your first sale to track your business."
-          />
+    {useSections ? 
+      <SectionList
+        sections={sections}
+        keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        renderSectionHeader={({ section }) => (
+          <BodyText style={{ fontWeight: "700", marginVertical: 6 }}>
+            {section.title}
+          </BodyText>
+        )}
+        renderItem={({item}) => renderSaleItem({item,router,formatDate})}
+        ListEmptyComponent={
+          <EmptyState 
+              title="No sales yet"
+              description="Start by recording your first sale to track your business."
+            />
+        }
+      />
+      : 
+        <FlatList
+          data={sales}
+          keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          renderItem={({item}) => renderSaleItem({item,router,formatDate})}
+          ListEmptyComponent={
+            <EmptyState
+              title="No sales yet"
+              description="Start by recording your first sale to track your business."
+            />
+          }
+        />
       }
-  />
+  
       <AddButton
         primaryAction={{ route: "/sales/add", label: "Add a Sale" }}
       />
     </View>
   );
 }
+
+const renderSaleItem = ({ item , router, formatDate}) => {
+  const fallbackTitle = `Sale - ${item.amount}`;
+  console.log(item,"hello item")
+
+  return (
+    <Pressable onPress={() => router.push(`/sales/${item.id}`)}>
+      <Card style={{ marginBottom: 10 }}>
+        <BodyText style={{ fontWeight: "600" }}>
+          {item.title || fallbackTitle}
+        </BodyText>
+
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            marginTop: 4,
+          }}
+        >
+          <SecondaryText>{formatDate(item.date)}</SecondaryText>
+
+          <BodyText style={{ fontWeight: "700" }}>
+            {item.amount_paid}
+          </BodyText>
+        </View>
+      </Card>
+    </Pressable>
+  );
+};
 
 const styles = StyleSheet.create({
   statsRow:{
