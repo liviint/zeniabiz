@@ -43,7 +43,6 @@ export async function createCompaniesTables(db) {
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       deleted_at TEXT,
-      deleted_at TEXT,
       joined_at TEXT,
 
       FOREIGN KEY (company) REFERENCES companies(uuid)
