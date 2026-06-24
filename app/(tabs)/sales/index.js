@@ -20,6 +20,7 @@ import { groupDataIntoSections } from "../../../src/helpers";
 import { useManualSync } from "../../../src/hooks/useManualSync";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
+import { canViewReports } from "../../../src/utils/rolesAndPermissions"
 
 export default function SalesList() {
   const { onRefresh, refreshing } = useManualSync();
@@ -27,6 +28,8 @@ export default function SalesList() {
   const isFocused = useIsFocused();
   const db = useSQLiteContext();
   const router = useRouter();
+
+  const isAllowedToViewReports = canViewReports()
 
   const [sales, setSales] = useState([]);
   const [stats, setStats] = useState({});
@@ -134,7 +137,7 @@ export default function SalesList() {
   return (
     <View style={globalStyles.container}>
       <RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>
-      <BodyText style={globalStyles.title}>My Sales</BodyText>
+      <BodyText style={globalStyles.title}>Sales</BodyText>
 
       <TimeNavigator
           state={timeState}
@@ -153,7 +156,7 @@ export default function SalesList() {
         />
       </View>
 
-      {sales.length ? 
+      {isAllowedToViewReports && sales.length ? 
         <View style={styles.statsRow}>
           <StatCard
             label="Cash Collected"

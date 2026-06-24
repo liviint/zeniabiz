@@ -19,6 +19,7 @@ const BusinessOverview = ({
   setEditBusiness,
   setBusinessData,
   refreshData,
+  isAllowedToViewReports 
 }) => {
 
   const db = useSQLiteContext();
@@ -68,9 +69,13 @@ const BusinessOverview = ({
 
     <View style={styles.header}>
       <BodyText style={styles.title}>Business Overview</BodyText>
-      <TouchableOpacity style={globalStyles.editBtn} onPress={handleEdit}>
-        <BodyText style={styles.editBtnText}>Edit</BodyText>
-      </TouchableOpacity>
+
+      {isAllowedToViewReports  && 
+        <TouchableOpacity style={globalStyles.editBtn} onPress={handleEdit}>
+          <BodyText style={styles.editBtnText}>Edit</BodyText>
+        </TouchableOpacity>
+      }
+
     </View>
 
     <View style={styles.row}>

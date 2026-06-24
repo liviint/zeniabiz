@@ -12,6 +12,7 @@ import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import BusinessOverview from "../../../src/components/business/overview";
 import EditBusinessModal from "../../../src/components/business/overview/edit";
 import RolesAndPermissions from "../../../src/components/business/rolesAndPermissions";
+import { canViewReports } from "../../../src/utils/rolesAndPermissions"
 
 const BusinessPage = () => {
 
@@ -21,6 +22,8 @@ const BusinessPage = () => {
   const [editBusiness,setEditBusiness] = useState(false)
   const [businessData,setBusinessData] = useState(null)
 
+  const isAllowedToViewReports = canViewReports()
+
   return (
     <ScrollView style={globalStyles.container}>
       <BodyText style={globalStyles.title}>Business Profile</BodyText>
@@ -29,17 +32,23 @@ const BusinessPage = () => {
         setEditBusiness={setEditBusiness}
         setBusinessData={setBusinessData}
         refreshData={refreshData}
+        isAllowedToViewReports ={isAllowedToViewReports }
       />
 
-      <CompanyMembers 
-        setInviteModal={setInviteModal}
-      />
+      {isAllowedToViewReports  && 
+        <CompanyMembers 
+          setInviteModal={setInviteModal}
+        />
+      }
 
-      <InvitedMembers 
-        refreshData={refreshData}
-      />
+      {isAllowedToViewReports  && 
+        <InvitedMembers 
+          refreshData={refreshData}
+      />}
 
-      <RolesAndPermissions />
+      {isAllowedToViewReports  && 
+        <RolesAndPermissions />
+      }
 
       <InviteModal
         inviteModal={inviteModal}

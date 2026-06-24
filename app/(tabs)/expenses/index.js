@@ -18,12 +18,16 @@ import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { setCategoriesMap } from "../../../src/store/features/cetegoriesSlice";
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 import { dateFormat } from "../../../utils/dateFormat";
+import { canViewReports } from "../../../src/utils/rolesAndPermissions"
 
 export default function FinanceListPage() {
     const { onRefresh, refreshing } = useManualSync();
     const db = useSQLiteContext()
     const router = useRouter();
     const dispatch = useDispatch()
+
+    const isAllowedToViewReports = canViewReports()
+
     const [expenses,setTransactions] = useState([])
     const [stats, setStats] = useState({})
     const [categoriesMap,setCategoriesMapLocal] = useState({})
@@ -136,6 +140,7 @@ export default function FinanceListPage() {
             expenses={expenses}
             timeState={timeState}
             setTimeState={setTimeState}
+            isAllowedToViewReports={isAllowedToViewReports}
           />
         }
         ListEmptyComponent={
@@ -159,7 +164,7 @@ export default function FinanceListPage() {
   )
 }
 
-const ListHeader = ({ stats, timeState,setTimeState, expenses}) => {
+const ListHeader = ({ stats, timeState,setTimeState, expenses, isAllowedToViewReports}) => {
   return <>
     <TimeNavigator
           state={timeState}
@@ -173,7 +178,7 @@ const ListHeader = ({ stats, timeState,setTimeState, expenses}) => {
       ]}
     />
 
-    {expenses.length ? 
+    {isAllowedToViewReports && expenses.length ? 
         <View style={styles.statsRow}>
           <StatCard
             label="Total spent"

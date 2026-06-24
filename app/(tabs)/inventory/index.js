@@ -15,6 +15,7 @@ import { useManualSync } from "../../../src/hooks/useManualSync";
 import FilterComponent from "../../../src/components/common/FilterComponent";
 import SortComponent from "../../../src/components/common/SortComponent";
 import { formatNumber } from "../../../src/db/utils";
+import { canViewReports } from "../../../src/utils/rolesAndPermissions"
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();
@@ -23,6 +24,8 @@ export default function ProductsListPage() {
   const isFocused = useIsFocused();
   const { globalStyles } = useThemeStyles();
   const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
+
+  const isAllowedToViewReports = canViewReports()
 
   const [products, setProducts] = useState([]);
   const [stats,setStats] = useState({})
@@ -175,6 +178,7 @@ export default function ProductsListPage() {
             sortOptions={sortOptions}
             sort={sort}
             globalStyles={globalStyles}
+            isAllowedToViewReports={isAllowedToViewReports}
           />
         }
         ListEmptyComponent={
@@ -204,7 +208,8 @@ const ListHeader = ({
   filterOptions,
   sortOptions,
   sort,
-  globalStyles
+  globalStyles,
+  isAllowedToViewReports
 }) => {
   return (
     <>
@@ -237,7 +242,7 @@ const ListHeader = ({
           </View>
 
       </View>
-      <View style={styles.row}>
+      {isAllowedToViewReports && <View style={styles.row}>
         <StatCard 
           label="Stock Value"
           value={formatNumber(stats.stockValue)}
@@ -247,7 +252,7 @@ const ListHeader = ({
           label="Products"
           value={formatNumber(stats.count)}
         />
-      </View>
+      </View>}
     </>
       
   )

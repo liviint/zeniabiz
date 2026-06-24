@@ -1,5 +1,9 @@
 import { Redirect } from 'expo-router';
+import { canViewReports } from "../../src/utils/rolesAndPermissions"
 
 export default function Index() {
-    return <Redirect href="/dashboard" />;
+
+    const isAllowedToViewReports = canViewReports()
+
+    return <Redirect href={isAllowedToViewReports ? "/dashboard" : "/sales"} />;
 }
