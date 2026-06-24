@@ -107,6 +107,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
+  title: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+
   overviewCard: {
     padding: 16,
     borderRadius: 12,

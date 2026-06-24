@@ -57,7 +57,7 @@ export default InvitedMembers;
 const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 16,
-        fontWeight: "600",
+        fontWeight: "700",
         marginBottom: 12,
     },
 
