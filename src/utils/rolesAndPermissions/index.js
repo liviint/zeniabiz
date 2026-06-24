@@ -1,7 +1,9 @@
 import { getActiveContextSync } from "../../db/utils";
 
 export function getCompanyRole() {
-  return getActiveContextSync().company_role;
+    let ctx = getActiveContextSync()
+    if(!ctx.is_authenticated && !ctx.company_role) return "owner"
+    else return ctx.company_role;
 }
 
 export function isOwner() {

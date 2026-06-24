@@ -9,26 +9,39 @@ import {
     StyleSheet,
 } from "react-native";
 import { useRouter, usePathname } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
+import { getActiveContextSync } from "@/src/db/utils";
 
 export default function Header({ menuOpen, setMenuOpen }) {
     const router = useRouter();
     const pathname = usePathname();
 
+    const db = useSQLiteContext();
+    const { is_authenticated } = getActiveContextSync(db);
+
     const items = [
         { label: "Credit", path: "/credits", type: "internal" },
         { label: "Customers", path: "/customers", type: "internal" },
-        { label: "Business", path: "/business", type: "internal" },
+    ];
+
+    if (is_authenticated) {
+        items.push({
+            label: "Business",
+            path: "/business",
+            type: "internal",
+        });
+    }
+
+    items.push(
         { label: "Settings", path: "/settings", type: "internal" },
         { label: "Profile", path: "/auth/profile", type: "internal" },
         { label: "Feedback", path: "/feedback", type: "internal" },
-
         {
             label: "Learning Center",
             path: "https://zeniabiz.com/learning-center",
             type: "external",
-        },
-    ];
-
+        }
+    );
     const handlePress = (item) => {
         setMenuOpen(false);
 

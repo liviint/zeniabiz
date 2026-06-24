@@ -1,7 +1,7 @@
 import { clearUserDetails } from "../../store/features/userSlice"
 import { createSession } from "../../db/query/users";
 import { api } from "../../../api";
-import { loadActiveContext } from "../../db/utils";
+import { loadActiveContext, getActiveContextSync } from "../../db/utils";
 
 let isLoggingOut = false;
 export async function logoutUser({
@@ -23,15 +23,15 @@ export async function logoutUser({
     } catch (error) {
         console.log(error);
     } finally {
+        let ctx = await await getActiveContextSync(db)
 
         dispatch(clearUserDetails());
 
-        await createSession(db, {});
+        await createSession(db, {company_role:ctx.company_role, is_authenticated:false,company_uuid:ctx.company_uuid});
 
         await loadActiveContext(db)
 
         isLoggingOut = false;
-        console.log("user logged out")
         router.push("/auth/profile");
     }
 }
