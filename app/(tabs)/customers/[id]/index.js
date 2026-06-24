@@ -111,7 +111,6 @@ export default function CustomerDetails() {
                     <BodyText
                     style={styles.balance}
                     >
-                    KES{" "}
                     {Number(
                         stats.balance_due || 0
                     ).toLocaleString()}
@@ -126,7 +125,6 @@ export default function CustomerDetails() {
                     <BodyText
                     style={styles.totalSales}
                     >
-                    KES{" "}
                     {Number(
                         stats.total_sales || 0
                     ).toLocaleString()}
@@ -141,7 +139,6 @@ export default function CustomerDetails() {
                     <BodyText
                     style={styles.paid}
                     >
-                    KES{" "}
                     {Number(
                         stats.total_paid || 0
                     ).toLocaleString()}
@@ -199,7 +196,6 @@ export default function CustomerDetails() {
                             styles.saleAmount
                         }
                         >
-                        KES{" "}
                         {Number(
                             sale.total_amount ||
                             0
@@ -219,7 +215,7 @@ export default function CustomerDetails() {
                             styles.saleBalance
                         }
                         >
-                        Balance: KES{" "}
+                        Balance: 
                         {Number(
                             sale.balance_due
                         ).toLocaleString()}

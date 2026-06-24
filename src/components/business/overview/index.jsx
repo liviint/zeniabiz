@@ -19,7 +19,8 @@ const BusinessOverview = ({
   setEditBusiness,
   setBusinessData,
   refreshData,
-  isAllowedToViewReports 
+  isAllowedToViewReports,
+  isUserLoggedIn
 }) => {
 
   const db = useSQLiteContext();
@@ -32,10 +33,12 @@ const BusinessOverview = ({
     const { company: companyId } = await getActiveContextSync(db);
 
     const localCompany = await getCompany(db, companyId);
+    console.log(localCompany,"hello local company")
     if (localCompany) {
       setCompany(localCompany);
       setBusinessData(localCompany);
     }
+    if(!isUserLoggedIn) return
 
     try {
       const companyRes = await api.get(
@@ -70,7 +73,7 @@ const BusinessOverview = ({
     <View style={styles.header}>
       <BodyText style={styles.title}>Business Overview</BodyText>
 
-      {isAllowedToViewReports  && 
+      {isAllowedToViewReports && isUserLoggedIn  && 
         <TouchableOpacity style={globalStyles.editBtn} onPress={handleEdit}>
           <BodyText style={styles.editBtnText}>Edit</BodyText>
         </TouchableOpacity>

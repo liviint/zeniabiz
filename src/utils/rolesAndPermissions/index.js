@@ -6,6 +6,11 @@ export function getCompanyRole() {
     else return ctx.company_role;
 }
 
+export function isLoggedIn() {
+    let ctx = getActiveContextSync()
+    return ctx.is_authenticated
+}
+
 export function isOwner() {
   return getCompanyRole() === "owner";
 }

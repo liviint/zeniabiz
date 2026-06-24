@@ -86,7 +86,6 @@ export default function SaleDetails() {
             <SecondaryText>Marked Price</SecondaryText>
 
             <BodyText style={styles.totalAmount}>
-              KES{" "}
               {Number(
                 sale?.amount || 0
               ).toLocaleString()}
@@ -97,7 +96,6 @@ export default function SaleDetails() {
             <SecondaryText>Amount Paid</SecondaryText>
 
             <BodyText style={styles.paid}>
-              KES{" "}
               {Number(
                 sale?.amount_paid || 0
               ).toLocaleString()}
@@ -108,7 +106,6 @@ export default function SaleDetails() {
             <SecondaryText>Balance</SecondaryText>
 
             <BodyText style={styles.balance}>
-              KES{" "}
               {Number(
                 sale?.balance_due || 0
               ).toLocaleString()}
@@ -120,7 +117,6 @@ export default function SaleDetails() {
               <SecondaryText>Discount</SecondaryText>
 
               <BodyText style={styles.discount}>
-                -KES{" "}
                 {Number(
                   sale?.discount || 0
                 ).toLocaleString()}
@@ -178,12 +174,12 @@ export default function SaleDetails() {
                 </BodyText>
 
                 <BodyText style={styles.itemTotal}>
-                  KES {total.toLocaleString()}
+                  {total.toLocaleString()}
                 </BodyText>
               </View>
 
               <SecondaryText>
-                {item.quantity} × KES{" "}
+                {item.quantity} × {" "}
                 {Number(item.price).toLocaleString()}
               </SecondaryText>
             </Card>
