@@ -32,7 +32,7 @@ export async function createCompaniesTables(db) {
       uuid TEXT PRIMARY KEY,
 
       company TEXT NOT NULL,
-      user_id TEXT NOT NULL,
+      user_id TEXT,
 
       username TEXT,
       email TEXT,

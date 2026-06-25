@@ -39,11 +39,10 @@ const CompanyMembers = ({ setInviteModal }) => {
             const membersRes = await api.get("/core/company-members");
 
             const apiMembers = membersRes.data.results;
-
-            await upsertCompanyMembers(db,company,apiMembers);
-
+            console.log(apiMembers,"hello api members")
+        
             setMembers(apiMembers);
-
+        
             const owner = apiMembers.find(
             (member) =>
                 member.role === "owner" &&
@@ -51,6 +50,7 @@ const CompanyMembers = ({ setInviteModal }) => {
             );
 
             setIsOwner(!!owner);
+            await upsertCompanyMembers(db,company,apiMembers);
 
         } catch (err) {
             console.log(
