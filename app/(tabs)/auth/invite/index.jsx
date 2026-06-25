@@ -75,8 +75,6 @@ export default function AcceptInviteScreen() {
         "Success",
         "Invitation accepted successfully."
       );
-
-      console.log(response.data,"hello invite accepted data")
       
       const { company } = response.data;
 

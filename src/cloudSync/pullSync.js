@@ -249,7 +249,6 @@ export async function pullServerChanges(db, model, endpoint) {
 // APPLY SERVER CHANGES
 // -------------------------
 export async function applyServerChanges(db, model, items) {
-  console.log(model,items,"hello model items")
   const config = MODEL_CONFIG[model];
 
   if (!config) {

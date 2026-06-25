@@ -31,7 +31,6 @@ export default function CreditDetailPage() {
 
   const loadCredit = async () => {
     const data = await getCreditById(db, id);
-    console.log(data,"hello data")
     setCredit(data);
   };
 

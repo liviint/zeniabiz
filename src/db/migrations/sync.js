@@ -45,7 +45,6 @@ export async function rebuildSyncQueue(db) {
                 SELECT id, company, deleted_at
                 FROM ${table}
             `);
-            console.log(records,"hello records")
             for (const record of records) {
                 await db.runAsync(
                     `

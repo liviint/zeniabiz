@@ -39,7 +39,6 @@ const CompanyMembers = ({ setInviteModal }) => {
             const membersRes = await api.get("/core/company-members");
 
             const apiMembers = membersRes.data.results;
-            console.log(apiMembers,"hello members")
 
             await upsertCompanyMembers(db,company,apiMembers);
 

@@ -59,7 +59,6 @@ const Signup = () => {
 
     try {
       const {company, user_id} =  await getActiveContextSync(db);
-      console.log(company, user_id,"hello local user")
       safeLocalStorage.removeItem("token")
       await api.post("/accounts/register/", 
         {

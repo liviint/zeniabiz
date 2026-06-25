@@ -33,7 +33,6 @@ const BusinessOverview = ({
     const { company: companyId } = await getActiveContextSync(db);
 
     const localCompany = await getCompany(db, companyId);
-    console.log(localCompany,"hello local company")
     if (localCompany) {
       setCompany(localCompany);
       setBusinessData(localCompany);

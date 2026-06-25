@@ -12,7 +12,6 @@ export async function sendBulkSync(model, items) {
     );
 
     clearTimeout(timeout);
-    // console.log(res,"hello res 123...")
     return { ok: true, data: res.data };
   } catch (err) {
     clearTimeout(timeout);

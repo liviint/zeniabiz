@@ -39,7 +39,6 @@ export default function CategoriesPicker({
       if (recentlyCreatedCategoryId && categories.length > 0) {
   
         const category = categories.find((c) => c.id === recentlyCreatedCategoryId);
-        console.log(category,"hello cate")
         if (category) {
           handleCategoryChange(category);
           dispatch(clearRecentlyCreatedCategoryId());

@@ -23,7 +23,6 @@ export const getAccessToken = async () => {
 };
 
 export const getStoredFileId = async (db) => {
-    console.log(getSetting(db, "gdrive_backup_file_id"),"hello getSetting(db, gdrive_backup_file_id)")
   return await getSetting(db, "gdrive_backup_file_id");
 };
 

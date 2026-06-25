@@ -82,7 +82,6 @@ export default function SellPage() {
     if (!id) return;
     (async () => {
       const t = await getSaleById(db, id);
-      console.log(t,"hello sale")
       setDate(new Date(t.date))
       setTitle(t?.title);
       setSale(t)

@@ -97,11 +97,9 @@ export default function SalesList() {
 
   useEffect(() => {
     if (!db) return;
-    console.log(filter,"hello filter");
     (async () => {
       setIsLoading(true);
       const data = await getSales(db, {timeState,filter,sort});
-      console.log(data,"hello data")
       setSales(data);
       setIsLoading(false);
     })();
@@ -112,7 +110,6 @@ export default function SalesList() {
     const getStats = async() => {
       const cashCollected = sales.reduce((sum, item) => sum + (item.amount_paid || 0),
   0);
-      console.log(cashCollected,"hello cash")
         setStats({
           count: sales.length,
           cashCollected:cashCollected
@@ -226,7 +223,6 @@ export default function SalesList() {
 
 const renderSaleItem = ({ item , router, formatDate}) => {
   const fallbackTitle = `Sale - ${item.amount}`;
-  console.log(item,"hello item")
 
   return (
     <Pressable onPress={() => router.push(`/sales/${item.id}`)}>

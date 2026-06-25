@@ -80,7 +80,6 @@ export default function CustomersList() {
         setIsLoading(true);
 
         const data = await getCustomers(db, {sort,});
-        console.log(data,"hello data")
         setCustomers(data || []);
         setIsLoading(false);
 
