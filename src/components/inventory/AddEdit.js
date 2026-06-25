@@ -12,6 +12,7 @@ import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { upsertProductAndRestocking , getProductById} from "../../db/query/inventory";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import BarcodeScanner from "../../../src/components/barcodeScanner";
 
 export default function AddProduct({isProduct=true}) {
   const {id} = useLocalSearchParams()
@@ -21,6 +22,7 @@ export default function AddProduct({isProduct=true}) {
 
   const [form, setForm] = useState({
     name: "",
+    barcode:"",
     cost_price: "",
     selling_price: "",
     stock_quantity: "",
@@ -31,6 +33,8 @@ export default function AddProduct({isProduct=true}) {
     unit:"",
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const [scannerVisible, setScannerVisible] = useState(false);
 
   const handleChange = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -112,10 +116,14 @@ export default function AddProduct({isProduct=true}) {
   }
 };
 
-const isEditing = Boolean(id);
+  const isEditing = Boolean(id);
 
-const showInventoryFields =
-  isProduct && !isEditing;
+  const showInventoryFields =
+    isProduct && !isEditing;
+
+  const handleBarcodeScanning =() => {
+    
+  }
 
   useEffect(() => {
     if (!isEditing) return;
@@ -137,13 +145,46 @@ const showInventoryFields =
           {isEditing ? "Update" : "Add"} {isProduct ? "Product" : "Service"}
         </BodyText>
         <Card>
-      <View style={globalStyles.formGroup}>
-        <FormLabel>Name</FormLabel>
-        <Input 
-          value={form.name} 
-          onChangeText={(v) => handleChange("name", v)} 
-        />
-      </View>
+        <View style={globalStyles.formGroup}>
+          <FormLabel>Name</FormLabel>
+          <Input 
+            value={form.name} 
+            onChangeText={(v) => handleChange("name", v)} 
+          />
+        </View>
+
+      {
+        showInventoryFields &&
+          <View style={globalStyles.formGroup}>
+  <FormLabel>Barcode</FormLabel>
+
+  <View
+    style={{
+      flexDirection: "row",
+      gap: 8,
+      alignItems: "center",
+    }}
+  >
+    <Input
+      style={{ flex: 1 }}
+      value={form.barcode}
+      onChangeText={(v) =>
+        handleChange("barcode", v)
+      }
+      placeholder="Scan or enter barcode"
+    />
+
+    <TouchableOpacity
+      style={globalStyles.primaryBtn}
+      onPress={() => setScannerVisible(true)}
+    >
+      <Text style={globalStyles.primaryBtnText}>
+        Scan
+      </Text>
+    </TouchableOpacity>
+  </View>
+</View>
+        }
 
         {
             showInventoryFields &&
@@ -258,6 +299,15 @@ const showInventoryFields =
         </TouchableOpacity>
 
         </Card>
+
+        <BarcodeScanner
+  visible={scannerVisible}
+  onClose={() => setScannerVisible(false)}
+  onScan={(barcode) => {
+    handleChange("barcode", barcode);
+  }}
+/>
+
     </KeyboardAwareScrollView>
   );
 }

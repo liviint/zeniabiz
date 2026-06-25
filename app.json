@@ -48,7 +48,13 @@
       "@react-native-firebase/crashlytics",
       "expo-web-browser",
       "@react-native-google-signin/google-signin",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow ZeniaBiz to access your camera to scan barcodes."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
