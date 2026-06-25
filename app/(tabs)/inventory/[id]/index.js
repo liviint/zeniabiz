@@ -56,6 +56,12 @@ export default function ProductViewPage() {
 
         <Card style={styles.card}>
           <DetailRow label="Name" value={product?.name} />
+          {!isService && 
+            <DetailRow
+              label="Barcode"
+              value={product?.barcode || "-"}
+            />
+          }
           <DetailRow label="Selling Price" value={product?.selling_price} />
 
           {!isService && (

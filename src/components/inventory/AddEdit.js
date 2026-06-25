@@ -156,34 +156,34 @@ export default function AddProduct({isProduct=true}) {
       {
         showInventoryFields &&
           <View style={globalStyles.formGroup}>
-  <FormLabel>Barcode</FormLabel>
+            <FormLabel>Barcode</FormLabel>
 
-  <View
-    style={{
-      flexDirection: "row",
-      gap: 8,
-      alignItems: "center",
-    }}
-  >
-    <Input
-      style={{ flex: 1 }}
-      value={form.barcode}
-      onChangeText={(v) =>
-        handleChange("barcode", v)
-      }
-      placeholder="Scan or enter barcode"
-    />
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 8,
+                alignItems: "center",
+              }}
+            >
+              <Input
+                style={{ flex: 1 }}
+                value={form.barcode}
+                onChangeText={(v) =>
+                  handleChange("barcode", v)
+                }
+                placeholder="Scan or enter barcode"
+              />
 
-    <TouchableOpacity
-      style={globalStyles.primaryBtn}
-      onPress={() => setScannerVisible(true)}
-    >
-      <Text style={globalStyles.primaryBtnText}>
-        Scan
-      </Text>
-    </TouchableOpacity>
-  </View>
-</View>
+              <TouchableOpacity
+                style={globalStyles.primaryBtn}
+                onPress={() => setScannerVisible(true)}
+              >
+                <Text style={globalStyles.primaryBtnText}>
+                  Scan
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         }
 
         {
@@ -301,12 +301,12 @@ export default function AddProduct({isProduct=true}) {
         </Card>
 
         <BarcodeScanner
-  visible={scannerVisible}
-  onClose={() => setScannerVisible(false)}
-  onScan={(barcode) => {
-    handleChange("barcode", barcode);
-  }}
-/>
+          visible={scannerVisible}
+          onClose={() => setScannerVisible(false)}
+          onScan={(barcode) => {
+            handleChange("barcode", barcode);
+          }}
+        />
 
     </KeyboardAwareScrollView>
   );

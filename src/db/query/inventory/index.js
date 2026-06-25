@@ -6,6 +6,7 @@ export async function upsertProductAndRestocking(
   {
     id,
     name,
+    barcode = null,
     cost_price = 0,
     selling_price = 0,
     stock_quantity = 0,
@@ -37,6 +38,7 @@ export async function upsertProductAndRestocking(
         created_by:user_id,
         updated_by:user_id,
         name:name,
+        barcode,
         selling_price:sellPrice,
         cost_price:unitCost,
         minimum_quantity:minimum_quantity,
@@ -73,6 +75,7 @@ export async function upsertProduct(db,product) {
           created_by,
           updated_by,
           name,
+          barcode,
           selling_price,
           cost_price,
           minimum_quantity,
@@ -81,10 +84,11 @@ export async function upsertProduct(db,product) {
           created_at,
           updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
+          barcode = excluded.barcode,
           selling_price = excluded.selling_price,
           cost_price = excluded.cost_price,
           updated_at = excluded.updated_at,
@@ -99,6 +103,7 @@ export async function upsertProduct(db,product) {
           product.created_by,
           product.updated_by,
           product.name,
+          product.barcode,
           product.selling_price,
           product.cost_price,
           product.minimum_quantity,
@@ -464,6 +469,7 @@ export async function getProductById(db, id) {
     SELECT 
       p.id,
       p.name,
+      p.barcode,
       p.sku,
       p.cost_price,
       p.selling_price,
