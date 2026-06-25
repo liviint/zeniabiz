@@ -5,6 +5,7 @@ import {
     StyleSheet,
     TouchableOpacity,
 } from "react-native";
+import { useIsFocused  } from "@react-navigation/native";
 
 import { api } from "../../../../api";
 import { useThemeStyles } from "../../../hooks/useThemeStyles";
@@ -28,21 +29,13 @@ const EditBusinessModal = ({
 }) => {
     const db = useSQLiteContext();
     const { globalStyles } = useThemeStyles();
-    const initialForm =  {
-        name: "",
-        phone: "",
-        email: "",
-        address: "",
-        country: "",
-        currency: "KES",
-        timezone: "",
-        receipt_footer: "",
-    }
-    const [formData, setFormData] = useState(initialForm);
+    const isFocused = useIsFocused()
+    
+    const [formData, setFormData] = useState({});
 
     useEffect(() => {
-        setFormData(businessData ? businessData : initialForm)
-    },[businessData])
+        businessData && setFormData(businessData)
+    },[businessData,isFocused])
 
 
     const updateField = (field, value) => {
@@ -54,7 +47,7 @@ const EditBusinessModal = ({
 
     const handleSave = async () => {
         if (!formData.name.trim()) {
-        return alert("Business name is required");
+            return alert("Business name is required");
         }
         const { company } =  await getActiveContextSync(db);
         try {
@@ -62,7 +55,7 @@ const EditBusinessModal = ({
             `/core/companies/${company}/`,
             formData
         );
-        await upsertCompany(formData)
+        await upsertCompany(db,formData)
         setRefreshData(prev => prev + 1)
         setVisible(false);
         if (onSuccess) {

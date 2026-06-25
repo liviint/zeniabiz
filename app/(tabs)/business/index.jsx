@@ -66,12 +66,14 @@ const BusinessPage = () => {
         setRefreshData={setRefreshData}
       />
 
-      <EditBusinessModal 
-        visible={editBusiness}
-        setVisible={setEditBusiness}
-        businessData={businessData}
-        setRefreshData={setRefreshData}
-      />
+      {isAllowedToViewReports && isUserLoggedIn && 
+        <EditBusinessModal 
+          visible={editBusiness}
+          setVisible={setEditBusiness}
+          businessData={businessData}
+          setRefreshData={setRefreshData}
+        />
+      }
 
     </ScrollView>
   );
