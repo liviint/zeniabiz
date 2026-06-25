@@ -1,7 +1,8 @@
 import { newUuid } from "../../utils";
 
 export async function upsertCompany(db, company) {
-  await db.runAsync(
+  try {
+    await db.runAsync(
     `
     INSERT INTO companies (
       uuid,
@@ -64,6 +65,9 @@ export async function upsertCompany(db, company) {
       company.deleted_at,
     ]
   );
+  } catch (error) {
+    console.log(error,"hello err")
+  }
 }
 export async function getCompany(db, companyId) {
   return await db.getFirstAsync(
