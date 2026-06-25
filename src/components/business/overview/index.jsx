@@ -88,7 +88,7 @@ const BusinessOverview = ({
 
     <View style={styles.row}>
       <BodyText>Currency</BodyText>
-      <BodyText>{company?.currency}</BodyText>
+      <BodyText>{company?.currency || "-"}</BodyText>
     </View>
 
     <View style={styles.row}>

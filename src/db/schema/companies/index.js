@@ -18,7 +18,7 @@ export async function createCompaniesTables(db) {
       website TEXT,
       default_tax_rate TEXT,
 
-      currency TEXT DEFAULT 'KES',
+      currency TEXT,
       timezone TEXT,
 
       receipt_footer TEXT,
