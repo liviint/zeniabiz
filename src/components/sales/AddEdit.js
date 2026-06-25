@@ -25,6 +25,8 @@ import {
 } from "../../db/query/sales";
 import CreditDiscountForm from "./CreditDiscountForm";
 import EditSaleForm from "./EditSaleForm";
+import SearchProducts from "../barcodeScanner/searchProducts";
+import { useDebounce } from "../../../src/hooks/useDebounce";
 
 export default function SellPage() {
   const db = useSQLiteContext();
@@ -35,6 +37,7 @@ export default function SellPage() {
 
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
   const [cart, setCart] = useState([]);
   const [title, setTitle] = useState("");
   const [sale,setSale] = useState(null)
@@ -60,14 +63,10 @@ export default function SellPage() {
   // Fetch products
   useEffect(() => {
     (async () => {
-      const data = await getProducts(db);
+      const data = await getProducts(db, { search: debouncedSearch});
       setProducts(data);
     })();
-  }, [isFocused]);
-
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
+  }, [isFocused,debouncedSearch, ]);
 
   // Load sale if editing
   useEffect(() => {
@@ -238,18 +237,15 @@ export default function SellPage() {
         {id ? "Update" : "Record"} Sale
       </BodyText>
 
-      {/* SEARCH */}
-      <Input
-        placeholder="Search products..."
-        value={search}
-        onChangeText={setSearch}
-        style={{ marginBottom: 8 }}
-      />
+        <SearchProducts 
+          search={search}
+          setSearch={setSearch}
+        />
 
       {/* PRODUCTS */}
       <View style={styles.productsContainer}>
         <FlatList
-          data={filteredProducts}
+          data={products}
           numColumns={2}
           keyExtractor={(item) => item.id}
           columnWrapperStyle={{ justifyContent: "space-between" }}
