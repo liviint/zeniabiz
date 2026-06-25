@@ -154,7 +154,7 @@ export default function AddProduct({isProduct=true}) {
         </View>
 
       {
-        showInventoryFields &&
+        isProduct &&
           <View style={globalStyles.formGroup}>
             <FormLabel>Barcode</FormLabel>
 
@@ -240,7 +240,7 @@ export default function AddProduct({isProduct=true}) {
         }
 
         {
-          !showInventoryFields &&
+          !showInventoryFields && !isProduct &&
           <View style={globalStyles.formGroup}>
             <FormLabel>Service Unit</FormLabel>
             <Input 
