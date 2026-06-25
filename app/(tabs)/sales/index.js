@@ -36,13 +36,15 @@ export default function SalesList() {
   const db = useSQLiteContext();
   const router = useRouter();
 
-  const isAllowedToViewReports = canViewReports()
+  const [isAllowedToViewReports,setIsAllowedToViewReports] = useState(canViewReports())
 
   const [sales, setSales] = useState([]);
   const [stats, setStats] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [timeState, setTimeState] = useState(createRange("month"));
+
   const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
+  const user = useSelector((state) => state.user.userDetails);
 
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("newest")
@@ -104,6 +106,10 @@ export default function SalesList() {
       setIsLoading(false);
     })();
   }, [isFocused, timeState,lastSyncedAt,filter,sort]);
+
+  useEffect(() => {
+    setIsAllowedToViewReports(canViewReports())
+  },[user])
 
 
   useEffect(() => {

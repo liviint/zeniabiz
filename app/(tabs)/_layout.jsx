@@ -1,6 +1,7 @@
 import { IconSymbol } from "@/src/components/ui/icon-symbol.ios";
+import React,{ useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { Tabs } from "expo-router";
-import React from "react";
 import { HapticTab } from "../../src/components/haptic-tab";
 import { useThemeStyles } from "../../src/hooks/useThemeStyles";
 import {  canViewReports } from "../../src/utils/rolesAndPermissions/index"
@@ -8,7 +9,14 @@ import {  canViewReports } from "../../src/utils/rolesAndPermissions/index"
 export default function TabLayout() {
   const { colors } = useThemeStyles();
 
-  const isAllowedToViewReports = canViewReports()
+  const user = useSelector((state) => state.user.userDetails);
+
+  const [isAllowedToViewReports,setIsAllowedToViewReports] = useState(canViewReports())
+
+
+  useEffect(() => {
+    setIsAllowedToViewReports(canViewReports())
+  },[user])
 
   return (
     <>

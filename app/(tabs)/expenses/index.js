@@ -26,7 +26,7 @@ export default function FinanceListPage() {
     const router = useRouter();
     const dispatch = useDispatch()
 
-    const isAllowedToViewReports = canViewReports()
+    const [isAllowedToViewReports,setIsAllowedToViewReports] = useState(canViewReports())
 
     const [expenses,setTransactions] = useState([])
     const [stats, setStats] = useState({})
@@ -35,7 +35,9 @@ export default function FinanceListPage() {
     const isFocused = useIsFocused()
     const {globalStyles} = useThemeStyles()
     const [timeState, setTimeState] = useState(createRange("month"));
+
     const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
+    const user = useSelector((state) => state.user.userDetails);
 
     const loadCategories = async () => {
       const categories = await getCategories(db)
@@ -60,6 +62,12 @@ export default function FinanceListPage() {
       }
         setIsLoading(false)
     },[isFocused, timeState,lastSyncedAt])
+
+
+    useEffect(() => {
+      setIsAllowedToViewReports(canViewReports())
+    },[user])
+
 
     useEffect(() => {
       setStats({

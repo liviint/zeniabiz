@@ -23,9 +23,11 @@ export default function ProductsListPage() {
   const router = useRouter();
   const isFocused = useIsFocused();
   const { globalStyles } = useThemeStyles();
-  const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
 
-  const isAllowedToViewReports = canViewReports()
+  const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
+  const user = useSelector((state) => state.user.userDetails);
+
+  const [isAllowedToViewReports,setIsAllowedToViewReports] = useState(canViewReports())
 
   const [products, setProducts] = useState([]);
   const [stats,setStats] = useState({})
@@ -122,6 +124,10 @@ export default function ProductsListPage() {
     lastSyncedAt, 
     sort
   ]);
+
+  useEffect(() => {
+    setIsAllowedToViewReports(canViewReports())
+  },[user])
 
   useEffect(() => {
     setStats({
