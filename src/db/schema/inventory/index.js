@@ -26,6 +26,11 @@ export async function createInventoryTables(db) {
     CREATE INDEX IF NOT EXISTS idx_products_company_created
     ON products(company, created_at DESC);
 
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_products_company_barcode
+      ON products(company, barcode)
+      WHERE barcode IS NOT NULL
+        AND barcode != '';
+
     CREATE TABLE IF NOT EXISTS inventory_batches (
       id TEXT PRIMARY KEY,
 

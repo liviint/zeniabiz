@@ -108,7 +108,13 @@ export default function AddProduct({isProduct=true}) {
 
     router.push("/inventory");
   } catch (error) {
-    console.log(error, "product save error");
+    if (error?.message?.includes("UNIQUE constraint")) {
+      Alert.alert(
+        "Barcode Exists",
+        "Another product already uses this barcode."
+      );
+      return;
+    }
     Alert.alert(
       "Error",
       "Failed to save item. Please try again."

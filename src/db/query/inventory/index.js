@@ -67,6 +67,7 @@ export async function upsertProductAndRestocking(
 }
 
 export async function upsertProduct(db,product) {
+    try {
       await db.runAsync(
         `
         INSERT INTO products (
@@ -120,6 +121,9 @@ export async function upsertProduct(db,product) {
         operation:"upsert",
       })
       return product.id;
+    } catch (error) {
+      throw error
+    }
 }
 
 export async function upsertBatch(db, batch) {
