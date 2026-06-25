@@ -2,6 +2,7 @@ import { useIsFocused } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import {
   Pressable,
   RefreshControl,
@@ -9,7 +10,6 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { useSelector } from "react-redux";
 
 import {
   BodyText,
@@ -31,11 +31,14 @@ import FilterComponent from "../../../src/components/common/FilterComponent";
 import { getCredits, getCreditStats } from "../../../src/db/query/credits";
 import { StatCard } from "../../../src/components/common/StatCard";
 import { formatNumber } from "../../../src/db/utils";
+import { canViewReports } from "../../../src/utils/rolesAndPermissions"
 
 export default function CreditsListPage() {
   const db = useSQLiteContext();
   const router = useRouter();
   const isFocused = useIsFocused();
+
+  const [isAllowedToViewReports,setIsAllowedToViewReports] = useState(canViewReports())
 
   const { globalStyles } = useThemeStyles();
 
@@ -45,7 +48,9 @@ export default function CreditsListPage() {
   const [creditStats,setCreditStats] = useState({})
   const [timeState, setTimeState] = useState(createRange("month"));
   const [statusFilter, setStatusFilter] = useState("outstanding");
+
   const lastSyncedAt = useSelector((state) => state.sync.lastSyncedAt);
+    const user = useSelector((state) => state.user.userDetails);
 
   const filterOptions = [
     {
@@ -92,7 +97,11 @@ export default function CreditsListPage() {
     }
   }, [isFocused, timeState, lastSyncedAt, statusFilter]);
 
-   useEffect(() => {
+  useEffect(() => {
+    setIsAllowedToViewReports(canViewReports())
+  },[user])
+
+  useEffect(() => {
     if (isFocused) {
       fetchStats();
     }
@@ -177,6 +186,7 @@ export default function CreditsListPage() {
             statusFilter={statusFilter}
             stats={creditStats}
             globalStyles={globalStyles}
+            isAllowedToViewReports={isAllowedToViewReports}
           />
         }
         ListEmptyComponent={
@@ -197,7 +207,8 @@ const ListHeader = ({
   filterOptions={filterOptions}, 
   statusFilter,
   stats,
-  globalStyles
+  globalStyles,
+  isAllowedToViewReports
 }) => {
   return (
     <>
@@ -210,7 +221,7 @@ const ListHeader = ({
         />
       </View>
 
-      <View style={styles.statsRow}>
+      {isAllowedToViewReports && <View style={styles.statsRow}>
         <StatCard
           label={"Balance"}
           value={formatNumber(stats?.totalAmount)}
@@ -223,7 +234,7 @@ const ListHeader = ({
           color="#FF6B6B"
           subText={""}
         />
-      </View>
+      </View>}
     </>
   );
 };
