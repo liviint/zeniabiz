@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { FlatList, Pressable, StyleSheet, View , RefreshControl} from "react-native";
+import { FlatList, Pressable, StyleSheet, View , RefreshControl, TouchableOpacity} from "react-native";
 import { BodyText, Card, SecondaryText, Input } from "../../../src/components/ThemeProvider/components";
 import { AddButton } from "../../../src/components/common/AddButton";
 import { getProducts } from "../../../src/db/query/inventory";
@@ -16,6 +16,7 @@ import FilterComponent from "../../../src/components/common/FilterComponent";
 import SortComponent from "../../../src/components/common/SortComponent";
 import { formatNumber } from "../../../src/db/utils";
 import { canViewReports } from "../../../src/utils/rolesAndPermissions"
+import BarcodeScanner from "../../../src/components/barcodeScanner";
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();
@@ -36,6 +37,8 @@ export default function ProductsListPage() {
   const debouncedSearch = useDebounce(search, 400);
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("newest")
+
+  const [scannerVisible, setScannerVisible] = useState(false);
 
   const filterOptions = [
     {
@@ -185,6 +188,7 @@ export default function ProductsListPage() {
             sort={sort}
             globalStyles={globalStyles}
             isAllowedToViewReports={isAllowedToViewReports}
+            setScannerVisible={setScannerVisible}
           />
         }
         ListEmptyComponent={
@@ -201,6 +205,13 @@ export default function ProductsListPage() {
           {route:"/inventory/add/service",label: "Add Service"},
         ]}
       />
+      <BarcodeScanner
+        visible={scannerVisible}
+        onClose={() => setScannerVisible(false)}
+        onScan={(barcode) => {
+          setSearch(barcode);
+        }}
+      />
     </View>
   );
 }
@@ -215,18 +226,28 @@ const ListHeader = ({
   sortOptions,
   sort,
   globalStyles,
-  isAllowedToViewReports
+  isAllowedToViewReports,
+  setScannerVisible,
 }) => {
   return (
     <>
       <View style={styles.filtersContainer}>
         <View style={styles.searchRow}>
           <Input
-            placeholder="Search items..."
+            placeholder="Search name or barcode..."
             value={search}
             onChangeText={setSearch}
             style={styles.searchInput}
           />
+
+          <TouchableOpacity
+            style={globalStyles.primaryBtn}
+            onPress={() => setScannerVisible(true)}
+          >
+            <BodyText style={globalStyles.primaryBtnText}>
+              Scan
+            </BodyText>
+          </TouchableOpacity>
 
           {search.length > 0 && (
             <Pressable onPress={() => setSearch("")} style={styles.clearBtn}>
@@ -259,6 +280,7 @@ const ListHeader = ({
           value={formatNumber(stats.count)}
         />
       </View>}
+
     </>
       
   )

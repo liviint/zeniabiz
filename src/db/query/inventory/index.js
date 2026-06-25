@@ -343,7 +343,7 @@ export async function getProducts(
     sql += `
       AND (
         p.name LIKE ?
-        OR p.sku LIKE ?
+        OR p.barcode LIKE ?
       )
     `;
 
