@@ -88,6 +88,7 @@ const MODEL_CONFIG = {
       "id",
       "company",
       "name",
+      "barcode",
       "selling_price",
       "cost_price",
       "item_type",
