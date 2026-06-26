@@ -22,45 +22,41 @@ const SearchProducts = ({
 
     return (
         <View style={styles.searchRow}>
-                  <Input
-                    placeholder="Search name or barcode..."
-                    value={search}
-                    onChangeText={setSearch}
-                    style={styles.searchInput}
+            <Input
+              placeholder="Search name or barcode..."
+              value={search}
+              onChangeText={setSearch}
+              style={styles.searchInput}
+            />
+        
+            <TouchableOpacity
+              style={globalStyles.primaryBtn}
+              onPress={() => setScannerVisible(true)}
+            >
+              <BodyText style={globalStyles.primaryBtnText}>
+                Scan
+              </BodyText>
+            </TouchableOpacity>
+        
+            {search.length > 0 && (
+              <Pressable onPress={() => setSearch("")} style={styles.clearBtn}>
+                <BodyText style={styles.clearText}>✕</BodyText>
+              </Pressable>
+            )}
+            <BarcodeScanner
+                    visible={scannerVisible}
+                    onClose={() => setScannerVisible(false)}
+                    onScan={(barcode) => {
+                      setSearch(barcode);
+                    }}
                   />
-        
-                  <TouchableOpacity
-                    style={globalStyles.primaryBtn}
-                    onPress={() => setScannerVisible(true)}
-                  >
-                    <BodyText style={globalStyles.primaryBtnText}>
-                      Scan
-                    </BodyText>
-                  </TouchableOpacity>
-        
-                  {search.length > 0 && (
-                    <Pressable onPress={() => setSearch("")} style={styles.clearBtn}>
-                      <BodyText style={styles.clearText}>✕</BodyText>
-                    </Pressable>
-                  )}
-                  <BarcodeScanner
-                          visible={scannerVisible}
-                          onClose={() => setScannerVisible(false)}
-                          onScan={(barcode) => {
-                            setSearch(barcode);
-                          }}
-                        />
-                </View>
+          </View>
     )
 }
 
 export default SearchProducts
 
 const styles = StyleSheet.create({
-  filtersContainer: {
-    paddingHorizontal: 12,
-    marginBottom: 8,
-  },
 
   searchRow: {
     flexDirection: "row",
@@ -68,43 +64,23 @@ const styles = StyleSheet.create({
     marginBottom:10,
   },
 
-searchInput: {
-  flex: 1,
-  padding: 12,
-  borderRadius: 12,
-},
-
-clearBtn: {
-  marginLeft: 8,
-  padding: 10,
-  borderRadius: 10,
-  backgroundColor: "#F4E1D2",
-},
-
-clearText: {
-  color: "#FF6B6B",
-  fontWeight: "bold",
-},
-
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  left: {
+  searchInput: {
     flex: 1,
-    marginRight: 12,
+    padding: 12,
+    borderRadius: 12,
+    marginRight:5,
   },
-  title: {
-    fontWeight: "600",
+
+  clearBtn: {
+    marginLeft: 5,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: "#F4E1D2",
   },
-  meta: {
-    fontSize: 12,
-    marginTop: 2,
+
+  clearText: {
+    color: "#FF6B6B",
+    fontWeight: "bold",
   },
-  price: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#2E8B8B",
-  },
+
 });
