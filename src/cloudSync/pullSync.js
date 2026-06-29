@@ -20,6 +20,27 @@ const MODEL_CONFIG = {
     ],
     conflictKeys: ["id"],
   },
+  suppliers: {
+    fields: [
+      "id",
+      "company",
+      "created_by",
+      "updated_by",
+      "business_name",
+      "contact_person",
+      "phone",
+      "email",
+      "address",
+      "notes",
+      "is_active",
+      "tax_pin",
+      "website",
+      "created_at",
+      "updated_at",
+      "deleted_at",
+    ],
+    conflictKeys: ["id"],
+  },
   sales: {
     fields: [
       "id",
