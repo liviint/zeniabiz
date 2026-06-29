@@ -27,6 +27,7 @@ import {
   createCustomerTables,
   createSettingsTables,
   createSyncTables,
+  createSuppliersTables,
 } from "../../db/schema"
 
 const migrateDbIfNeeded = async (db) => {
@@ -46,6 +47,7 @@ const migrateDbIfNeeded = async (db) => {
     await createSalesTables(db)
     await createPaymentsTables(db)
     await createCustomerTables(db)
+    await createSuppliersTables(db)
 
     //INFRA
     await createSyncTables(db)
