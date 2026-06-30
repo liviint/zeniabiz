@@ -36,15 +36,19 @@ export default function CategoriesPicker({
   }, [isFocused]);
 
   useEffect(() => {
-      if (recentlyCreatedCategoryId && categories.length > 0) {
-  
-        const category = categories.find((c) => c.id === recentlyCreatedCategoryId);
-        if (category) {
+    if (recentlyCreatedCategoryId && categories.length > 0) {
+      const category = categories.find((c) => c.id === recentlyCreatedCategoryId);
+      
+      if (category) {
+        const timer = setTimeout(() => {
           handleCategoryChange(category);
           dispatch(clearRecentlyCreatedCategoryId());
-        }
+        }, 50);
+
+        return () => clearTimeout(timer);
       }
-    }, [categories,recentlyCreatedCategoryId,]);
+    }
+  }, [categories, recentlyCreatedCategoryId]);
 
   // Special value for Add Category button
   const ADD_CATEGORY_VALUE = "__add_category__";
