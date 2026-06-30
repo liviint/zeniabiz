@@ -12,6 +12,13 @@ export const configureGoogleDrive = () => {
   });
 };
 
+export const configureGoogleDriveLoginOnly = () => {
+  GoogleSignin.configure({
+    webClientId: "28706889001-ab7rmk5a8t678ebijhnmsmioj17p629p.apps.googleusercontent.com",
+    offlineAccess: true,
+  });
+};
+
 export const getAccessToken = async () => {
   const { accessToken } = await GoogleSignin.getTokens();
 

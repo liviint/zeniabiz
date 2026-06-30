@@ -2,6 +2,7 @@ import { loadActiveContext } from "@/src/db/utils";
 import { clearSyncRequest } from "@/src/store/features/googleDriveSyncSlice";
 import {
     determineSyncAction,
+    configureGoogleDriveLoginOnly,
     restoreBackup,
     uploadBackup,
 } from "@/src/utils/googleDriveBackupService";
@@ -123,6 +124,10 @@ const GoogleBackupProvider = ({ children }) => {
       dispatch(clearSyncRequest());
     }
   };
+
+  useEffect(() => {
+    configureGoogleDriveLoginOnly();
+  }, []);
 
   /**
    * Manual sync request
