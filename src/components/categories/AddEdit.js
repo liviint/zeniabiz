@@ -66,7 +66,6 @@ export default function AddEdit() {
                 color: form.color,
                 icon: form.icon,
             });
-            setForm(initialForm)
 
             dispatch(setRecentlyCreatedCategoryId(cateId))
 

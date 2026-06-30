@@ -4,7 +4,17 @@ import { useIsFocused } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { 
+  Alert, 
+  Modal, 
+  Pressable, 
+  ScrollView, 
+  StyleSheet, 
+  Text, 
+  TouchableOpacity, 
+  View,
+  InteractionManager
+} from "react-native";
 import { getTransactionById, upsertExpense } from "../../db/query/expenses";
 import { getTransactionTemplates } from "../../db/query/expenses/templates";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
@@ -140,7 +150,12 @@ const isFormValid = () => {
       }
     };
 
-    loadTemplates();
+    if (isFocused) {
+      const task = InteractionManager.runAfterInteractions(() => {
+        loadTemplates();
+      });
+      return () => task.cancel(); // Cleans up task if unmounted mid-animation
+    }
   }, [isFocused]);
 
 

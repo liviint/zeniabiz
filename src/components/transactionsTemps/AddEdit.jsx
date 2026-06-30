@@ -6,6 +6,7 @@ import {
     Alert,
     TouchableOpacity,
     View,
+    InteractionManager,
 } from "react-native";
 import {
     getTransactionTemplateByid,
@@ -71,7 +72,7 @@ export default function AddTransactionTemplateScreen() {
     });
 
     Alert.alert("Success", "Template saved successfully!");
-    setForm(initialForm);
+
     router.back();
   };
 
@@ -80,8 +81,13 @@ export default function AddTransactionTemplateScreen() {
       const result = await getTransactionTemplateByid(db, id);
       setForm(result);
     };
-    id && loadTemplate();
-  }, [isFocused]);
+    if (id && isFocused) {
+      const task = InteractionManager.runAfterInteractions(() => {
+        loadTemplate();
+      });
+      return () => task.cancel();
+    }
+  }, [id,isFocused]);
 
   return (
     <KeyboardAwareScrollView
