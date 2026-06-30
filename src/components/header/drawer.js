@@ -15,18 +15,21 @@ export default function Header({ menuOpen, setMenuOpen }) {
     const pathname = usePathname();
 
     const items = [
-        { label: "Credit", path: "/credits", type: "internal" },
         { label: "Customers", path: "/customers", type: "internal" },
+        { label: "Suppliers", path: "/suppliers", type: "internal" },
+        { label: "Credit", path: "/credits", type: "internal" },
+
         { label: "Business", path: "/business", type: "internal" },
-        { label: "Settings", path: "/settings", type: "internal" },
-        { label: "Profile", path: "/auth/profile", type: "internal" },
-        { label: "Feedback", path: "/feedback", type: "internal" },
 
         {
             label: "Learning Center",
             path: "https://zeniabiz.com/learning-center",
             type: "external",
         },
+
+        { label: "Feedback", path: "/feedback", type: "internal" },
+        { label: "Settings", path: "/settings", type: "internal" },
+        { label: "Profile", path: "/auth/profile", type: "internal" },
     ];
 
     const handlePress = (item) => {

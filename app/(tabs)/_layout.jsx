@@ -118,6 +118,12 @@ export default function TabLayout() {
             href: null,
           }}
         />
+        <Tabs.Screen
+          name="suppliers"
+          options={{
+            href: null,
+          }}
+        />
       <Tabs.Screen
           name="business/index"
           options={{

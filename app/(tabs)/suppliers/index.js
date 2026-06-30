@@ -149,7 +149,13 @@ export default function CustomersList() {
                 {section.title}
             </BodyText>
             )}
-            renderItem={item => renderItem({item,router,formatDate})}
+            renderItem={({ item }) => (
+                <RenderSupplierItem
+                    item={item}
+                    router={router}
+                    formatDate={formatDate}
+                />
+            )}
             ListEmptyComponent={
             <EmptyState
                 title="No suppliers yet"
@@ -168,7 +174,7 @@ export default function CustomersList() {
     );
 }
 
-const renderItem= ({ item , router, formatDate}) => (
+const RenderSupplierItem = ({ item , router, formatDate}) => (
     <Pressable
         onPress={() => router.push(`/suppliers/${item.id}`)}
         style={({ pressed }) => ({
