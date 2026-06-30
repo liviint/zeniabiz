@@ -96,6 +96,7 @@ export async function createSession(db, { user, access, refresh, company_uuid = 
     const localUser = await db.getFirstAsync(
       `SELECT uuid FROM local_user LIMIT 1`
     );
+    const user_id =  user?.uuid || localUser?.uuid
 
     let companyUuid = company_uuid || await getSessionCompany(db, user);
 
@@ -124,7 +125,7 @@ export async function createSession(db, { user, access, refresh, company_uuid = 
       VALUES (?, ?, ?, ?, ?, ?, ?)
       `,
       [
-        user?.uuid,   
+        user_id,   
         companyUuid,
         company_role,
         access ? access : null,
@@ -137,7 +138,7 @@ export async function createSession(db, { user, access, refresh, company_uuid = 
     console.log("✅ Session created successfully:", result);
 
     return {
-      user_uuid: user?.uuid,
+      user_uuid: user_id,
       access,
       refresh
     };
