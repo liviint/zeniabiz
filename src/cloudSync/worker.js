@@ -10,6 +10,7 @@ const PULL_ORDER = [
   "expenses",
   "expense_templates",
   "customers",
+  "suppliers",
   "sales",
   "sale_items", 
   "payments"
