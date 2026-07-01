@@ -2,7 +2,14 @@ import { useIsFocused } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { Pressable, RefreshControl, SectionList, StyleSheet, View } from "react-native";
+import { 
+  Pressable, 
+  RefreshControl, 
+  SectionList, 
+  StyleSheet, 
+  View,
+  InteractionManager,
+} from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { BodyText, Card, SecondaryText } from "../../../src/components/ThemeProvider/components";
 import { AddButton } from "../../../src/components/common/AddButton";
@@ -19,8 +26,9 @@ import { setCategoriesMap } from "../../../src/store/features/cetegoriesSlice";
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 import { dateFormat } from "../../../utils/dateFormat";
 import { canViewReports } from "../../../src/utils/rolesAndPermissions"
+import PageLoader from "../../../src/components/common/PageLoader";
 
-export default function FinanceListPage() {
+export default function ExpensesListPage() {
     const { onRefresh, refreshing } = useManualSync();
     const db = useSQLiteContext()
     const router = useRouter();
@@ -57,11 +65,14 @@ export default function FinanceListPage() {
 
     useEffect(() => {
       if (isFocused) {
-        fetchExpenses()
-        loadCategories()
+        setIsLoading(true);
+        const task = InteractionManager.runAfterInteractions(async () => {
+          await Promise.all([fetchExpenses(), loadCategories()]);
+          setIsLoading(false);
+        });
+        return () => task.cancel();
       }
-        setIsLoading(false)
-    },[isFocused, timeState,lastSyncedAt])
+    }, [isFocused, timeState, lastSyncedAt]);
 
 
     useEffect(() => {
@@ -131,43 +142,54 @@ export default function FinanceListPage() {
         </BodyText>
       </View>
           
+    { !isLoading ?
       <>
-      <SectionList
-        sections={sections}
-        keyExtractor={(item) => item.id}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        renderItem={renderItem}
-        renderSectionHeader={({ section: { title } }) => (
-          <BodyText style={{ fontWeight: "bold", padding: 10 }}>
-            {title}
-          </BodyText>
-        )}
-        ListHeaderComponent={
-          <ListHeader
-            stats={stats}
-            expenses={expenses}
-            timeState={timeState}
-            setTimeState={setTimeState}
-            isAllowedToViewReports={isAllowedToViewReports}
-          />
-        }
-        ListEmptyComponent={
-          <EmptyState 
-            title="No expenses yet"
-            description="Record a sale or expense to start tracking your business."
+        
+        <SectionList
+          sections={sections}
+          keyExtractor={(item) => String(item.id)}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          renderItem={renderItem}
+          renderSectionHeader={({ section: { title } }) => (
+            <BodyText style={{ fontWeight: "bold", padding: 10 }}>
+              {title}
+            </BodyText>
+          )}
+          ListHeaderComponent={
+            <ListHeader
+              stats={stats}
+              expenses={expenses}
+              timeState={timeState}
+              setTimeState={setTimeState}
+              isAllowedToViewReports={isAllowedToViewReports}
+            />
+          }
+          ListEmptyComponent={
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 40 }}>
+              <EmptyState 
+                title="No expenses yet"
+                description="Record a sale or expense to start tracking your business."
+              />
+            </View>
+          }
+          contentContainerStyle={{ paddingBottom: 96 }}
         />
-        }
-        contentContainerStyle={{ paddingBottom: 96 }}
-      />
-    </> 
 
-      <AddButton 
-        primaryAction={{route:"/expenses/add",label:"Add Expense"}}
-        secondaryActions={[
-          {route:"/expenses/categories/add/modal",label:"Add Category"},
-          {route:"/expenses/templates/add/",label:"Add Template"},
-        ]}
-      />
+        <AddButton 
+          primaryAction={{route:"/expenses/add",label:"Add Expense"}}
+          secondaryActions={[
+            {route:"/expenses/categories/add/modal",label:"Add Category"},
+            {route:"/expenses/templates/add/",label:"Add Template"},
+          ]}
+        />
+
+      </> 
+      : 
+      <PageLoader />
+    }
+
+      
+
   </View>
   )
 }

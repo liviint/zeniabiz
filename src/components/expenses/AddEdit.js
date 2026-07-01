@@ -1,3 +1,4 @@
+
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useSelector } from "react-redux";
 import { useIsFocused } from "@react-navigation/native";
@@ -13,7 +14,8 @@ import {
   Text, 
   TouchableOpacity, 
   View,
-  InteractionManager
+  InteractionManager,
+  Platform
 } from "react-native";
 import { getTransactionById, upsertExpense } from "../../db/query/expenses";
 import { getTransactionTemplates } from "../../db/query/expenses/templates";
@@ -24,28 +26,28 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 
 export default function AddEdit() {
   const isFocused = useIsFocused()
-  const {id} = useLocalSearchParams()
+  const { id } = useLocalSearchParams()
   const categoriesMap = useSelector(state => state.categories.categoriesMap);
-  const {globalStyles} = useThemeStyles()
+  const { globalStyles } = useThemeStyles()
   const db = useSQLiteContext()
   const router = useRouter()
+  
   const [form, setForm] = useState({
     title: "",
     amount: "",
     category: "",
-    category_id:"", 
+    category_id: "", 
     note: "",
-    id:"",
-    payee:"",
-    date:new Date(),
-    template:false,
-    created_at:new Date(),
+    id: "",
+    payee: "",
+    date: new Date(),
+    template: false,
+    created_at: new Date(),
   });
+  
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [transactionDate, setTransactionDate] = useState(
-    form.date ? new Date(form.date) : new Date()
-  );
+  const [transactionDate, setTransactionDate] = useState(new Date());
   const [templates, setTemplates] = useState([]);
   const [showTemplates, setShowTemplates] = useState(false);
 
@@ -53,6 +55,7 @@ export default function AddEdit() {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  // FIX 1: Android Picker crash protection using timeouts
   const handleDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
     if (selectedDate) {
@@ -61,7 +64,11 @@ export default function AddEdit() {
       updated.setMonth(selectedDate.getMonth());
       updated.setDate(selectedDate.getDate());
       setTransactionDate(updated);
-      setForm(prev => ({...prev,date:updated}))
+      
+      // Delay parent state change until native modal fully closes
+      setTimeout(() => {
+        setForm(prev => ({ ...prev, date: updated }));
+      }, Platform.OS === 'android' ? 100 : 0);
     }
   };
 
@@ -72,39 +79,33 @@ export default function AddEdit() {
       updated.setHours(selectedTime.getHours());
       updated.setMinutes(selectedTime.getMinutes());
       updated.setSeconds(selectedTime.getSeconds());
-      setForm(prev => ({...prev,date:updated}))
+      
+      setTimeout(() => {
+        setForm(prev => ({ ...prev, date: updated }));
+      }, Platform.OS === 'android' ? 100 : 0);
     }
   };
 
   const handleCategoryChange = (selected) => {
-    setForm((prev) => ({ ...prev, category_id: selected.id, category:selected.name,}))
+    setForm((prev) => ({ ...prev, category_id: selected.id, category: selected.name }));
   } 
 
-const isFormValid = () => {
-  if (!form.title.trim()) {
-    Alert.alert("Missing title", "Please enter a title for the expense.");
-    return false;
-  }
-
-  const amount = Number(form.amount);
-  if (!form.amount || isNaN(amount) || amount <= 0) {
-    Alert.alert(
-      "Invalid amount",
-      "Please enter a valid amount greater than 0."
-    );
-    return false;
-  }
-
-  if (!form.category_id) {
-    Alert.alert(
-      "Category required",
-      "Please select a category for this transaction."
-    );
-    return false;
-  }
-
-  return true;
-};
+  const isFormValid = () => {
+    if (!form.title.trim()) {
+      Alert.alert("Missing title", "Please enter a title for the expense.");
+      return false;
+    }
+    const amount = Number(form.amount);
+    if (!form.amount || isNaN(amount) || amount <= 0) {
+      Alert.alert("Invalid amount", "Please enter a valid amount greater than 0.");
+      return false;
+    }
+    if (!form.category_id) {
+      Alert.alert("Category required", "Please select a category for this transaction.");
+      return false;
+    }
+    return true;
+  };
 
   const handleUseTemplate = (template) => {
     setForm((prev) => ({
@@ -115,38 +116,46 @@ const isFormValid = () => {
       category_id: template.category_id || "",
       note: template.note || "",
       payee: template.payee || "",
-      template:template.id,
+      template: template.id,
     }));
     setShowTemplates(false);
   };
 
+  // FIX 2: Correct historical routing to avoid SQLite write blocks
   const handleSave = async () => {
-    if(!isFormValid()) return
+    if (!isFormValid()) return;
     try {
-      await upsertExpense(db,form)
-      router.push("/expenses")
+      await upsertExpense(db, form);
+      
+      // If we came from an existing route, go back. Otherwise replace stack safely.
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace("/expenses");
+      }
     } catch (error) {
-      console.log(error,"hello error creating a transaction")
+      console.log(error, "hello error creating a transaction");
     }
-  }
+  };
 
   useEffect(() => {
-    if(!id) return
+    if (!id) return;
     let getTransaction = async() => {
-      let transaction = await getTransactionById(db,id)
-      let date = transaction.date ? new Date(transaction.date) : new Date()
-      setForm({...transaction,date})
-    }
-    getTransaction()
-  },[id])
+      let transaction = await getTransactionById(db, id);
+      let date = transaction.date ? new Date(transaction.date) : new Date();
+      setForm({ ...transaction, date });
+      setTransactionDate(date);
+    };
+    getTransaction();
+  }, [id]);
 
   useEffect(() => {
     const loadTemplates = async () => {
       try {
         const result = await getTransactionTemplates(db);
-        setTemplates(result);
+        setTemplates(result || []);
       } catch (error) {
-        console.log(error,"hello error")
+        console.log(error, "hello error");
       }
     };
 
@@ -154,10 +163,9 @@ const isFormValid = () => {
       const task = InteractionManager.runAfterInteractions(() => {
         loadTemplates();
       });
-      return () => task.cancel(); // Cleans up task if unmounted mid-animation
+      return () => task.cancel();
     }
   }, [isFocused]);
-
 
   return (
     <KeyboardAwareScrollView
@@ -171,17 +179,17 @@ const isFormValid = () => {
         {id ? "Edit Expense" : "Add Expense"}
       </BodyText>
 
-      <Card >
-
-      <UseTemplateComponent 
-        id={id}
-        templates={templates}
-        showTemplates={showTemplates}
-        setShowTemplates={setShowTemplates}
-        handleUseTemplate={handleUseTemplate}
-        globalStyles={globalStyles}
-        categoriesMap={categoriesMap}
-      />
+      <Card>
+        <UseTemplateComponent 
+          id={id}
+          templates={templates}
+          showTemplates={showTemplates}
+          setShowTemplates={setShowTemplates}
+          handleUseTemplate={handleUseTemplate}
+          globalStyles={globalStyles}
+          categoriesMap={categoriesMap}
+        />
+        
         <View style={globalStyles.formGroup}>
           <FormLabel style={styles.label}>Title</FormLabel>
           <Input
@@ -198,18 +206,18 @@ const isFormValid = () => {
         />
 
         <View style={globalStyles.formGroup}>
-          <FormLabel >Amount</FormLabel>
+          <FormLabel>Amount</FormLabel>
           <Input
             placeholder="0"
             keyboardType="numeric"
-            value={String(form.amount)}
+            value={form.amount ? String(form.amount) : ""}
             onChangeText={(v) => handleChange("amount", v)}
             id={id}
           />
         </View>
 
         <View style={globalStyles.formGroup}>
-          <FormLabel >Payee</FormLabel>
+          <FormLabel>Payee</FormLabel>
           <Input
             placeholder="Payee (e.g Landlord)"
             value={form.payee || ""}
@@ -233,7 +241,6 @@ const isFormValid = () => {
               <BodyText>{form?.date?.toDateString()}</BodyText>
             </TouchableOpacity>
 
-            {/* Time Button */}
             <TouchableOpacity
               onPress={() => setShowTimePicker(true)}
               style={{
@@ -242,7 +249,7 @@ const isFormValid = () => {
                 paddingHorizontal: 4,
                 borderRadius: 14,
                 alignItems: "center",
-                justifyContent:"center",
+                justifyContent: "center",
                 ...globalStyles.formBorder
               }}
             >
@@ -255,7 +262,7 @@ const isFormValid = () => {
 
           {showDatePicker && (
             <DateTimePicker
-              value={form.date}
+              value={form.date || new Date()}
               mode="date"
               display="calendar"
               onChange={handleDateChange}
@@ -265,7 +272,7 @@ const isFormValid = () => {
 
           {showTimePicker && (
             <DateTimePicker
-              value={form.date}
+              value={form.date || new Date()}
               mode="time"
               display="spinner"
               onChange={handleTimeChange}
@@ -273,9 +280,8 @@ const isFormValid = () => {
           )}
         </View>
 
-
         <View style={globalStyles.formGroup}>
-          <FormLabel >Note (optional)</FormLabel>
+          <FormLabel>Note (optional)</FormLabel>
           <TextArea
             placeholder="Any extra details"
             value={form.note}
@@ -289,20 +295,20 @@ const isFormValid = () => {
             {id ? "Update Expense" : "Save Expense"}
           </Text>
         </TouchableOpacity>
-
       </Card>
     </KeyboardAwareScrollView>
   );
 }
 
-const UseTemplateComponent = ({id,templates, handleUseTemplate,showTemplates, setShowTemplates, globalStyles,categoriesMap}) => {
-  const router = useRouter()
+// FIX 3: Fully clean up modal interactions when redirecting to Template Setup
+const UseTemplateComponent = ({ id, templates, handleUseTemplate, showTemplates, setShowTemplates, globalStyles, categoriesMap }) => {
+  const router = useRouter();
   return (
     <>
-      {!id &&  (
+      {!id && (
         <Pressable
           onPress={() => setShowTemplates(true)}
-          style={{...globalStyles.secondaryBtn, marginBottom:10}}
+          style={{ ...globalStyles.secondaryBtn, marginBottom: 10 }}
         >
           <BodyText style={globalStyles.secondaryBtnTxt}>
             📋 Use Template
@@ -310,143 +316,103 @@ const UseTemplateComponent = ({id,templates, handleUseTemplate,showTemplates, se
         </Pressable>
       )}
 
-
-    <Modal
-      visible={showTemplates}
-      transparent
-      animationType="fade"
-      onRequestClose={() => setShowTemplates(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <Card style={styles.modalContent}>
-          <BodyText style={styles.modalTitle}>
-            Select a Template
-          </BodyText>
-
-          <Pressable
-            onPress={() => {
-              setShowTemplates(false);
-              router.push("/expenses/templates/add");
-            }}
-            style={globalStyles.primaryBtn}
-          >
-            <BodyText style={globalStyles.primaryBtnText}>
-              + Add New Template
+      <Modal
+        visible={showTemplates}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowTemplates(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Card style={styles.modalContent}>
+            <BodyText style={styles.modalTitle}>
+              Select a Template
             </BodyText>
-          </Pressable>
 
-          {templates.length === 0 && (
-            <SecondaryText style={{ textAlign: "center", marginVertical: 20 }}>
-              No templates yet. Create one to save time.
-            </SecondaryText>
-          )}
+            <Pressable
+              onPress={() => {
+                setShowTemplates(false);
+                // Wait for modal animation fallback to complete cleanly before jumping
+                setTimeout(() => {
+                  router.push("/expenses/templates/add");
+                }, 150);
+              }}
+              style={globalStyles.primaryBtn}
+            >
+              <BodyText style={globalStyles.primaryBtnText}>
+                + Add New Template
+              </BodyText>
+            </Pressable>
 
-          <ScrollView>
-            {templates.map((tpl) => (
-              <Pressable
-                key={tpl.id}
-                onPress={() => handleUseTemplate(tpl)}
-                style={styles.templateItem}
-              >
-                <BodyText style={styles.templateTitle}>
-                  {tpl.title}
-                </BodyText>
-                <SecondaryText style={styles.templateMeta}>
-                  {tpl.category_id ? categoriesMap[tpl.category_id] : "Uncategorized"}
-                </SecondaryText>
-              </Pressable>
-            ))}
-          </ScrollView>
+            {templates.length === 0 && (
+              <SecondaryText style={{ textAlign: "center", marginVertical: 20 }}>
+                No templates yet. Create one to save time.
+              </SecondaryText>
+            )}
 
-          <Pressable
-            onPress={() => setShowTemplates(false)}
-            style={globalStyles.secondaryBtn}
-          >
-            <BodyText style={globalStyles.secondaryBtnTxt}>
-              Cancel
-            </BodyText>
-          </Pressable>
-        </Card>
-      </View>
-    </Modal>
+            <ScrollView>
+              {templates.map((tpl) => (
+                <Pressable
+                  key={String(tpl.id)}
+                  onPress={() => handleUseTemplate(tpl)}
+                  style={styles.templateItem}
+                >
+                  <BodyText style={styles.templateTitle}>
+                    {tpl.title}
+                  </BodyText>
+                  <SecondaryText style={styles.templateMeta}>
+                    {tpl.category_id ? categoriesMap[tpl.category_id] : "Uncategorized"}
+                  </SecondaryText>
+                </Pressable>
+              ))}
+            </ScrollView>
+
+            <Pressable
+              onPress={() => setShowTemplates(false)}
+              style={globalStyles.secondaryBtn}
+            >
+              <BodyText style={globalStyles.secondaryBtnTxt}>
+                Cancel
+              </BodyText>
+            </Pressable>
+          </Card>
+        </View>
+      </Modal>
     </>
-  )
-  
-}
+  );
+};
 
 const styles = StyleSheet.create({
-  header: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#333333",
-    marginBottom: 4,
-  },
-  subHeader: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 16,
-  },
-  expenseActive: {
-    backgroundColor: "#FF6B6B",
-  },
-  incomeActive: {
-    backgroundColor: "#2E8B8B",
-  },
-  activeText: {
-    color: "#FFFFFF",
-  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.45)",
     justifyContent: "center",
     paddingHorizontal: 20,
-},
-
-modalContent: {
-  borderRadius: 22,
-  paddingVertical: 18,
-  paddingHorizontal: 16,
-  maxHeight: "75%",
-  elevation: 10,
-},
-
-modalTitle: {
-  fontSize: 17,
-  fontWeight: "700",
-  textAlign: "center",
-  marginBottom: 14,
-},
-
-templateItem: {
-  paddingVertical: 14,
-  paddingHorizontal: 6,
-  borderBottomWidth: 0.5,
-  borderBottomColor: "#EEE",
-},
-
-templateTitle: {
-  fontSize: 15,
-  fontWeight: "600",
-},
-
-templateMeta: {
-  fontSize: 12,
-  marginTop: 4,
-},
-
-cancelBtn: {
-  marginTop: 16,
-  paddingVertical: 12,
-  borderRadius: 14,
-  alignItems: "center",
-  backgroundColor: "#F4E1D2",
-},
-
-cancelText: {
-  fontSize: 14,
-  fontWeight: "600",
-  color: "#333",
-},
-
-
+  },
+  modalContent: {
+    borderRadius: 22,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    maxHeight: "75%",
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 14,
+  },
+  templateItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 6,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#EEE",
+  },
+  templateTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  templateMeta: {
+    fontSize: 12,
+    marginTop: 4,
+  },
 });
