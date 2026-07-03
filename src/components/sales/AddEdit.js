@@ -8,6 +8,7 @@ import {
   Pressable,
   StyleSheet,
   View,
+  InteractionManager,
 } from "react-native";
 import {
   BodyText,
@@ -60,33 +61,6 @@ export default function SellPage() {
     payments:[],
   })
 
-  // Fetch products
-  useEffect(() => {
-    (async () => {
-      const data = await getProducts(db, { search: debouncedSearch});
-      setProducts(data);
-    })();
-  }, [isFocused,debouncedSearch, ]);
-
-  // Load sale if editing
-  useEffect(() => {
-    if (!id) return;
-    (async () => {
-      const items = await getSaleItems(db, id);
-      setCart(items);
-    })();
-  }, [isFocused]);
-
-  useEffect(() => {
-    if (!id) return;
-    (async () => {
-      const t = await getSaleById(db, id);
-      setDate(new Date(t.date))
-      setTitle(t?.title);
-      setSale(t)
-    })();
-  }, [isFocused]);
-
   // Auto title
   useEffect(() => {
     if (cart.length === 0 || id) return;
@@ -94,14 +68,85 @@ export default function SellPage() {
     setTitle(`${topItem?.name || "Sale"} - ${total}`);
   }, [cart]);
 
-  // Fetch category
+
   useEffect(() => {
-    (async () => {
-      const data = await getCategories(db);
-      const cat = data.find((c) => c.name === "Product Sales");
-      setCategory(cat);
-    })();
+    let isMounted = true;
+    const fetchCategoryMetadata = async () => {
+      try {
+        const data = await getCategories(db);
+        const cat = data?.find((c) => c.name === "Product Sales");
+        if (isMounted && cat) {
+          setCategory(cat);
+        }
+      } catch (error) {
+        console.error("Failed to fetch category:", error);
+      }
+    };
+    fetchCategoryMetadata();
+    return () => { isMounted = false; };
   }, []);
+
+  useEffect(() => {
+    if (!isFocused) return;
+
+    let isMounted = true;
+    
+    const hydrateScreenData = async () => {
+      try {
+        // Fetch products based on search term
+        const fetchedProducts = await getProducts(db, { search: debouncedSearch });
+        
+        if (!isMounted) return;
+        setProducts(fetchedProducts || []);
+
+        // If editing an existing sale, fetch everything in parallel to protect thread execution
+        if (id) {
+          const [saleItems, saleDetails] = await Promise.all([
+            getSaleItems(db, id),
+            getSaleById(db, id)
+          ]);
+
+          if (!isMounted) return;
+
+          if (saleItems) setCart(saleItems);
+          if (saleDetails) {
+            setSale(saleDetails);
+            setTitle(saleDetails.title || "");
+            setDate(saleDetails.date ? new Date(saleDetails.date) : new Date());
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load screen data securely:", error);
+      }
+    };
+
+    // Stagger execution until native slide transition animations finish completely
+    const task = InteractionManager.runAfterInteractions(() => {
+      hydrateScreenData();
+    });
+
+    return () => {
+      isMounted = false;
+      task.cancel();
+    };
+  }, [isFocused, debouncedSearch, id]);
+
+  useEffect(() => {
+    setPaymentsForm(prev => ({
+      ...prev,
+      amountPaid: markedPrice,
+    }));
+  }, [cart]);
+
+  useEffect(() => {
+    if (sale) {
+      setPaymentsForm({
+        amountPaid: sale.amount_paid ?? 0,
+        discount: sale.discount ?? 0,
+        customer_id: sale.customer_id ?? null,
+      });
+    } 
+  }, [sale]);
 
   const addToCart = (product) => {
     setSale(null)
@@ -145,23 +190,6 @@ export default function SellPage() {
 
   const markedPrice = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,0);
-
-  useEffect(() => {
-    setPaymentsForm(prev => ({
-      ...prev,
-      amountPaid: markedPrice,
-    }));
-  }, [cart]);
-
-  useEffect(() => {
-    if (sale) {
-      setPaymentsForm({
-        amountPaid: sale.amount_paid ?? 0,
-        discount: sale.discount ?? 0,
-        customer_id: sale.customer_id ?? null,
-      });
-    } 
-  }, [sale]);
 
   const handleSave = async (
     fromCreditDiscount = false,

@@ -1,7 +1,7 @@
 import { useIsFocused } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { 
     Pressable, 
     RefreshControl, 
@@ -9,6 +9,7 @@ import {
     StyleSheet, 
     View,
     FlatList, 
+    InteractionManager,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { AddButton } from "../../../src/components/common/AddButton";
@@ -39,7 +40,6 @@ export default function SalesList() {
   const [isAllowedToViewReports,setIsAllowedToViewReports] = useState(canViewReports())
 
   const [sales, setSales] = useState([]);
-  const [stats, setStats] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [timeState, setTimeState] = useState(createRange("month"));
 
@@ -98,30 +98,47 @@ export default function SalesList() {
   ];
 
   useEffect(() => {
-    if (!db) return;
-    (async () => {
-      setIsLoading(true);
-      const data = await getSales(db, {timeState,filter,sort});
-      setSales(data);
-      setIsLoading(false);
-    })();
-  }, [isFocused, timeState,lastSyncedAt,filter,sort]);
+    if (!isFocused || !db) return;
+
+    let isMounted = true;
+    setIsLoading(true);
+
+    const fetchSalesData = async () => {
+      try {
+        const data = await getSales(db, { timeState, filter, sort });
+        if (isMounted) {
+          setSales(data || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch sales lists safely:", error);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    const task = InteractionManager.runAfterInteractions(() => {
+      fetchSalesData();
+    });
+
+    return () => {
+      isMounted = false;
+      task.cancel();
+    };
+  }, [isFocused, timeState, lastSyncedAt, filter, sort]);
 
   useEffect(() => {
     setIsAllowedToViewReports(canViewReports())
   },[user])
 
-
-  useEffect(() => {
-    const getStats = async() => {
-      const cashCollected = sales.reduce((sum, item) => sum + (item.amount_paid || 0),
-  0);
-        setStats({
-          count: sales.length,
-          cashCollected:cashCollected
-        });
-      }
-    getStats()
+  const stats = useMemo(() => {
+    if (!sales || sales.length === 0) {
+      return { count: 0, cashCollected: 0 };
+    }
+    const cashCollected = sales.reduce((sum, item) => sum + (Number(item?.amount_paid) || 0), 0);
+    return {
+      count: sales.length,
+      cashCollected
+    };
   }, [sales]);
 
   const formatDate = (date) => {
