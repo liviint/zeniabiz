@@ -188,7 +188,7 @@ export default function SalesList() {
       {isAllowedToViewReports && sales.length ? 
         <View style={styles.statsRow}>
           <StatCard
-            label="Cash Collected"
+            label="Amount Paid"
             value={stats?.cashCollected?.toLocaleString()}
             subText=""
           />
