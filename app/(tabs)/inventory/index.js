@@ -3,7 +3,14 @@ import { useSelector } from "react-redux";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { FlatList, Pressable, StyleSheet, View , RefreshControl, } from "react-native";
+import { 
+    FlatList, 
+    Pressable, 
+    StyleSheet, 
+    View , 
+    RefreshControl, 
+    InteractionManager 
+} from "react-native";
 import { BodyText, Card, SecondaryText } from "../../../src/components/ThemeProvider/components";
 import { AddButton } from "../../../src/components/common/AddButton";
 import { getProducts } from "../../../src/db/query/inventory";
@@ -109,22 +116,46 @@ export default function ProductsListPage() {
   },
 ];
 
-  const fetchProducts = async () => {
-    setIsLoading(true);
-    const data = await getProducts(db, { search: debouncedSearch, filter, sort });
-    setProducts(data);
-    setIsLoading(false);
-  };
+  
 
   useEffect(() => {
-    if (isFocused) fetchProducts();
-  }, [
-    isFocused, 
-    debouncedSearch, 
-    filter,
-    lastSyncedAt, 
-    sort
-  ]);
+    if (!isFocused || !db) return;
+
+    let isMounted = true;
+    setIsLoading(true);
+
+    const task = InteractionManager.runAfterInteractions(async () => {
+      try {
+        const data = await getProducts(db, {
+          search: debouncedSearch,
+          filter,
+          sort,
+        });
+
+        if (isMounted) {
+          setProducts(data || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      task.cancel();
+    };
+}, [
+  isFocused,
+  db,
+  debouncedSearch,
+  filter,
+  lastSyncedAt,
+  sort,
+]);
 
   useEffect(() => {
     setIsAllowedToViewReports(canViewReports())
