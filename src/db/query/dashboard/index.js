@@ -328,7 +328,7 @@ const revenueResult = await db.getFirstAsync(
     [company, startDate, endDate]
   );
 
-  const revenue = (revenueResult?.revenue - discountResult?.discounts) || 0 ;
+  const revenue = revenueResult?.revenue || 0 ;
 
   const cost = costResult?.cost || 0;
 
