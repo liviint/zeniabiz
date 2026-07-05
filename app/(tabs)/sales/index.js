@@ -9,7 +9,6 @@ import {
     StyleSheet, 
     View,
     FlatList, 
-    InteractionManager,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { AddButton } from "../../../src/components/common/AddButton";
@@ -29,6 +28,7 @@ import { useManualSync } from "../../../src/hooks/useManualSync";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 import { canViewReports } from "../../../src/utils/rolesAndPermissions"
+import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
 
 export default function SalesList() {
   const { onRefresh, refreshing } = useManualSync();
@@ -97,34 +97,35 @@ export default function SalesList() {
     },
   ];
 
-  useEffect(() => {
-    if (!isFocused || !db) return;
+  useDeferredEffect(async (isMounted) => {
+    if (isMounted()) setIsLoading(true);
 
-    let isMounted = true;
-    setIsLoading(true);
+    try {
+      const data = await getSales(db, {
+        timeState,
+        filter,
+        sort,
+      });
 
-    const fetchSalesData = async () => {
-      try {
-        const data = await getSales(db, { timeState, filter, sort });
-        if (isMounted) {
-          setSales(data || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch sales lists safely:", error);
-      } finally {
-        if (isMounted) setIsLoading(false);
+      if (isMounted()) {
+        setSales(data || []);
       }
-    };
-
-    const task = InteractionManager.runAfterInteractions(() => {
-      fetchSalesData();
-    });
-
-    return () => {
-      isMounted = false;
-      task.cancel();
-    };
-  }, [isFocused, timeState, lastSyncedAt, filter, sort]);
+    } catch (error) {
+      console.error("Failed to fetch sales:", error);
+    } finally {
+      if (isMounted()) {
+        setIsLoading(false);
+      }
+    }
+  }, [
+    db, 
+    isFocused, 
+    timeState, 
+    filter, 
+    sort, 
+    lastSyncedAt
+  ],{enabled: isFocused,}
+  );
 
   useEffect(() => {
     setIsAllowedToViewReports(canViewReports())

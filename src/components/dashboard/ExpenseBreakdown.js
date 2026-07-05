@@ -3,10 +3,11 @@ import { useSelector } from "react-redux";
 import { useIsFocused } from "@react-navigation/native";
 import { PieChart } from "react-native-chart-kit";
 import { useSQLiteContext } from "expo-sqlite";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card,BodyText } from "../ThemeProvider/components";
 import { getExpensesBreakDown } from "../../db/query/dashboard";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
+import { useDeferredEffect } from "../../hooks/useDeferredEffect";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -17,11 +18,8 @@ export default function ExpenseBreakdown({timeState}) {
   const [data, setData] = useState([]);
   const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
 
-  useEffect(() => {
-    loadData();
-  }, [lastSyncedAt,isFocused, timeState]);
+  useDeferredEffect(async (isMounted) => {
 
-  const loadData = async () => {
     const result = await getExpensesBreakDown(db, timeState) 
     
     const colors = [
@@ -40,9 +38,11 @@ export default function ExpenseBreakdown({timeState}) {
       legendFontSize: 12,
     }));
 
-    setData(formatted);
-  };
+    if (isMounted()) {
+      setData(formatted);
+    }
 
+  }, [db, isFocused, timeState, lastSyncedAt],{enabled: isFocused,});
 
   return (
     <Card >

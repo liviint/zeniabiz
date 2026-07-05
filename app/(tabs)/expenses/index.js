@@ -8,7 +8,6 @@ import {
   SectionList, 
   StyleSheet, 
   View,
-  InteractionManager,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { BodyText, Card, SecondaryText } from "../../../src/components/ThemeProvider/components";
@@ -27,6 +26,7 @@ import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 import { dateFormat } from "../../../utils/dateFormat";
 import { canViewReports } from "../../../src/utils/rolesAndPermissions"
 import PageLoader from "../../../src/components/common/PageLoader";
+import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
 
 export default function ExpensesListPage() {
     const { onRefresh, refreshing } = useManualSync();
@@ -63,17 +63,22 @@ export default function ExpensesListPage() {
         setTransactions(expenses)
     }
 
-    useEffect(() => {
-      if (isFocused) {
-        setIsLoading(true);
-        const task = InteractionManager.runAfterInteractions(async () => {
+    useDeferredEffect(async (isMounted) => {
+        if (isMounted()) setIsLoading(true);
+    
+        try {
           await Promise.all([fetchExpenses(), loadCategories()]);
-          setIsLoading(false);
-        });
-        return () => task.cancel();
-      }
-    }, [isFocused, timeState, lastSyncedAt]);
-
+          if (isMounted()) {
+            setIsLoading(false);
+          }
+        } catch (error) {
+          console.error("Failed to fetch sales:", error);
+        } finally {
+          if (isMounted()) {
+            setIsLoading(false);
+          }
+        }
+      }, [db, isFocused, timeState, lastSyncedAt],{enabled: isFocused,});
 
     useEffect(() => {
       setIsAllowedToViewReports(canViewReports())

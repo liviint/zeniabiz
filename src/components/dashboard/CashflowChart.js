@@ -3,11 +3,12 @@ import { useSelector } from "react-redux";
 import { useIsFocused } from "@react-navigation/native";
 import { LineChart } from "react-native-chart-kit";
 import { useSQLiteContext } from "expo-sqlite";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { chartConfig } from "../../helpers";
 import { Card, BodyText } from "../ThemeProvider/components";
 import { getCashFlow } from "../../db/query/dashboard";
+import { useDeferredEffect } from "../../hooks/useDeferredEffect";
 
 const screenWidth = Dimensions.get("window").width;
 export default function CashflowChart({timeState}) {
@@ -20,14 +21,16 @@ export default function CashflowChart({timeState}) {
   });
   const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
 
-  useEffect(() => {
-    loadChart();
-  }, [lastSyncedAt,isFocused, timeState]);
 
-  const loadChart = async () => {
+  useDeferredEffect(async (isMounted) => {
     let res = await getCashFlow(db, timeState)
-    setChartData(res);
-  };
+  
+      if (isMounted()) {
+        setChartData(res);
+      }
+
+    }, [db, isFocused, timeState, lastSyncedAt],{enabled: isFocused,});
+
 
   return (
     <Card >

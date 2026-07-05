@@ -32,6 +32,7 @@ import { getCredits, getCreditStats } from "../../../src/db/query/credits";
 import { StatCard } from "../../../src/components/common/StatCard";
 import { formatNumber } from "../../../src/db/utils";
 import { canViewReports } from "../../../src/utils/rolesAndPermissions"
+import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
 
 export default function CreditsListPage() {
   const db = useSQLiteContext();
@@ -80,22 +81,19 @@ export default function CreditsListPage() {
     },
   ]
 
-  const fetchCredits = async () => {
-    const data = await getCredits(db, timeState, statusFilter);
-    setCredits(data);
-    
-  };
-
   const fetchStats = async() => {
     const stats = await getCreditStats(credits, statusFilter);
     setCreditStats(stats)
   }
 
-  useEffect(() => {
-    if (isFocused) {
-      fetchCredits();
+  useDeferredEffect(async (isMounted) => {
+  
+    const data = await getCredits(db, timeState, statusFilter);
+
+    if (isMounted()) {
+        setCredits(data);
     }
-  }, [isFocused, timeState, lastSyncedAt, statusFilter]);
+  }, [isFocused, timeState, lastSyncedAt, statusFilter],{enabled: isFocused,});
 
   useEffect(() => {
     setIsAllowedToViewReports(canViewReports())

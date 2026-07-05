@@ -22,8 +22,8 @@ import { StatCard } from "../../../src/components/common/StatCard";
 import { useManualSync } from "../../../src/hooks/useManualSync";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
-
 import { getSuppliers } from "../../../src/db/query/suppliers";
+import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
 
 export default function CustomersList() {
     const { onRefresh, refreshing } = useManualSync();
@@ -67,24 +67,22 @@ export default function CustomersList() {
         },
     ];
 
-    useEffect(() => {
-        if (!db) return;
-
-        (async () => {
-        setIsLoading(true);
+    useDeferredEffect(async (isMounted) => {
+        if(isMounted()) setIsLoading(true);
 
         const data = await getSuppliers(db, {sort,});
-        setSuppliers(data || []);
-        setIsLoading(false);
-
-        })();
+    
+        if (isMounted()) {
+            setSuppliers(data || []);
+            setIsLoading(false);
+        }
     }, [
         db,
         isFocused,
         timeState,
         sort,
         lastSyncedAt,
-    ]);
+    ],{enabled: isFocused,});
 
     useEffect(() => {
         setStats({

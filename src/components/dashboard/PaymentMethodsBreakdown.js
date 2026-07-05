@@ -3,10 +3,11 @@ import { useSelector } from "react-redux";
 import { useIsFocused } from "@react-navigation/native";
 import { PieChart } from "react-native-chart-kit";
 import { useSQLiteContext } from "expo-sqlite";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, BodyText } from "../ThemeProvider/components";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { getPaymentsBreakdown } from "../../db/query/dashboard";
+import { useDeferredEffect } from "../../hooks/useDeferredEffect";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -17,31 +18,31 @@ export default function PaymentMethodsBreakdown({ timeState }) {
   const [data, setData] = useState([]);
   const lastSyncedAt = useSelector((state) => state.sync.lastSyncedAt);
 
-  useEffect(() => {
-    loadData();
-  }, [lastSyncedAt, isFocused, timeState]);
 
-  const loadData = async () => {
-    const result = await getPaymentsBreakdown(db, timeState);
+  useDeferredEffect(async (isMounted) => {
+      const result = await getPaymentsBreakdown(db, timeState);
 
-    const colors = [
-      "#2E8B8B",
-      "#FF6B6B",
-      "#6C5CE7",
-      "#00B894",
-      "#F39C12",
-    ];
+      const colors = [
+        "#2E8B8B",
+        "#FF6B6B",
+        "#6C5CE7",
+        "#00B894",
+        "#F39C12",
+      ];
 
-    const formatted = result.map((item, index) => ({
-      name: formatMethod(item.payment_method),
-      amount: item.total,
-      color: colors[index % colors.length],
-      legendFontColor: themeColors.text,
-      legendFontSize: 12,
-    }));
+      const formatted = result.map((item, index) => ({
+        name: formatMethod(item.payment_method),
+        amount: item.total,
+        color: colors[index % colors.length],
+        legendFontColor: themeColors.text,
+        legendFontSize: 12,
+      }));
 
-    setData(formatted);
-  };
+    
+    if (isMounted()) {
+      setData(formatted);
+    }
+  }, [db, isFocused, timeState, lastSyncedAt],{enabled: isFocused,});
 
   return (
     <Card>

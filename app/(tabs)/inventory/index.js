@@ -24,6 +24,7 @@ import SortComponent from "../../../src/components/common/SortComponent";
 import { formatNumber } from "../../../src/db/utils";
 import { canViewReports } from "../../../src/utils/rolesAndPermissions"
 import SearchProducts from "../../../src/components/barcodeScanner/searchProducts";
+import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();
@@ -116,46 +117,35 @@ export default function ProductsListPage() {
   },
 ];
 
-  
+  useDeferredEffect(async (isMounted) => {
+    if (isMounted()) setIsLoading(true);
+    
+    try {
+      const data = await getProducts(db, {
+        search: debouncedSearch,
+        filter,
+        sort,
+      });
 
-  useEffect(() => {
-    if (!isFocused || !db) return;
-
-    let isMounted = true;
-    setIsLoading(true);
-
-    const task = InteractionManager.runAfterInteractions(async () => {
-      try {
-        const data = await getProducts(db, {
-          search: debouncedSearch,
-          filter,
-          sort,
-        });
-
-        if (isMounted) {
-          setProducts(data || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch products:", error);
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+      if (isMounted()) {
+        setProducts(data || []);
       }
-    });
-
-    return () => {
-      isMounted = false;
-      task.cancel();
-    };
-}, [
-  isFocused,
-  db,
-  debouncedSearch,
-  filter,
-  lastSyncedAt,
-  sort,
-]);
+    } catch (error) {
+      console.error("Failed to fetch sales:", error);
+    } finally {
+      if (isMounted()) {
+        setIsLoading(false);
+      }
+    }
+  }, [
+    isFocused,
+    db,
+    debouncedSearch,
+    filter,
+    lastSyncedAt,
+    sort,
+  ],
+{enabled: isFocused,});
 
   useEffect(() => {
     setIsAllowedToViewReports(canViewReports())

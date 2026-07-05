@@ -14,7 +14,6 @@ import { useSelector } from "react-redux";
 import {
     BodyText
 } from "../../../src/components/ThemeProvider/components";
-
 import { AddButton } from "../../../src/components/common/AddButton";
 import EmptyState from "../../../src/components/common/EmptyState";
 import SortComponent from "../../../src/components/common/SortComponent";
@@ -22,8 +21,8 @@ import { StatCard } from "../../../src/components/common/StatCard";
 import { useManualSync } from "../../../src/hooks/useManualSync";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
-
 import { getCustomers } from "../../../src/db/query/customers";
+import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
 
 export default function CustomersList() {
     const { onRefresh, refreshing } = useManualSync();
@@ -73,24 +72,22 @@ export default function CustomersList() {
         },
     ];
 
-    useEffect(() => {
-        if (!db) return;
-
-        (async () => {
-        setIsLoading(true);
+    useDeferredEffect(async (isMounted) => {
+        if(isMounted()) setIsLoading(true);
 
         const data = await getCustomers(db, {sort,});
-        setCustomers(data || []);
-        setIsLoading(false);
-
-        })();
+    
+        if (isMounted()) {
+            setCustomers(data || []);
+            setIsLoading(false);
+        }
     }, [
         db,
         isFocused,
         timeState,
         sort,
         lastSyncedAt,
-    ]);
+    ],{enabled: isFocused,});
 
     useEffect(() => {
         setStats({
