@@ -14,9 +14,6 @@ export const unstable_settings = {
   anchor: '(tabs)',
 };
 
-if (__DEV__) {
-  analytics().setAnalyticsCollectionEnabled(false);
-}
 
 export default function RootLayout() {
   const router = useRouter();
@@ -32,6 +29,10 @@ export default function RootLayout() {
     });
     return () => sub.remove();
   }, [router]);
+
+  useEffect(() => {
+    analytics().setAnalyticsCollectionEnabled(!__DEV__);
+  }, []);
 
   return (
     <ReduxProvider>
