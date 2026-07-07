@@ -13,6 +13,7 @@ import { upsertProductAndRestocking , getProductById} from "../../db/query/inven
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import BarcodeScanner from "../../../src/components/barcodeScanner";
+import { AnalyticsService } from "../../utils/analyticsService";
 
 export default function AddProduct({isProduct=true}) {
   const {id} = useLocalSearchParams()
@@ -105,6 +106,8 @@ export default function AddProduct({isProduct=true}) {
       minimum_quantity: minimumQuantity,
       item_type:isProduct ? 'product' : 'service'
     });
+
+    await AnalyticsService.logFirstEvent('first_product_added');
 
     router.push("/inventory");
   } catch (error) {

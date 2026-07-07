@@ -20,6 +20,7 @@ import {
     upsertSupplier,
 } from "../../db/query/suppliers";
 import { useIsFocused } from "@react-navigation/native";
+import { AnalyticsService } from "../../utils/analyticsService";
 
 export default function AddEditSupplierPage({ id }) {
     useIsFocused();
@@ -71,6 +72,8 @@ export default function AddEditSupplierPage({ id }) {
             });
 
             setForm(initialForm);
+
+            await AnalyticsService.logFirstEvent('first_supplier_added');
 
             router.back();
         } catch (error) {

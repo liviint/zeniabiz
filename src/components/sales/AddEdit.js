@@ -28,6 +28,7 @@ import CreditDiscountForm from "./CreditDiscountForm";
 import EditSaleForm from "./EditSaleForm";
 import SearchProducts from "../barcodeScanner/searchProducts";
 import { useDebounce } from "../../../src/hooks/useDebounce";
+import { AnalyticsService } from "../../utils/analyticsService";
 
 export default function SellPage() {
   const db = useSQLiteContext();
@@ -245,7 +246,7 @@ export default function SellPage() {
       };
 
       await createOrUpdateSale(db, saleData);
-
+      await AnalyticsService.logFirstEvent('first_product_added');
       Alert.alert("Success", "Sale recorded");
 
       router.push("/sales");

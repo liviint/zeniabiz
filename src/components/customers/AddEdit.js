@@ -19,6 +19,7 @@ import { upsertCustomer, getCustomerById } from "../../db/query/customers";
 import { setRecentlyCreatedCustomerId } from "../../store/features/entitySelectionSlice"
 import { useDispatch } from "react-redux";
 import { useIsFocused } from "@react-navigation/native";
+import { AnalyticsService } from "../../utils/analyticsService";
 
 export default function AddEditCustomerPage({id}) {
     const isFocused = useIsFocused()
@@ -65,7 +66,7 @@ export default function AddEditCustomerPage({id}) {
         dispatch(setRecentlyCreatedCustomerId(customer_id));
 
         setForm(initialForm)
-
+        await AnalyticsService.logFirstEvent('first_customer_added');
         router.back();
         } catch (error) {
         console.log(error);

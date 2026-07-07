@@ -23,6 +23,7 @@ import { useThemeStyles } from "../../hooks/useThemeStyles";
 import CategoriesPicker from "../common/CategoriesPicker";
 import { BodyText, Card, FormLabel, Input, SecondaryText, TextArea } from "../ThemeProvider/components";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { AnalyticsService } from "../../utils/analyticsService";
 
 export default function AddEdit() {
   const isFocused = useIsFocused()
@@ -126,7 +127,7 @@ export default function AddEdit() {
     if (!isFormValid()) return;
     try {
       await upsertExpense(db, form);
-      
+      await AnalyticsService.logFirstEvent('first_expense_added');
       // If we came from an existing route, go back. Otherwise replace stack safely.
       if (router.canGoBack()) {
         router.back();
