@@ -7,11 +7,16 @@ import { BackHandler } from 'react-native';
 import ThemeProvider from "../src/components/ThemeProvider"
 import AppDataProvider from "../src/components/AppDataProvider/index"
 import AppLockProvider from "../src/components/AppDataProvider/AppLockProvider"
+import analytics from '@react-native-firebase/analytics';
 // import DonateProvider from "../src/components/AppDataProvider/DonateProvider"
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
+
+if (__DEV__) {
+  analytics().setAnalyticsCollectionEnabled(false);
+}
 
 export default function RootLayout() {
   const router = useRouter();
