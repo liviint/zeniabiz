@@ -246,7 +246,7 @@ export default function SellPage() {
       };
 
       await createOrUpdateSale(db, saleData);
-      await AnalyticsService.logFirstEvent('first_product_added');
+      await AnalyticsService.logFirstEvent('first_sale_added');
       Alert.alert("Success", "Sale recorded");
 
       router.push("/sales");
