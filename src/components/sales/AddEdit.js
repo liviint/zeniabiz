@@ -13,7 +13,6 @@ import {
 import {
   BodyText,
   Card,
-  Input,
   SecondaryText,
 } from "../../../src/components/ThemeProvider/components";
 import { getCategories } from "../../../src/db/query/categories";

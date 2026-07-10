@@ -1,11 +1,23 @@
 import { useLocalSearchParams } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useState, useEffect } from "react";
-import { Alert, Pressable, StyleSheet, View , Modal, TouchableOpacity,  } from "react-native";
-import { BodyText, Card, Input , FormLabel, SecondaryText} from "../../components/ThemeProvider/components";
+import { 
+    Alert, 
+    Pressable, 
+    StyleSheet, 
+    View ,  
+    TouchableOpacity,  
+} from "react-native";
+import { 
+    BodyText,  
+    Input , 
+    FormLabel, 
+    SecondaryText
+} from "../../components/ThemeProvider/components";
 import { getProductById, restockProduct , upsertBatch} from "../../db/query/inventory";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import AddEditModal from "../common/addEditModal";
 
 export default function RestockForm({
     product, 
@@ -114,13 +126,9 @@ export default function RestockForm({
         }, [batch]);
 
     return (
-        <Modal
+        <AddEditModal
             visible={restockVisible}
-            transparent
-            animationType="fade"
         >
-        <View style={styles.modalOverlay}>
-            <Card style={styles.modalContent}>
             <BodyText style={styles.modalTitle}>
                 {batch ? "Edit Batch" : "Restock Product"}
             </BodyText>
@@ -231,25 +239,11 @@ export default function RestockForm({
                     </BodyText>
                     </Pressable>
                 </View>
-            </Card>
-        </View>
-        </Modal>
+        </AddEditModal>
     )
 }
 
 const styles = StyleSheet.create({
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: "rgba(0,0,0,0.4)",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-
-    modalContent: {
-        width: "85%",
-        padding: 20,
-        borderRadius: 12,
-    },
 
     modalTitle: {
         fontSize: 18,
