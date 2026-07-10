@@ -21,7 +21,7 @@ const AddEditModal = ({
             onRequestClose={onClose}
         >
             <KeyboardAwareScrollView
-                contentContainerStyle={{...styles.modalContainer, paddingBottom: 150}}
+                contentContainerStyle={styles.modalContainer}
                 enableOnAndroid
                 extraScrollHeight={20}
                 keyboardShouldPersistTaps="handled"
@@ -39,11 +39,15 @@ export default AddEditModal;
 const styles = StyleSheet.create({
     modalContainer: {
         flexGrow: 1,
-        justifyContent: "center",
+        justifyContent: 'center',
+        alignItems: 'center', 
         padding: 16,
-        backgroundColor: "rgba(0,0,0,0.5)",
+        paddingBottom:50,
+        backgroundColor: 'rgba(0,0,0,0.5)',
     },
     modalCard: {
+        width: '100%',
+        maxWidth: 500,
         padding: 16,
     },
 });

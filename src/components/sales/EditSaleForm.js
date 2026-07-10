@@ -13,6 +13,7 @@ import {
     FormLabel
 } from "../../../src/components/ThemeProvider/components";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import AddEditModal from "../common/addEditModal";
 
 const EditSaleForm = ({
     styles,
@@ -59,16 +60,11 @@ const EditSaleForm = ({
     };
 
     return (
-        <Modal 
-            visible={modalVisible} 
-            transparent 
-            animationType="slide"
+        
+        <AddEditModal 
+            visible={modalVisible}
         >
-        <View 
-            style={styles.modalContainer}
-            keyboardShouldPersistTaps="handled"
-        >
-            <Card style={styles.modalCard}>
+
             <BodyText>Edit Item</BodyText>
 
             <View style={globalStyles.formGroup}>
@@ -183,9 +179,9 @@ const EditSaleForm = ({
             </Pressable>
             </View>
             
-            </Card>
-        </View>
-        </Modal>
+            </AddEditModal>
+        
+        
     );
 }
 
