@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text,  TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
+import { 
+  View, 
+  Text,  
+  TouchableOpacity, 
+  StyleSheet, 
+  ActivityIndicator, 
+  ScrollView ,
+  Linking
+} from 'react-native';
 import { blogApi } from '../../../api';
 import {useThemeStyles} from "../../../src/hooks/useThemeStyles"
 import { Card, BodyText, TextArea } from '../../../src/components/ThemeProvider/components';
-import { Linking } from 'react-native';
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 export default function FeedbackPage() {
   const {globalStyles} = useThemeStyles()
@@ -27,7 +35,13 @@ export default function FeedbackPage() {
   };
 
   return (
-    <View style={globalStyles.container}>
+    <KeyboardAwareScrollView
+      style={globalStyles.container}
+      contentContainerStyle={{ paddingBottom: 40 }}
+      enableOnAndroid
+      extraScrollHeight={20}
+      keyboardShouldPersistTaps="handled"
+    >
       <ScrollView contentContainerStyle={styles.scroll}>
         <Card >
           <BodyText style={globalStyles.title}>
@@ -100,7 +114,7 @@ export default function FeedbackPage() {
           </View>
         </Card>
       </ScrollView>
-    </View>
+    </KeyboardAwareScrollView>
   );
 }
 

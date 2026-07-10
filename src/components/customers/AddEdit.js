@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
     Alert,
     Pressable,
-    ScrollView,
     StyleSheet,
     View,
 } from "react-native";
@@ -20,6 +19,7 @@ import { setRecentlyCreatedCustomerId } from "../../store/features/entitySelecti
 import { useDispatch } from "react-redux";
 import { useIsFocused } from "@react-navigation/native";
 import { AnalyticsService } from "../../utils/analyticsService";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 export default function AddEditCustomerPage({id}) {
     const isFocused = useIsFocused()
@@ -90,14 +90,12 @@ export default function AddEditCustomerPage({id}) {
     },[id])
 
     return (
-        <ScrollView
+        <KeyboardAwareScrollView
             style={globalStyles.container}
-            contentContainerStyle={
-                styles.content
-            }
-            showsVerticalScrollIndicator={
-                false
-            }
+            contentContainerStyle={{ paddingBottom: 40 }}
+            enableOnAndroid
+            extraScrollHeight={20}
+            keyboardShouldPersistTaps="handled"
         >
         
         <View style={styles.header}>
@@ -179,7 +177,7 @@ export default function AddEditCustomerPage({id}) {
             </BodyText>
             </Pressable>
         </Card>
-        </ScrollView>
+        </KeyboardAwareScrollView>
     );
 }
 

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
     Alert,
     Pressable,
-    ScrollView,
     StyleSheet,
     View,
 } from "react-native";
@@ -21,6 +20,7 @@ import {
 } from "../../db/query/suppliers";
 import { useIsFocused } from "@react-navigation/native";
 import { AnalyticsService } from "../../utils/analyticsService";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 export default function AddEditSupplierPage({ id }) {
     useIsFocused();
@@ -101,10 +101,12 @@ export default function AddEditSupplierPage({ id }) {
     }, [id]);
 
     return (
-        <ScrollView
+        <KeyboardAwareScrollView
             style={globalStyles.container}
-            contentContainerStyle={styles.content}
-            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 40 }}
+            enableOnAndroid
+            extraScrollHeight={20}
+            keyboardShouldPersistTaps="handled"
         >
             <View style={styles.header}>
                 <BodyText style={globalStyles.title}>
@@ -211,7 +213,7 @@ export default function AddEditSupplierPage({ id }) {
                 </Pressable>
 
             </Card>
-        </ScrollView>
+        </KeyboardAwareScrollView>
     );
 }
 
