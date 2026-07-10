@@ -14,20 +14,21 @@ import {
   BodyText,
   Card,
   SecondaryText,
-} from "../../../src/components/ThemeProvider/components";
-import { getCategories } from "../../../src/db/query/categories";
-import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
-import { getProducts } from "../../db/query/inventory";
+  Input
+} from "../../../../src/components/ThemeProvider/components";
+import { getCategories } from "../../../../src/db/query/categories";
+import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import {
   createOrUpdateSale,
   getSaleById,
   getSaleItems,
-} from "../../db/query/sales";
-import CreditDiscountForm from "./CreditDiscountForm";
-import EditSaleForm from "./EditSaleForm";
-import SearchProducts from "../barcodeScanner/searchProducts";
-import { useDebounce } from "../../../src/hooks/useDebounce";
-import { AnalyticsService } from "../../utils/analyticsService";
+} from "../../../db/query/sales";
+import CreditDiscountForm from "../CreditDiscountForm";
+import EditSaleForm from "../EditSaleForm";
+import { AnalyticsService } from "../../../utils/analyticsService";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import ProductsList from "./Products";
+
 
 export default function SellPage() {
   const db = useSQLiteContext();
@@ -36,9 +37,6 @@ export default function SellPage() {
   const router = useRouter();
   const { globalStyles } = useThemeStyles();
 
-  const [products, setProducts] = useState([]);
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 400);
   const [cart, setCart] = useState([]);
   const [title, setTitle] = useState("");
   const [sale,setSale] = useState(null)
@@ -93,11 +91,7 @@ export default function SellPage() {
     
     const hydrateScreenData = async () => {
       try {
-        // Fetch products based on search term
-        const fetchedProducts = await getProducts(db, { search: debouncedSearch });
-        
         if (!isMounted) return;
-        setProducts(fetchedProducts || []);
 
         // If editing an existing sale, fetch everything in parallel to protect thread execution
         if (id) {
@@ -129,7 +123,7 @@ export default function SellPage() {
       isMounted = false;
       task.cancel();
     };
-  }, [isFocused, debouncedSearch, id]);
+  }, [isFocused, id]);
 
   useEffect(() => {
     setPaymentsForm(prev => ({
@@ -147,30 +141,6 @@ export default function SellPage() {
       });
     } 
   }, [sale]);
-
-  const addToCart = (product) => {
-    setSale(null)
-    setCart((prev) => {
-      const exists = prev.find((c) => c.product_id === product.id);
-      if (exists) {
-        return prev.map((c) =>
-          c.product_id === product.id
-            ? { ...c, quantity: c.quantity + 1 }
-            : c
-        );
-      }
-      return [
-        ...prev,
-        {
-          product_id: product.id,
-          name: product.name,
-          price: product.selling_price,
-          quantity: 1,
-          item_type:product.item_type
-        },
-      ];
-    });
-  };
 
   const updateQuantity = (product_id, quantity) => {
     if (quantity <= 0) {
@@ -265,31 +235,10 @@ export default function SellPage() {
         {id ? "Update" : "Record"} Sale
       </BodyText>
 
-        <SearchProducts 
-          search={search}
-          setSearch={setSearch}
+        <ProductsList 
+          setSale={setSale}
+          setCart={setCart}
         />
-
-      {/* PRODUCTS */}
-      <View style={styles.productsContainer}>
-        <FlatList
-          data={products}
-          numColumns={2}
-          keyExtractor={(item) => item.id}
-          columnWrapperStyle={{ justifyContent: "space-between" }}
-          renderItem={({ item }) => (
-            <Pressable
-              style={styles.gridItem}
-              onPress={() => addToCart(item)}
-            >
-              <Card style={styles.productCard}>
-                <BodyText>{item.name}</BodyText>
-                <SecondaryText>{item.selling_price}</SecondaryText>
-              </Card>
-            </Pressable>
-          )}
-        />
-      </View>
 
       {/* CART HEADER */}
       <Pressable
@@ -310,39 +259,62 @@ export default function SellPage() {
           style={styles.cartList}
           renderItem={({ item }) => (
             <Card style={styles.cartItem}>
-              <Pressable
-                onPress={() => {
-                  setSelectedItem(item);
-                  setEditSaleModalVisible(true);
-                }}
-              >
-                <BodyText>{item.name}</BodyText>
-                <SecondaryText>
-                  {item.price} x {item.quantity} ={" "}
-                  {(item.price * item.quantity).toFixed(2)}
-                </SecondaryText>
-              </Pressable>
+  <View style={styles.cartTop}>
+    <Pressable
+      style={styles.cartInfo}
+      onPress={() => {
+        setSelectedItem(item);
+        setEditSaleModalVisible(true);
+      }}
+    >
+      <BodyText>{item.name}</BodyText>
+      <SecondaryText>
+        {item.price} x {item.quantity} ={" "}
+        {(item.price * item.quantity).toFixed(2)}
+      </SecondaryText>
+    </Pressable>
 
-              <View style={styles.qtyRow}>
-                <Pressable
-                  onPress={() =>
-                    updateQuantity(item.product_id, item.quantity - 1)
-                  }
-                >
-                  <BodyText>-</BodyText>
-                </Pressable>
+    <Pressable
+      style={styles.editButton}
+      onPress={() => {
+        setSelectedItem(item);
+        setEditSaleModalVisible(true);
+      }}
+    >
+      <MaterialIcons name="edit" size={22} color="#666" />
+    </Pressable>
+  </View>
 
-                <BodyText>{item.quantity}</BodyText>
+  <View style={styles.qtyRow}>
+    <Pressable
+      style={styles.qtyButton}
+      onPress={() =>
+        updateQuantity(item.product_id, item.quantity - 1)
+      }
+    >
+      <BodyText style={styles.qtyButtonText}>−</BodyText>
+    </Pressable>
 
-                <Pressable
-                  onPress={() =>
-                    updateQuantity(item.product_id, item.quantity + 1)
-                  }
-                >
-                  <BodyText>+</BodyText>
-                </Pressable>
-              </View>
-            </Card>
+    <Input
+      value={String(item.quantity)}
+      keyboardType="numeric"
+      style={styles.qtyInput}
+      onChangeText={(text) => {
+        const qty = parseInt(text, 10);
+        updateQuantity(item.product_id, isNaN(qty) ? 0 : qty);
+      }}
+    />
+
+    <Pressable
+      style={styles.qtyButton}
+      onPress={() =>
+        updateQuantity(item.product_id, item.quantity + 1)
+      }
+    >
+      <BodyText style={styles.qtyButtonText}>+</BodyText>
+    </Pressable>
+  </View>
+</Card>
           )}
         />
       )}
@@ -394,17 +366,6 @@ export default function SellPage() {
 }
 
 const styles = StyleSheet.create({
-  productsContainer: {
-    flex: 1,
-  },
-  productCard: {
-    padding: 12,
-  },
-  gridItem: {
-    flex: 1,
-    marginBottom: 8,
-    marginHorizontal: 4,
-  },
   cartHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -415,14 +376,46 @@ const styles = StyleSheet.create({
     maxHeight: 200,
   },
   cartItem: {
-    marginBottom: 8,
-  },
-  qtyRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 8,
-    width: 100,
-  },
+  marginBottom: 8,
+  padding: 12,
+},
+
+cartTop: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+},
+
+cartInfo: {
+  flex: 1,
+},
+
+editButton: {
+  padding: 6,
+  marginLeft: 8,
+},
+
+qtyRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginTop: 12,
+  width: 140,
+},
+
+qtyButton: {
+  width: 40,
+  height: 40,
+  borderRadius: 20,
+  justifyContent: "center",
+  alignItems: "center",
+  backgroundColor: "#f2f2f2",
+},
+
+qtyButtonText: {
+  fontSize: 22,
+  fontWeight: "600",
+},
   footer: {
     marginTop: 8,
     display:"flex",

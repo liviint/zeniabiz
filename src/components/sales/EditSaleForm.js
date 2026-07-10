@@ -3,11 +3,9 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import {
     View,
     Pressable,
-    Modal,
     TouchableOpacity
 } from "react-native";
 import {
-    Card,
     BodyText,
     Input,
     FormLabel
