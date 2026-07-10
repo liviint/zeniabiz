@@ -5,8 +5,8 @@ import {
     Text,
     TouchableOpacity,
     Alert,
-    ScrollView
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useSQLiteContext } from "expo-sqlite";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { BodyText, FormLabel, Input , Card } from "../ThemeProvider/components";
@@ -76,7 +76,13 @@ export default function AddEdit() {
     };
 
     return (
-        <ScrollView style={globalStyles.container}>
+        <KeyboardAwareScrollView
+            style={globalStyles.container}
+            contentContainerStyle={{ paddingBottom: 40 }}
+            enableOnAndroid
+            extraScrollHeight={20}
+            keyboardShouldPersistTaps="handled"
+        >
 
             <BodyText style={globalStyles.title}>
                 {categoryUuid ? "Edit Category" : "Add Category"}
@@ -145,6 +151,6 @@ export default function AddEdit() {
                 </Text>
             </TouchableOpacity>
             </Card>
-        </ScrollView>
+        </KeyboardAwareScrollView>
     );
 }
