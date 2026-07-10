@@ -4,7 +4,6 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
   Alert,
-  FlatList,
   Pressable,
   StyleSheet,
   View,
@@ -12,9 +11,6 @@ import {
 } from "react-native";
 import {
   BodyText,
-  Card,
-  SecondaryText,
-  Input
 } from "../../../../src/components/ThemeProvider/components";
 import { getCategories } from "../../../../src/db/query/categories";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
@@ -24,10 +20,9 @@ import {
   getSaleItems,
 } from "../../../db/query/sales";
 import CreditDiscountForm from "../CreditDiscountForm";
-import EditSaleForm from "../EditSaleForm";
 import { AnalyticsService } from "../../../utils/analyticsService";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import ProductsList from "./Products";
+import Cart from "./Cart";
 
 
 export default function SellPage() {
@@ -44,12 +39,7 @@ export default function SellPage() {
   const [date,setDate] = useState(new Date())
 
   const [category, setCategory] = useState(null);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [editSaleModalVisible, setEditSaleModalVisible] = useState(false);
   const [checkoutModalVisible, setCheckoutModalVisible] = useState(false);
-  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
-
-  const [cartExpanded, setCartExpanded] = useState(true);
 
   const [paymentsForm,setPaymentsForm] = useState({
     amountPaid:0,
@@ -142,19 +132,6 @@ export default function SellPage() {
     } 
   }, [sale]);
 
-  const updateQuantity = (product_id, quantity) => {
-    if (quantity <= 0) {
-      setCart((prev) => prev.filter((c) => c.product_id !== product_id));
-      return;
-    }
-
-    setCart((prev) =>
-      prev.map((c) =>
-        c.product_id === product_id ? { ...c, quantity } : c
-      )
-    );
-  };
-
   const total = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,0);
 
@@ -240,84 +217,13 @@ export default function SellPage() {
           setCart={setCart}
         />
 
-      {/* CART HEADER */}
-      <Pressable
-        style={styles.cartHeader}
-        onPress={() => setCartExpanded((prev) => !prev)}
-      >
-        <BodyText style={{ fontWeight: "600" }}>
-          Cart ({cart.length}) {cartExpanded ? "▼" : "▲"}
-        </BodyText>
-        <BodyText>Total: {markedPrice.toFixed(2)}</BodyText>
-      </Pressable>
-
-      {/* CART LIST */}
-      {cartExpanded && (
-        <FlatList
-          data={cart}
-          keyExtractor={(item) => item.product_id}
-          style={styles.cartList}
-          renderItem={({ item }) => (
-            <Card style={styles.cartItem}>
-  <View style={styles.cartTop}>
-    <Pressable
-      style={styles.cartInfo}
-      onPress={() => {
-        setSelectedItem(item);
-        setEditSaleModalVisible(true);
-      }}
-    >
-      <BodyText>{item.name}</BodyText>
-      <SecondaryText>
-        {item.price} x {item.quantity} ={" "}
-        {(item.price * item.quantity).toFixed(2)}
-      </SecondaryText>
-    </Pressable>
-
-    <Pressable
-      style={styles.editButton}
-      onPress={() => {
-        setSelectedItem(item);
-        setEditSaleModalVisible(true);
-      }}
-    >
-      <MaterialIcons name="edit" size={22} color="#666" />
-    </Pressable>
-  </View>
-
-  <View style={styles.qtyRow}>
-    <Pressable
-      style={styles.qtyButton}
-      onPress={() =>
-        updateQuantity(item.product_id, item.quantity - 1)
-      }
-    >
-      <BodyText style={styles.qtyButtonText}>−</BodyText>
-    </Pressable>
-
-    <Input
-      value={String(item.quantity)}
-      keyboardType="numeric"
-      style={styles.qtyInput}
-      onChangeText={(text) => {
-        const qty = parseInt(text, 10);
-        updateQuantity(item.product_id, isNaN(qty) ? 0 : qty);
-      }}
-    />
-
-    <Pressable
-      style={styles.qtyButton}
-      onPress={() =>
-        updateQuantity(item.product_id, item.quantity + 1)
-      }
-    >
-      <BodyText style={styles.qtyButtonText}>+</BodyText>
-    </Pressable>
-  </View>
-</Card>
-          )}
+        <Cart 
+          cart={cart}
+          setCart={setCart}
+          id={id}
+          date={date}
+          setDate={setDate}
         />
-      )}
 
       <View style={styles.footer}>
 
@@ -330,26 +236,7 @@ export default function SellPage() {
           </BodyText>
         </Pressable>
 
-        {/* <Pressable 
-          style={globalStyles.primaryBtn} 
-          onPress={() => handleSave()}
-        >
-          <BodyText style={globalStyles.primaryBtnText}>
-            Complete Sale
-          </BodyText>
-        </Pressable> */}
       </View>
-
-      <EditSaleForm 
-        styles={styles}
-        modalVisible={editSaleModalVisible}
-        setModalVisible={setEditSaleModalVisible}
-        setCart={setCart}
-        selectedItem={selectedItem}
-        setSelectedItem={setSelectedItem}
-        date={date}
-        setDate={setDate}
-      />
 
       <CreditDiscountForm 
         markedPrice={markedPrice}
@@ -358,7 +245,6 @@ export default function SellPage() {
         setCheckoutModalVisible={setCheckoutModalVisible}
         paymentsForm={paymentsForm}
         setPaymentsForm={setPaymentsForm}
-        setPaymentModalVisible={setPaymentModalVisible}
       />
 
     </View>
@@ -366,56 +252,6 @@ export default function SellPage() {
 }
 
 const styles = StyleSheet.create({
-  cartHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    borderTopWidth: 1,
-  },
-  cartList: {
-    maxHeight: 200,
-  },
-  cartItem: {
-  marginBottom: 8,
-  padding: 12,
-},
-
-cartTop: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-},
-
-cartInfo: {
-  flex: 1,
-},
-
-editButton: {
-  padding: 6,
-  marginLeft: 8,
-},
-
-qtyRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  marginTop: 12,
-  width: 140,
-},
-
-qtyButton: {
-  width: 40,
-  height: 40,
-  borderRadius: 20,
-  justifyContent: "center",
-  alignItems: "center",
-  backgroundColor: "#f2f2f2",
-},
-
-qtyButtonText: {
-  fontSize: 22,
-  fontWeight: "600",
-},
   footer: {
     marginTop: 8,
     display:"flex",
