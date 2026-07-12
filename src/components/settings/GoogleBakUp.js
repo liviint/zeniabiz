@@ -19,6 +19,7 @@ import {
   restoreBackup,
   getAccessToken,
 } from "@/src/utils/googleDriveBackupService";
+import { AnalyticsService } from "../../utils/analyticsService";
 
 import { getSetting, setSetting } from "../../db/query/settings";
 
@@ -110,6 +111,7 @@ const GoogleBackUp = () => {
         
         await setSetting(db,"gdrive_email",userInfo?.data?.user?.email)
         setUserEmail(userInfo?.data?.user?.email)
+        await AnalyticsService.logFirstEvent('first_connected_google_drive');
 
         Alert.alert(
           "Connected",
