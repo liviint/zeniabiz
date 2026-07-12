@@ -132,6 +132,20 @@ export default function TabLayout() {
         />
 
         <Tabs.Screen
+          name="data-backup"
+          options={{
+            href: null,
+          }}
+        />
+
+        <Tabs.Screen
+          name="google-drive"
+          options={{
+            href: null,
+          }}
+        />
+
+        <Tabs.Screen
           name="settings/index"
           options={{
             href: null,

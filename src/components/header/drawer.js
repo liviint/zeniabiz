@@ -21,6 +21,8 @@ export default function Header({ menuOpen, setMenuOpen }) {
 
         { label: "Business", path: "/business", type: "internal" },
 
+        { label: "Data Backup & Sync", path: "/data-backup", type: "internal" },
+
         {
             label: "Learning Center",
             path: "https://zeniabiz.com/learning-center",
