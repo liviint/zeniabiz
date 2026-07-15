@@ -44,7 +44,6 @@ export default function Header({ menuOpen, setMenuOpen }) {
         },
         
         { label: "Settings", path: "/settings", type: "internal" },
-        { label: "Profile", path: "/auth/profile", type: "internal" },
     ];
 
     const handlePress = (item) => {
