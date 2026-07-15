@@ -7,7 +7,6 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { getSetting, setSetting } from "@/src/db/query/settings";
 import * as LocalAuthentication from "expo-local-authentication";
-import GoogleBakUp from "@/src/components/settings/GoogleBakUp"
 
 const SettingsPage = () => {
   const dispatch = useDispatch();
@@ -49,6 +48,7 @@ const SettingsPage = () => {
 
   return (
     <ScrollView style={globalStyles.container}>
+      <BodyText style={globalStyles.title}>App Settings</BodyText>
       <Card style={styles.card}>
         <BodyText style={styles.title}>Appearance</BodyText>
 
@@ -78,8 +78,6 @@ const SettingsPage = () => {
           Require device authentication to open the app
         </BodyText>
       </Card>
-      
-      <GoogleBakUp />
     </ScrollView>
   );
 };
