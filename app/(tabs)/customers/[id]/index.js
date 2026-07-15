@@ -23,7 +23,7 @@ import {
 } from "../../../../src/db/query/customers";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import DeleteButton from "../../../../src/components/common/DeleteButton";
-import { dateFormat } from "../../../../src/utils/dateFormat";
+import { dateFormat } from "../../../../utils/dateFormat";
 
 export default function CustomerDetails() {
     const { globalStyles } = useThemeStyles();

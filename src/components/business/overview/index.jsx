@@ -11,7 +11,7 @@ import {
 import { getActiveContextSync } from "../../../db/utils";
 import { useSQLiteContext } from "expo-sqlite";
 import { api } from "../../../../api";
-import { dateFormat } from "../../../utils/dateFormat";
+import { dateFormat } from "../../../../utils/dateFormat";
 import { useThemeStyles } from "../../../hooks/useThemeStyles";
 import { getCompany , upsertCompany} from "../../../db/query/companies"
 

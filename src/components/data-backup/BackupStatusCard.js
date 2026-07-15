@@ -11,8 +11,7 @@ import {
   BodyText,
   SecondaryText,
 } from "@/src/components/ThemeProvider/components";
-
-import { dateFormat } from "@/src/utils/dateFormat";
+import { dateFormat } from "../../../utils/dateFormat";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 
 const BackupStatusCard = ({
@@ -60,9 +59,8 @@ const BackupStatusCard = ({
 
               <SecondaryText style={styles.meta}>
                 Last Backup:{" "}
-                {lastBackup
-                  ? dateFormat(lastBackup, true)
-                  : "Never"}
+                {console.log(dateFormat(lastBackup,true),"dateFormat(lastBackup,true)")}
+                {lastBackup ? dateFormat(lastBackup,true) : "Not yet"}
               </SecondaryText>
             </>
           ) : (

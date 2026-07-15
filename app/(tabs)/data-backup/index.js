@@ -8,6 +8,7 @@ import {
 import { 
     BodyText ,
     Card,
+    SecondaryText
 } from "../../../src/components/ThemeProvider/components";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { getSetting } from "../../../src/db/query/settings";
@@ -85,21 +86,21 @@ export default function DataBackupScreen() {
 
             {/* Information */}
             <Card style={styles.infoCard}>
-                <BodyText style={styles.infoTitle}>
+                <SecondaryText style={styles.infoTitle}>
                     Which option should I choose?
-                </BodyText>
+                </SecondaryText>
 
-                <BodyText style={styles.infoText}>
+                <SecondaryText style={styles.infoText}>
                     <Text style={styles.bold}>Google Drive Backup</Text> is best
                     if you use only one phone and want to restore your data if
                     you change devices.
-                </BodyText>
+                </SecondaryText>
 
-                <BodyText style={[styles.infoText, { marginTop: 10 }]}>
+                <SecondaryText style={[styles.infoText, { marginTop: 10 }]}>
                     <Text style={styles.bold}>Cloud Sync</Text> is recommended
                     if you use multiple phones, tablets or want automatic
                     synchronization.
-                </BodyText>
+                </SecondaryText>
             </Card>
         </ScrollView>
     );
