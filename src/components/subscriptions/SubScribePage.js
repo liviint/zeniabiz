@@ -23,6 +23,7 @@ const SubScribePage = () => {
   const { hasPremium, hasPremiumPlus, refreshCustomerInfo } = useRevenueCat();
 
   const [offerings, setOfferings] = useState({});
+  const [purchasing, setPurchasing] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -55,6 +56,10 @@ const SubScribePage = () => {
   }, []);
 
   const handlePurchase = async (pkg) => {
+    if (purchasing) return;
+
+    setPurchasing(true);
+
     try {
       await Purchases.purchasePackage(pkg);
       await refreshCustomerInfo();
@@ -72,6 +77,9 @@ const SubScribePage = () => {
           "Your payment couldn't be completed. Please try again."
         );
       }
+    }
+    finally {
+        setPurchasing(false);
     }
   };
 

@@ -30,6 +30,13 @@ import {
     (pkg) => pkg.packageType === "ANNUAL"
   );
 
+  const monthlyPrice = monthlyPackage?.product.price;
+const yearlyPrice = yearlyPackage?.product.price;
+    const savings =
+        monthlyPrice && yearlyPrice
+            ? monthlyPrice * 12 - yearlyPrice
+            : 0;
+
   
 
   return (
@@ -93,7 +100,7 @@ import {
           </BodyText>
 
           <SecondaryText style={styles.saveText}>
-            Save 2 months
+            Save {savings}
           </SecondaryText>
         </TouchableOpacity>
       )}

@@ -1,6 +1,5 @@
-import React from "react";
+import React,{ useState, useEffect } from "react";
 import { 
-    View, 
     StyleSheet, 
     TouchableOpacity, 
     Alert,
@@ -17,8 +16,38 @@ import {
 
 import SubscriptionStatusCard from "./SubscriptionStatusCard";
 
-export default function PremiumPage({ premiumPlusOffering }) {
+export default function PremiumPage() {
   const { globalStyles } = useThemeStyles();
+
+    const [offerings, setOfferings] = useState({});
+    const [purchasing, setPurchasing] = useState(false);
+  
+    useEffect(() => {
+        const fetchOfferings = async () => {
+            try {
+            const revenueCatOfferings = await Purchases.getOfferings();
+    
+            setOfferings({
+                premium: revenueCatOfferings.all["premium"],
+                premiumPlus: revenueCatOfferings.all["premium_plus"],
+            });
+    
+            } catch (err) {
+            console.warn("RevenueCat fetch error", err);
+    
+            let message = "Something went wrong. Please try again.";
+    
+            if (err.message?.toLowerCase().includes("network")) {
+                message = "No internet connection. Please check and try again.";
+            }
+    
+            Alert.alert("Subscriptions", message);
+    
+            } 
+        };
+    
+        fetchOfferings();
+    }, []);
 
   const handleRestorePurchases = async () => {
     try {
@@ -36,29 +65,47 @@ export default function PremiumPage({ premiumPlusOffering }) {
     }
   };
 
-  const handleUpgrade = async () => {
-    if (!premiumPlusOffering) return;
+  const handleUpgrade = async (pkg) => {
+    if (purchasing) return;
 
-    const monthly = premiumPlusOffering.availablePackages.find(
-      (pkg) => pkg.packageType === "MONTHLY"
-    );
+    setPurchasing(true);
 
-    if (!monthly) {
-      Alert.alert("Unavailable", "Premium Plus is currently unavailable.");
-      return;
+    if (!pkg) {
+        Alert.alert(
+            "Unavailable",
+            "This subscription is currently unavailable."
+        );
+        return;
     }
 
     try {
-      await Purchases.purchasePackage(monthly);
+        await Purchases.purchasePackage(pkg);
     } catch (error) {
-      if (!error.userCancelled) {
-        Alert.alert(
-          "Upgrade Failed",
-          "Unable to complete your upgrade."
-        );
-      }
+        if (!error.userCancelled) {
+            Alert.alert(
+                "Upgrade Failed",
+                "Unable to complete your upgrade."
+            );
+        }
     }
-  };
+    finally {
+        setPurchasing(false);
+    }
+};
+
+    const monthlyPackage = offerings?.premiumPlus?.availablePackages.find(
+        pkg => pkg.packageType === "MONTHLY"
+    );
+    const yearlyPackage = offerings?.premiumPlus?.availablePackages.find(
+        pkg => pkg.packageType === "ANNUAL"
+    );
+
+    const monthlyPrice = monthlyPackage?.product.price;
+    const yearlyPrice = yearlyPackage?.product.price;
+    const savings =
+        monthlyPrice && yearlyPrice
+            ? monthlyPrice * 12 - yearlyPrice
+            : 0;
 
   return (
     <ScrollView style={globalStyles.container}>
@@ -115,13 +162,29 @@ export default function PremiumPage({ premiumPlusOffering }) {
         </SecondaryText>
 
         <TouchableOpacity
-          style={{...globalStyles.primaryBtn,marginBottom:12}}
-          onPress={handleUpgrade}
+            style={{...globalStyles.primaryBtn,marginBottom:15}}
+            onPress={() => handleUpgrade(monthlyPackage)}
+            disabled={!monthlyPackage || purchasing}
         >
-          <BodyText style={globalStyles.primaryBtnText}>
-            Upgrade to Premium Plus
-          </BodyText>
+            <BodyText style={globalStyles.primaryBtnText}>
+                Upgrade Monthly • {monthlyPackage.product.priceString}
+            </BodyText>
         </TouchableOpacity>
+
+        <TouchableOpacity
+            style={{...globalStyles.secondaryBtn, marginBottom:15}}
+            onPress={() => handleUpgrade(yearlyPackage)}
+            disabled={!yearlyPackage || purchasing}
+        >
+            <BodyText style={globalStyles.secondaryBtnText}>
+                Upgrade Yearly • {yearlyPackage.product.priceString}
+            </BodyText>
+
+            <SecondaryText style={styles.saveText}>
+                Save {savings}
+            </SecondaryText>
+        </TouchableOpacity>
+
       </Card>
 
       <TouchableOpacity
