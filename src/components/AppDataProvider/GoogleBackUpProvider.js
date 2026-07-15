@@ -9,11 +9,12 @@ import {
 import NetInfo from "@react-native-community/netinfo";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useRef } from "react";
-import { Alert, AppState } from "react-native";
+import { Alert } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { setSetting } from "../../db/query/settings";
+import { setSetting , getSetting} from "../../db/query/settings";
+import * as SecureStore from "expo-secure-store";
 
-const AUTO_SYNC_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
+const AUTO_SYNC_INTERVAL = 24 * 60 * 60 * 1000; 
 
 const GoogleBackupProvider = ({ children }) => {
   const db = useSQLiteContext();
@@ -24,15 +25,39 @@ const GoogleBackupProvider = ({ children }) => {
   );
 
   const syncingRef = useRef(false);
-  const intervalRef = useRef(null);
 
-  /**
-   * Prevent multiple syncs running simultaneously
-   */
-  const executeSync = async () => {
+  const shouldRunDailyBackup = async () => {
+      const lastBackup = await getSetting(db, "last_backup_date");
+
+      if (!lastBackup) {
+          return true;
+      }
+
+      const last = new Date(lastBackup).getTime();
+      const now = Date.now();
+
+      return now - last >= AUTO_SYNC_INTERVAL;
+  };
+
+  const executeSync = async (force = false) => {
     if (syncingRef.current) {
       console.log("Sync already running");
       return;
+    }
+
+    if (!force) {
+      const shouldBackup = await shouldRunDailyBackup();
+
+      if (!shouldBackup) {
+          console.log("Daily backup not due yet.");
+          return;
+      }
+    }
+
+    const token = await SecureStore.getItemAsync("gdrive_token");
+
+    if (!token) {
+        return;
     }
 
     const networkState = await NetInfo.fetch();
@@ -135,44 +160,15 @@ const GoogleBackupProvider = ({ children }) => {
   useEffect(() => {
     if (!syncRequested) return;
 
-    executeSync();
+    executeSync(true);
   }, [syncRequested]);
 
-  /**
-   * Automatic daily sync
-   */
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      console.log("Running automatic daily backup...");
-
-      executeSync();
-    }, AUTO_SYNC_INTERVAL);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, []);
 
   /**
    * Backup when app goes to background
    */
   useEffect(() => {
-    const subscription = AppState.addEventListener(
-      "change",
-      async (nextAppState) => {
-        if (nextAppState === "background") {
-          console.log("App moved to background");
-
-          await executeSync();
-        }
-      }
-    );
-
-    return () => {
-      subscription.remove();
-    };
+    executeSync();
   }, []);
 
   return children;
