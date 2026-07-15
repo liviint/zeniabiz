@@ -21,7 +21,7 @@ import {
     getAccessToken,
 } from "@/src/utils/googleDriveBackupService";
 import { AnalyticsService } from "../../../src/utils/analyticsService";
-import { getSetting, setSetting } from "../../../src/db/query/settings";
+import { getSetting, setSetting, deleteSetting } from "../../../src/db/query/settings";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { dateFormat } from "../../../utils/dateFormat";
 
@@ -174,19 +174,26 @@ const GoogleBackUp = () => {
   };
 
   // 8. Disconnect
-  const handleDisconnect = async () => {
-    try {
-      await GoogleSignin.signOut();
-      await SecureStore.deleteItemAsync("gdrive_token");
+ const handleDisconnect = async () => {
+  try {
+    await GoogleSignin.signOut();
+    await SecureStore.deleteItemAsync("gdrive_token");
 
-      setIsConnected(false);
-      setLastBackup(null);
+    await deleteSetting(db, "gdrive_email");
+    await deleteSetting(db, "last_backup_date");
 
-      Alert.alert("Disconnected", "You have been signed out.");
-    } catch (error) {
-      console.error(error);
-    }
-  };
+    setIsConnected(false);
+    setLastBackup(null);
+    setUserEmail(null);
+
+    Alert.alert(
+      "Disconnected",
+      "Your Google Drive account has been disconnected."
+    );
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   // 9. UI
   return (

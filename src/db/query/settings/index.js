@@ -35,3 +35,10 @@ export const setSetting = async (db, key, value) => {
     throw error;
   }
 };
+
+export const deleteSetting = async (db, key) => {
+  await db.runAsync(
+    "DELETE FROM app_settings WHERE key = ?",
+    [key]
+  );
+};

@@ -46,8 +46,8 @@ const yearlyPrice = yearlyPackage?.product.price;
         <BodyText style={styles.cardTitle}>{title}</BodyText>
 
         {!!badge && (
-          <View style={styles.badge}>
-            <SecondaryText style={styles.badgeText}>
+          <View style={globalStyles.badge}>
+            <SecondaryText style={globalStyles.badgeText}>
               {badge}
             </SecondaryText>
           </View>
@@ -122,19 +122,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
     flex: 1,
-  },
-
-  badge: {
-    backgroundColor: "#E8F5E9",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-    marginLeft: 10,
-  },
-
-  badgeText: {
-    fontSize: 12,
-    fontWeight: "600",
   },
 
   currentPlan: {

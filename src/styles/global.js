@@ -120,6 +120,19 @@ export const createGlobalStyles = (colors) =>
       fontSize: 16,
     },
 
+    badge: {
+      backgroundColor: "#E8F5E9",
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 20,
+      marginLeft: 10,
+    },
+
+    badgeText: {
+      fontSize: 12,
+      fontWeight: "600",
+    },
+
     passwordWrapper: {
       position: "relative",
       width: "100%",
