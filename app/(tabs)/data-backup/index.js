@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { useRouter } from "expo-router";
 import {
     StyleSheet, 
@@ -15,6 +16,7 @@ import { getSetting } from "../../../src/db/query/settings";
 import { useSQLiteContext } from "expo-sqlite";
 import { useIsFocused } from "@react-navigation/native";
 import BackupStatusCard from "../../../src/components/data-backup/BackupStatusCard";
+import { getActiveContextSync } from "../../../src/db/utils";
 
 export default function DataBackupScreen() {
     const db = useSQLiteContext();
@@ -22,16 +24,24 @@ export default function DataBackupScreen() {
     const router = useRouter();
     const isFocused = useIsFocused();
 
+    const lastSyncedAt = useSelector((state) => state.sync.lastSyncedAt);
+    let { is_authenticated , email} = getActiveContextSync(db)
+
     const [lastBackup, setLastBackup] = useState(null);
     const [googleDriveEmail, setGoogleDriveEmail] = useState("");
 
     const loadSettings = async () => {
         const last = await getSetting(db, "last_backup_date");
         let email = await getSetting(db, "gdrive_email")
+        console.log(email,last,"hello backups 123")
         setGoogleDriveEmail(email)
         if (last) {
             setLastBackup(new Date(last));
         }
+    };
+
+    const loadAccountDetails = async () => {
+        
     };
 
     useEffect(() => {
@@ -75,10 +85,10 @@ export default function DataBackupScreen() {
             <BackupStatusCard
                     title="ZeniaBiz Account"
                     icon="🔄"
-                    connected={false}
-                    account={googleDriveEmail}
-                    lastBackup={lastBackup}
-                    onPress={() => router.push("/google-drive")}
+                    connected={is_authenticated}
+                    account={email}
+                    lastBackup={lastSyncedAt}
+                    onPress={() => router.push("/auth/profile")}
                     description="Create a ZeniaBiz account to sync your business across multiple devices."
                     recommendation="✓ Best for multiple devices"
                 />

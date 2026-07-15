@@ -24,16 +24,6 @@ export async function upsertLocalUser(db, user) {
     console.log("🔄 upsertLocalUser START");
     console.log("👤 Incoming user:", user);
 
-    const session = await db.getFirstAsync(
-      `SELECT user_uuid FROM app_session LIMIT 1`
-    );
-
-    console.log("📦 Session found:", session);
-
-    if (!session) {
-      throw new Error("No active session found in app_session");
-    }
-
     const result = await db.runAsync(
       `
       UPDATE local_user
@@ -50,13 +40,11 @@ export async function upsertLocalUser(db, user) {
         user.email || "",
         now,
         now,
-        session.user_uuid
+        user?.uuid
       ]
     );
 
     console.log("✅ Local user updated successfully:", result);
-
-    return session.user_uuid;
 
   } catch (error) {
     console.error("❌ upsertLocalUser FAILED");
@@ -115,6 +103,7 @@ export async function createSession(db, { user, access, refresh, company_uuid = 
       `
       INSERT INTO app_session (
         user_uuid,
+        email,
         company_uuid,
         company_role,
         access_token,
@@ -122,10 +111,11 @@ export async function createSession(db, { user, access, refresh, company_uuid = 
         created_at,
         updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
-        user_id,   
+        user_id, 
+        user?.email, 
         companyUuid,
         company_role,
         access ? access : null,

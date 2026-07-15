@@ -14,6 +14,7 @@ import { addFieledsToCompaniesTable_22_06_2026 } from "../../db/migrations/compa
 import {migrateSalesCreditFieldsV1, migratePaymentsFromSalesV1} from "../../db/migrations/credit"
 import { applySalesMigrationsV1, applySalesMigrationsV2 } from "../../db/migrations/sales"
 import { applySyncMigrationsV1, rebuildSyncQueue } from "../../db/migrations/sync"
+import { addFieledsToAppSession_15_07_2026 } from "../../db/migrations/session";
 import { getSetting, setSetting } from "@/src/db/query/settings";
 
 import {
@@ -108,6 +109,12 @@ const migrateDbIfNeeded = async (db) => {
   if(currentVersion < 8){
     await addFieledsToCompaniesTable_22_06_2026(db);
     currentVersion = 8;
+    await setSetting(db, "db_version", currentVersion);
+  }
+
+  if(currentVersion < 9){
+    await addFieledsToAppSession_15_07_2026(db);
+    currentVersion = 9;
     await setSetting(db, "db_version", currentVersion);
   }
 

@@ -71,6 +71,7 @@ export async function loadActiveContext(db) {
 
   cachedContext = {
     user_id: session?.user_uuid ?? null,
+    email:session?.email ?? null,
     company: session?.company_uuid ?? null,
     company_role: session?.company_role ?? null,
     access_token: session?.access_token ?? null,

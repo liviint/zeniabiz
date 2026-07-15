@@ -5,7 +5,7 @@ export const getSetting = async (db, key) => {
       `SELECT value FROM app_settings WHERE key = ?`,
       [key]
     );
-
+    console.log(key,row,"hello row")
     return row?.value ?? null;
   } catch (error) {
     console.warn("Failed to get setting:", error.message);

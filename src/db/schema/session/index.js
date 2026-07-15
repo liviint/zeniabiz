@@ -9,6 +9,7 @@ export async function createSessionTables(db) {
 
             access_token TEXT,
             refresh_token TEXT,
+            email TEXT,
 
             created_at TEXT,
             updated_at TEXT

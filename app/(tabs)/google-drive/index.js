@@ -58,7 +58,7 @@ const GoogleBackUp = () => {
     }
 
     const auto = await getSetting(db, "auto_backup_enabled");
-
+    console.log(email,"hello email")
     if (auto === null) {
       await setSetting(db, "auto_backup_enabled", "true");
       setAutoBackupEnabled(true);
