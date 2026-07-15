@@ -20,78 +20,78 @@ import PlanCard from "./PlanCard"
 
 const SubScribePage = () => {
   const { globalStyles } = useThemeStyles();
-const { hasPremium, hasPremiumPlus } = useRevenueCat();
+  const { hasPremium, hasPremiumPlus, refreshCustomerInfo } = useRevenueCat();
 
-const [offerings, setOfferings] = useState({});
-const [loading, setLoading] = useState(true);
+  const [offerings, setOfferings] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  const fetchOfferings = async () => {
-    try {
-      const revenueCatOfferings = await Purchases.getOfferings();
+    const fetchOfferings = async () => {
+      try {
+        const revenueCatOfferings = await Purchases.getOfferings();
 
-      setOfferings({
-        premium: revenueCatOfferings.all["premium"],
-        premiumPlus: revenueCatOfferings.all["premium_plus"],
-      });
+        setOfferings({
+          premium: revenueCatOfferings.all["premium"],
+          premiumPlus: revenueCatOfferings.all["premium_plus"],
+        });
+
+      } catch (err) {
+        console.warn("RevenueCat fetch error", err);
+
+        let message = "Something went wrong. Please try again.";
+
+        if (err.message?.toLowerCase().includes("network")) {
+          message = "No internet connection. Please check and try again.";
+        }
+
+        Alert.alert("Subscriptions", message);
+
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOfferings();
+  }, []);
+
+  const handlePurchase = async (pkg) => {
+    try {
+      await Purchases.purchasePackage(pkg);
+      await refreshCustomerInfo();
+      Alert.alert(
+        "Subscription Activated",
+        "Your subscription is now active."
+      );
 
     } catch (err) {
-      console.warn("RevenueCat fetch error", err);
+      console.warn("Purchase error:", err);
 
-      let message = "Something went wrong. Please try again.";
-
-      if (err.message?.toLowerCase().includes("network")) {
-        message = "No internet connection. Please check and try again.";
+      if (!err.userCancelled) {
+        Alert.alert(
+          "Purchase Failed",
+          "Your payment couldn't be completed. Please try again."
+        );
       }
-
-      Alert.alert("Subscriptions", message);
-
-    } finally {
-      setLoading(false);
     }
   };
 
-  fetchOfferings();
-}, []);
+  const handleRestorePurchases = async () => {
+    try {
+      await Purchases.restorePurchases();
 
-  const handlePurchase = async (pkg) => {
-  try {
-    await Purchases.purchasePackage(pkg);
-
-    Alert.alert(
-      "Subscription Activated",
-      "Your subscription is now active."
-    );
-
-  } catch (err) {
-    console.warn("Purchase error:", err);
-
-    if (!err.userCancelled) {
       Alert.alert(
-        "Purchase Failed",
-        "Your payment couldn't be completed. Please try again."
+        "Purchases Restored",
+        "Your subscriptions have been restored successfully."
+      );
+    } catch (error) {
+      console.warn(error);
+
+      Alert.alert(
+        "Restore Failed",
+        "Unable to restore your purchases. Please try again."
       );
     }
-  }
-};
-
-const handleRestorePurchases = async () => {
-  try {
-    await Purchases.restorePurchases();
-
-    Alert.alert(
-      "Purchases Restored",
-      "Your subscriptions have been restored successfully."
-    );
-  } catch (error) {
-    console.warn(error);
-
-    Alert.alert(
-      "Restore Failed",
-      "Unable to restore your purchases. Please try again."
-    );
-  }
-};
+  };
 
   return (
   <ScrollView

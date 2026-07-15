@@ -25,6 +25,11 @@ export default function RevenueCatProvider({ children }) {
   !!customerInfo?.entitlements.active["premium"] ||
   !!customerInfo?.entitlements.active["premium_plus"];
 
+  const refreshCustomerInfo = async () => {
+      const info = await Purchases.getCustomerInfo();
+      setCustomerInfo(info);
+  };
+
 const hasPremiumPlus =
   !!customerInfo?.entitlements.active["premium_plus"];
 
@@ -49,9 +54,11 @@ const hasPremiumPlus =
 
       setLoading(false);
 
-      Purchases.addCustomerInfoUpdateListener((info) => {
-        setCustomerInfo(info);
+      const listener = Purchases.addCustomerInfoUpdateListener((info) => {
+          setCustomerInfo(info);
       });
+
+      return () => listener.remove();
     }
 
     init();
