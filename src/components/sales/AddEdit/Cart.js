@@ -4,6 +4,7 @@ import {
     Pressable,
     StyleSheet,
     View,
+    Alert
 } from "react-native";
 import {
     BodyText,
@@ -31,16 +32,44 @@ export default function Cart({
 
     const updateQuantity = (product_id, quantity) => {
         if (quantity <= 0) {
-        setCart((prev) => prev.filter((c) => c.product_id !== product_id));
-        return;
+            setCart((prev) =>
+            prev.map((c) =>
+                c.product_id === product_id ? { ...c, quantity:0 } : c
+            )
+        );
+            return;
         }
 
         setCart((prev) =>
-        prev.map((c) =>
-            c.product_id === product_id ? { ...c, quantity } : c
-        )
+            prev.map((c) =>
+                c.product_id === product_id ? { ...c, quantity } : c
+            )
         );
     };
+
+    const deleteItem = (item) => {
+        let {product_id} = item
+
+        Alert.alert(
+            "Remove item?",
+            `Remove ${item.name} from the cart?`,
+        [
+        { text: "Cancel", style: "cancel" },
+        {
+            text: "Remove",
+            style: "destructive",
+            onPress: () => {
+                setCart((prev) =>
+                    prev.filter((c) =>
+                        c.product_id !== product_id
+                    )
+                )
+            },
+        },
+    ]
+);
+        
+    }
 
     const markedPrice = cart.reduce(
         (sum, item) => sum + item.price * item.quantity,0);
@@ -80,15 +109,26 @@ return (
                             </SecondaryText>
                             </Pressable>
 
-                            <Pressable
-                            style={styles.editButton}
-                            onPress={() => {
-                                setSelectedItem(item);
-                                setEditSaleModalVisible(true);
-                            }}
+                            <View style={styles.actions}>
+                                <Pressable
+                                style={styles.editButton}
+                                onPress={() => {
+                                    setSelectedItem(item);
+                                    setEditSaleModalVisible(true);
+                                }}
                             >
                             <MaterialIcons name="edit" size={22} color="#666" />
                             </Pressable>
+                            <Pressable
+                                style={styles.deleteButton}
+                                onPress={() => {
+                                    deleteItem(item)
+                                }}
+                            >
+                                <MaterialIcons name="delete-outline" size={20} color="#D32F2F" />
+                            </Pressable>
+                            </View>
+                            
                         </View>
 
                         <View style={styles.qtyRow}>
@@ -102,13 +142,13 @@ return (
                             </Pressable>
 
                             <Input
-                            value={String(item.quantity)}
-                            keyboardType="numeric"
-                            style={styles.qtyInput}
-                            onChangeText={(text) => {
-                                const qty = parseInt(text, 10);
-                                updateQuantity(item.product_id, isNaN(qty) ? 0 : qty);
-                            }}
+                                value={String(item.quantity)}
+                                keyboardType="numeric"
+                                style={styles.qtyInput}
+                                onChangeText={(text) => {
+                                    const qty = parseInt(text, 10);
+                                    updateQuantity(item.product_id, isNaN(qty) ? 0 : qty);
+                                }}
                             />
 
                             <Pressable
@@ -163,10 +203,29 @@ cartTop: {
 cartInfo: {
   flex: 1,
 },
+actions: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 8,
+    gap:10
+},
 
 editButton: {
-  padding: 6,
-  marginLeft: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+},
+
+deleteButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 4,
+    backgroundColor: "#FDECEC",
 },
 
 qtyRow: {

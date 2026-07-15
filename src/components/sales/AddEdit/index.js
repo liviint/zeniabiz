@@ -229,7 +229,10 @@ export default function SellPage() {
 
         <Pressable
           style={globalStyles.primaryBtn} 
-          onPress={() => setCheckoutModalVisible(true)}
+          onPress={() => {
+            setCart(prev => prev.filter(item => item.quantity > 0) )
+            setCheckoutModalVisible(true)
+          }}
         >
           <BodyText style={globalStyles.primaryBtnText}>
             Checkout

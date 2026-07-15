@@ -140,7 +140,7 @@ const GoogleBackUp = () => {
 
       await setSetting(db, "last_backup_date", now);
 
-      setLastBackup(new Date(now).toLocaleString());
+      setLastBackup(new Date(now));
 
       Alert.alert("Success", "Backup completed successfully");
     } catch (error) {
