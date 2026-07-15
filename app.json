@@ -2,7 +2,7 @@
   "expo": {
     "name": "ZeniaBiz",
     "slug": "zeniaBiz",
-    "version": "2.7.8",
+    "version": "2.7.9",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "scheme": "zeniabiz",
