@@ -32,7 +32,8 @@ export default function Header({ menuOpen, setMenuOpen }) {
         },
 
         { label: "Feedback", path: "/feedback", type: "internal" },
-
+        
+        { label: "Settings", path: "/settings", type: "internal" },
         {   
             label: hasPremiumPlus
                 ? "Premium Plus"
@@ -42,8 +43,6 @@ export default function Header({ menuOpen, setMenuOpen }) {
             path: "/subscriptions", 
             type: "internal" 
         },
-        
-        { label: "Settings", path: "/settings", type: "internal" },
     ];
 
     const handlePress = (item) => {

@@ -30,6 +30,9 @@ export default function DataBackupScreen() {
     const [lastBackup, setLastBackup] = useState(null);
     const [googleDriveEmail, setGoogleDriveEmail] = useState("");
 
+    const [isAuthenticated,setIsAuthenticated] = useState(is_authenticated)
+    const [userEmail,setUserEmail] = useState(email)
+
     const loadSettings = async () => {
         const last = await getSetting(db, "last_backup_date");
         let email = await getSetting(db, "gdrive_email")
@@ -41,11 +44,14 @@ export default function DataBackupScreen() {
     };
 
     const loadAccountDetails = async () => {
-        
+        let { is_authenticated , email} = getActiveContextSync(db)
+        setIsAuthenticated(is_authenticated)
+        setUserEmail(email)
     };
 
     useEffect(() => {
         loadSettings()
+        loadAccountDetails()
     },[isFocused])
 
     return (
@@ -59,39 +65,27 @@ export default function DataBackupScreen() {
                 devices.
             </BodyText>
 
-            {/* Google Drive */}
-
-            {googleDriveEmail ? 
-                <BackupStatusCard
-                    title="Google Drive Backup"
-                    icon="☁️"
-                    connected={googleDriveEmail !== ""}
-                    account={googleDriveEmail}
-                    lastBackup={lastBackup}
-                    onPress={() => router.push("/google-drive")}
-                />
-                :
-                <BackupStatusCard
-                    title="Google Drive Backup"
-                    icon="☁️"
-                    connected={false}
-                    account={googleDriveEmail}
-                    lastBackup={lastBackup}
-                    onPress={() => router.push("/google-drive")}
-                    description="Back up your business to your personal Google Drive. Ideal if you use one phone."
-                />
-            }
+            <BackupStatusCard
+                title="Google Drive Backup"
+                icon="☁️"
+                connected={googleDriveEmail}
+                account={googleDriveEmail}
+                lastBackup={lastBackup}
+                onPress={() => router.push("/google-drive")}
+                description="Back up your business to your personal Google Drive. Ideal if you use one phone."
+                recommendation="✓ Best for single-device businesses"
+            />
 
             <BackupStatusCard
-                    title="ZeniaBiz Account"
-                    icon="🔄"
-                    connected={is_authenticated}
-                    account={email}
-                    lastBackup={lastSyncedAt}
-                    onPress={() => router.push("/auth/profile")}
-                    description="Create a ZeniaBiz account to sync your business across multiple devices."
-                    recommendation="✓ Best for multiple devices"
-                />
+                title="ZeniaBiz Account"
+                icon="🔄"
+                connected={isAuthenticated}
+                account={userEmail}
+                lastBackup={lastSyncedAt}
+                onPress={() => router.push("/auth/profile")}
+                description="Create a ZeniaBiz account to sync your business across multiple devices."
+                recommendation="✓ Best for multiple devices"
+            />
 
 
             {/* Information */}
