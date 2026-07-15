@@ -14,13 +14,9 @@ export const getSetting = async (db, key) => {
 };
 
 export const setSetting = async (db, key, value) => {
-  const now = new Date().toISOString();
-
   if (!key) {
     throw new Error("Setting key is required");
   }
-
-  await db.runAsync("BEGIN TRANSACTION");
 
   try {
     // 1️⃣ Local persistence (source of truth offline)
@@ -34,10 +30,8 @@ export const setSetting = async (db, key, value) => {
       [key, String(value)]
     );
 
-    await db.runAsync("COMMIT");
 
   } catch (error) {
-    await db.runAsync("ROLLBACK");
     throw error;
   }
 };

@@ -9,7 +9,7 @@ import {
     ScrollView,
 } from "react-native";
 import { useDispatch } from "react-redux";
-import { Card, BodyText } from "@/src/components/ThemeProvider/components";
+import { Card, BodyText, SecondaryText } from "@/src/components/ThemeProvider/components";
 import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
 import * as SecureStore from "expo-secure-store";
 import { useSQLiteContext } from "expo-sqlite";
@@ -23,6 +23,7 @@ import {
 import { AnalyticsService } from "../../../src/utils/analyticsService";
 import { getSetting, setSetting } from "../../../src/db/query/settings";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import { dateFormat } from "../../../utils/dateFormat";
 
 const GoogleBackUp = () => {
   const db = useSQLiteContext();
@@ -51,10 +52,9 @@ const GoogleBackUp = () => {
   const loadSettings = async () => {
     const last = await getSetting(db, "last_backup_date");
     let email = await getSetting(db, "gdrive_email")
-
+    setUserEmail(email)
     if (last) {
-      setLastBackup(new Date(last).toLocaleString());
-      setUserEmail(email)
+      setLastBackup(new Date(last));
     }
 
     const auto = await getSetting(db, "auto_backup_enabled");
@@ -191,16 +191,16 @@ const GoogleBackUp = () => {
   // 9. UI
   return (
     <ScrollView style={globalStyles.container}>
-        <BodyText style={styles.pageTitle}>
+        <BodyText style={globalStyles.title}>
             Google Drive Backup
         </BodyText>
 
-        <BodyText style={styles.pageDescription}>
+        <SecondaryText style={{marginBottom:15}}>
             Back up your business to your personal Google Drive. Recommended if
             you use one phone.
-        </BodyText>
+        </SecondaryText>
 
-        <View style={styles.card}>
+        <Card >
             <View style={styles.statusRow}>
                 <View style={styles.iconCircle}>
                     <BodyText style={styles.icon}>☁️</BodyText>
@@ -223,26 +223,26 @@ const GoogleBackUp = () => {
 
             {!isConnected && (
                 <TouchableOpacity
-                    style={styles.primaryButton}
+                    style={{...globalStyles.primaryBtn,marginTop:15}}
                     onPress={handleConnectGoogle}
                 >
-                    <BodyText style={styles.buttonText}>
+                    <BodyText style={globalStyles.primaryBtnText}>
                         Connect Google Drive
                     </BodyText>
                 </TouchableOpacity>
             )}
-        </View>
+        </Card>
 
         {isConnected && (
             <>
-                <View style={styles.card}>
+                <Card >
                     <View style={styles.infoRow}>
                         <BodyText style={styles.infoLabel}>
                             Last Backup
                         </BodyText>
 
                         <BodyText style={styles.infoValue}>
-                            {lastBackup || "Never"}
+                            {lastBackup ? dateFormat(lastBackup,true) : "Not yet"}
                         </BodyText>
                     </View>
 
@@ -270,28 +270,28 @@ const GoogleBackUp = () => {
                             onValueChange={toggleAutoBackup}
                         />
                     </View>
-                </View>
+                </Card>
 
                 <TouchableOpacity
-                    style={styles.primaryButton}
+                    style={globalStyles.primaryBtn}
                     onPress={handleBackup}
                 >
-                    <BodyText style={styles.buttonText}>
+                    <BodyText style={globalStyles.primaryBtnText}>
                         Backup Now
                     </BodyText>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    style={styles.secondaryButton}
+                    style={{...globalStyles.secondaryBtn,marginTop:15}}
                     onPress={handleRestore}
                 >
-                    <BodyText style={styles.secondaryText}>
+                    <BodyText style={globalStyles.secondaryBtnText}>
                         Restore Backup
                     </BodyText>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    style={styles.disconnectButton}
+                    style={{...styles.disconnectButton,marginBottom:15}}
                     onPress={handleDisconnect}
                 >
                     <BodyText style={styles.disconnectText}>
@@ -301,17 +301,17 @@ const GoogleBackUp = () => {
             </>
         )}
 
-        <View style={styles.noteCard}>
-            <BodyText style={styles.noteTitle}>
+        <Card >
+            <BodyText >
                 Your privacy
             </BodyText>
 
-            <BodyText style={styles.noteText}>
+            <SecondaryText >
                 Backups are stored inside your own Google Drive account. Only
                 you can access them, and they can be restored if you replace or
                 reset your phone.
-            </BodyText>
-        </View>
+            </SecondaryText>
+        </Card>
     </ScrollView>
 );
 };
@@ -319,35 +319,6 @@ const GoogleBackUp = () => {
 export default GoogleBackUp;
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 16,
-        backgroundColor: "#F7F7F7",
-    },
-
-    pageTitle: {
-        fontSize: 26,
-        fontWeight: "700",
-    },
-
-    pageDescription: {
-        color: "#666",
-        marginTop: 6,
-        marginBottom: 20,
-        lineHeight: 22,
-    },
-
-    card: {
-        backgroundColor: "#FFF",
-        borderRadius: 16,
-        padding: 18,
-        marginBottom: 16,
-        elevation: 2,
-        shadowColor: "#000",
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-    },
-
     statusRow: {
         flexDirection: "row",
         alignItems: "center",
@@ -398,32 +369,6 @@ const styles = StyleSheet.create({
         backgroundColor: "#EFEFEF",
     },
 
-    primaryButton: {
-        backgroundColor: "#2E8B8B",
-        paddingVertical: 14,
-        borderRadius: 12,
-        alignItems: "center",
-        marginBottom: 12,
-    },
-
-    buttonText: {
-        color: "#FFF",
-        fontWeight: "700",
-    },
-
-    secondaryButton: {
-        borderWidth: 1,
-        borderColor: "#2E8B8B",
-        paddingVertical: 14,
-        borderRadius: 12,
-        alignItems: "center",
-    },
-
-    secondaryText: {
-        color: "#2E8B8B",
-        fontWeight: "700",
-    },
-
     disconnectButton: {
         marginTop: 24,
         alignItems: "center",
@@ -434,20 +379,4 @@ const styles = StyleSheet.create({
         textDecorationLine: "underline",
     },
 
-    noteCard: {
-        backgroundColor: "#FFF",
-        borderRadius: 16,
-        padding: 18,
-        marginTop: 24,
-    },
-
-    noteTitle: {
-        fontWeight: "700",
-        marginBottom: 8,
-    },
-
-    noteText: {
-        color: "#666",
-        lineHeight: 22,
-    },
 });
