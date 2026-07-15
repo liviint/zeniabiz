@@ -8,7 +8,7 @@ import ThemeProvider from "../src/components/ThemeProvider"
 import AppDataProvider from "../src/components/AppDataProvider/index"
 import AppLockProvider from "../src/components/AppDataProvider/AppLockProvider"
 import analytics from '@react-native-firebase/analytics';
-// import DonateProvider from "../src/components/AppDataProvider/DonateProvider"
+import RevenueCatProvider from "../src/components/AppDataProvider/RevenueCatProvider"
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -37,28 +37,29 @@ export default function RootLayout() {
   return (
     <ReduxProvider>
       <ThemeProvider >
-        <AppDataProvider>
-          <AppLockProvider>
-              <Stack>
-                <Stack.Screen
-                  name="(tabs)"
-                  options={{
-                    header: () => <Header />,
-                  }}
-                />
+        <RevenueCatProvider>
+          <AppDataProvider>
+            <AppLockProvider>
+                <Stack>
+                  <Stack.Screen
+                    name="(tabs)"
+                    options={{
+                      header: () => <Header />,
+                    }}
+                  />
 
-                <Stack.Screen
-                  name="modal"
-                  options={{
-                    presentation: 'modal',
-                    title: 'Modal',
-                    header: () => <Header />,
-                  }}
-                />
-              </Stack>
-           {/*  </DonateProvider> */}
-          </AppLockProvider>
-        </AppDataProvider>
+                  <Stack.Screen
+                    name="modal"
+                    options={{
+                      presentation: 'modal',
+                      title: 'Modal',
+                      header: () => <Header />,
+                    }}
+                  />
+                </Stack>
+            </AppLockProvider>
+          </AppDataProvider>
+        </RevenueCatProvider>
       </ThemeProvider>
     </ReduxProvider>
   );

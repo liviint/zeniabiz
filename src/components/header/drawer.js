@@ -9,8 +9,10 @@ import {
     StyleSheet,
 } from "react-native";
 import { useRouter, usePathname } from "expo-router";
+import { useRevenueCat  } from "../AppDataProvider/RevenueCatProvider"
 
 export default function Header({ menuOpen, setMenuOpen }) {
+    const { hasPremium, hasPremiumPlus } = useRevenueCat();
     const router = useRouter();
     const pathname = usePathname();
 
@@ -30,6 +32,17 @@ export default function Header({ menuOpen, setMenuOpen }) {
         },
 
         { label: "Feedback", path: "/feedback", type: "internal" },
+
+        {   
+            label: hasPremiumPlus
+                ? "Premium Plus"
+                : hasPremium
+                ? "Premium"
+                : "✨ Premium",
+            path: "/subscriptions", 
+            type: "internal" 
+        },
+        
         { label: "Settings", path: "/settings", type: "internal" },
         { label: "Profile", path: "/auth/profile", type: "internal" },
     ];
