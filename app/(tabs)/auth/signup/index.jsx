@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ScrollView,
 } from "react-native";
 import { api } from "../../../../api";
@@ -13,9 +12,9 @@ import { validateEmail } from "../../../../src/helpers";
 import { Card, FormLabel, Input, BodyText } from "../../../../src/components/ThemeProvider/components";
 import { useRouter } from "expo-router";
 import { safeLocalStorage } from "../../../../utils/storage";
-import { getLocalUser } from "../../../../src/db/query/users";
 import { getActiveContextSync } from "../../../../src/db/utils";
 import { useSQLiteContext } from "expo-sqlite";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const Signup = () => {
   const router = useRouter()
@@ -85,7 +84,13 @@ const Signup = () => {
   };
 
   return (
-    <ScrollView style={globalStyles.container} contentContainerStyle={styles.container}>
+    <KeyboardAwareScrollView
+        style={{...globalStyles.container,}}
+        contentContainerStyle={styles.container}
+        enableOnAndroid
+        extraScrollHeight={20}
+        keyboardShouldPersistTaps="handled"
+      >
       <Card style={styles.form}>
         <BodyText style={globalStyles.title}>Create an Account</BodyText>
 
@@ -147,7 +152,7 @@ const Signup = () => {
 </BodyText>
 
       </Card>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 };
 

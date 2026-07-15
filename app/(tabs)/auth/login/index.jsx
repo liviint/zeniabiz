@@ -18,6 +18,7 @@ import { Card, BodyText, FormLabel, Input } from "../../../../src/components/The
 import { upsertLocalUser, createSession } from "../../../../src/db/query/users";
 import { useSQLiteContext } from "expo-sqlite";
 import { loadActiveContext } from "../../../../src/db/utils";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 WebBrowser.maybeCompleteAuthSession();
 
 export default function Index() {
@@ -91,7 +92,13 @@ export default function Index() {
 };
 
   return (
-    <View style={{...globalStyles.container,...styles.container}}>
+    <KeyboardAwareScrollView
+      style={{...globalStyles.container,}}
+      contentContainerStyle={{ ...styles.container}}
+      enableOnAndroid
+      extraScrollHeight={20}
+      keyboardShouldPersistTaps="handled"
+    >
       <Card style={styles.form}>
         <BodyText style={styles.title}>Welcome Back</BodyText>
 
@@ -154,7 +161,7 @@ export default function Index() {
           </Text>
         </BodyText>
       </Card>
-    </View>
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -164,7 +171,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 10,
   },
   form: {
     padding: 20,
