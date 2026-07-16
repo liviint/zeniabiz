@@ -84,22 +84,29 @@ const SubScribePage = () => {
   };
 
   const handleRestorePurchases = async () => {
-    try {
-      await Purchases.restorePurchases();
-
-      Alert.alert(
-        "Purchases Restored",
-        "Your subscriptions have been restored successfully."
-      );
-    } catch (error) {
-      console.warn(error);
-
-      Alert.alert(
-        "Restore Failed",
-        "Unable to restore your purchases. Please try again."
-      );
-    }
-  };
+      try {
+  
+        const customerInfo = await Purchases.restorePurchases();
+  
+        if (Object.keys(customerInfo.entitlements.active).length > 0) {
+            Alert.alert(
+                "Purchases Restored",
+                "Your subscriptions have been restored successfully."
+            );
+        } else {
+            Alert.alert(
+                "No Purchases Found",
+                "No active subscriptions were found for this account."
+            );
+        }
+  
+      } catch (error) {
+        Alert.alert(
+          "Restore Failed",
+          "Unable to restore your purchases."
+        );
+      }
+    };
 
   return (
   <ScrollView

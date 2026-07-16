@@ -51,12 +51,21 @@ export default function PremiumPage() {
 
   const handleRestorePurchases = async () => {
     try {
-      await Purchases.restorePurchases();
 
-      Alert.alert(
-        "Purchases Restored",
-        "Your subscriptions have been restored successfully."
-      );
+      const customerInfo = await Purchases.restorePurchases();
+
+      if (Object.keys(customerInfo.entitlements.active).length > 0) {
+          Alert.alert(
+              "Purchases Restored",
+              "Your subscriptions have been restored successfully."
+          );
+      } else {
+          Alert.alert(
+              "No Purchases Found",
+              "No active subscriptions were found for this account."
+          );
+      }
+
     } catch (error) {
       Alert.alert(
         "Restore Failed",
@@ -65,12 +74,14 @@ export default function PremiumPage() {
     }
   };
 
+
   const handleUpgrade = async (pkg) => {
     if (purchasing) return;
 
     setPurchasing(true);
 
     if (!pkg) {
+      setPurchasing(false);
         Alert.alert(
             "Unavailable",
             "This subscription is currently unavailable."
@@ -93,15 +104,15 @@ export default function PremiumPage() {
     }
 };
 
-    const monthlyPackage = offerings?.premiumPlus?.availablePackages.find(
+    const monthlyPackage = offerings?.premiumPlus?.availablePackages?.find(
         pkg => pkg.packageType === "MONTHLY"
     );
-    const yearlyPackage = offerings?.premiumPlus?.availablePackages.find(
+    const yearlyPackage = offerings?.premiumPlus?.availablePackages?.find(
         pkg => pkg.packageType === "ANNUAL"
     );
 
-    const monthlyPrice = monthlyPackage?.product.price;
-    const yearlyPrice = yearlyPackage?.product.price;
+    const monthlyPrice = monthlyPackage?.product?.price;
+    const yearlyPrice = yearlyPackage?.product?.price;
     const savings =
         monthlyPrice && yearlyPrice
             ? monthlyPrice * 12 - yearlyPrice
@@ -167,7 +178,10 @@ export default function PremiumPage() {
             disabled={!monthlyPackage || purchasing}
         >
             <BodyText style={globalStyles.primaryBtnText}>
-                Upgrade Monthly • {monthlyPackage.product.priceString}
+              {monthlyPackage
+                ? `Upgrade Monthly • ${monthlyPackage?.product?.priceString}`
+              : "Monthly subscription unavailable"
+              }
             </BodyText>
         </TouchableOpacity>
 
@@ -177,7 +191,11 @@ export default function PremiumPage() {
             disabled={!yearlyPackage || purchasing}
         >
             <BodyText style={globalStyles.secondaryBtnText}>
-                Upgrade Yearly • {yearlyPackage.product.priceString}
+              {
+                yearlyPackage
+                  ? `Upgrade Yearly • ${yearlyPackage.product.priceString}`
+                  : 'Yearly subscription unavailable'
+              }
             </BodyText>
 
             <SecondaryText style={styles.saveText}>

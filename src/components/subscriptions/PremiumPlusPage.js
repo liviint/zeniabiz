@@ -21,20 +21,29 @@ export default function PremiumPlusPage() {
   const { globalStyles } = useThemeStyles();
 
   const handleRestorePurchases = async () => {
-    try {
-      await Purchases.restorePurchases();
-
-      Alert.alert(
-        "Purchases Restored",
-        "Your subscription has been restored successfully."
-      );
-    } catch (error) {
-      Alert.alert(
-        "Restore Failed",
-        "Unable to restore your purchases."
-      );
-    }
-  };
+      try {
+  
+        const customerInfo = await Purchases.restorePurchases();
+  
+        if (Object.keys(customerInfo.entitlements.active).length > 0) {
+            Alert.alert(
+                "Purchases Restored",
+                "Your subscriptions have been restored successfully."
+            );
+        } else {
+            Alert.alert(
+                "No Purchases Found",
+                "No active subscriptions were found for this account."
+            );
+        }
+  
+      } catch (error) {
+        Alert.alert(
+          "Restore Failed",
+          "Unable to restore your purchases."
+        );
+      }
+    };
 
   const handleManageSubscription = () => {
     Linking.openURL(
