@@ -14,7 +14,7 @@ import {
 } from "../../../../src/components/ThemeProvider/components";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import EditSaleForm from "../EditSaleForm";
-
+import { useThemeStyles } from "../../../hooks/useThemeStyles";
 
 export default function Cart({
     cart,
@@ -23,12 +23,12 @@ export default function Cart({
     date,
     setDate
 }) {
+    const {colors} = useThemeStyles()
+
     const [selectedItem, setSelectedItem] = useState(null);
     const [editSaleModalVisible, setEditSaleModalVisible] = useState(false);
 
     const [cartExpanded, setCartExpanded] = useState(true);
-
-
 
     const updateQuantity = (product_id, quantity) => {
         if (quantity <= 0) {
@@ -73,9 +73,6 @@ export default function Cart({
 
     const markedPrice = cart.reduce(
         (sum, item) => sum + item.price * item.quantity,0);
-
-
-
 return (
     <>
         <Pressable
@@ -133,12 +130,15 @@ return (
 
                         <View style={styles.qtyRow}>
                             <Pressable
-                            style={styles.qtyButton}
-                            onPress={() =>
-                                updateQuantity(item.product_id, item.quantity - 1)
-                            }
+                                style={{
+                                    ...styles.qtyButton,
+                                    backgroundColor: colors.accent,
+                                }}
+                                onPress={() =>
+                                    updateQuantity(item.product_id, item.quantity - 1)
+                                }
                             >
-                            <BodyText style={styles.qtyButtonText}>−</BodyText>
+                            <BodyText style={{...styles.qtyButtonText}}>−</BodyText>
                             </Pressable>
 
                             <Input
@@ -152,12 +152,15 @@ return (
                             />
 
                             <Pressable
-                            style={styles.qtyButton}
-                            onPress={() =>
-                                updateQuantity(item.product_id, item.quantity + 1)
-                            }
+                                style={{
+                                    ...styles.qtyButton,
+                                    backgroundColor: colors.accent,
+                                }}
+                                onPress={() =>
+                                    updateQuantity(item.product_id, item.quantity + 1)
+                                }
                             >
-                            <BodyText style={styles.qtyButtonText}>+</BodyText>
+                            <BodyText style={{...styles.qtyButtonText}}>+</BodyText>
                             </Pressable>
                         </View>
                     </Card>
@@ -180,82 +183,83 @@ return (
 }
 
 const styles = StyleSheet.create({
-  cartHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    borderTopWidth: 1,
-  },
-  cartList: {
-    maxHeight: 200,
-  },
-  cartItem: {
-  marginBottom: 8,
-  padding: 12,
-},
+    cartHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        paddingVertical: 10,
+        borderTopWidth: 1,
+    },
+    cartList: {
+        maxHeight: 200,
+    },
+    cartItem: {
+        marginBottom: 8,
+        padding: 12,
+    },
 
-cartTop: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-},
+    cartTop: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+    },
 
-cartInfo: {
-  flex: 1,
-},
-actions: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: 8,
-    gap:10
-},
+    cartInfo: {
+        flex: 1,
+    },
+    actions: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginLeft: 8,
+        gap:10
+    },
 
-editButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-},
+    editButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        alignItems: "center",
+        justifyContent: "center",
+    },
 
-deleteButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 4,
-    backgroundColor: "#FDECEC",
-},
+    deleteButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        alignItems: "center",
+        justifyContent: "center",
+        marginLeft: 4,
+        backgroundColor: "#FDECEC",
+    },
 
-qtyRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  marginTop: 12,
-  width: 140,
-},
+    qtyRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginTop: 12,
+        width: 140,
+    },
 
-qtyButton: {
-  width: 40,
-  height: 40,
-  borderRadius: 20,
-  justifyContent: "center",
-  alignItems: "center",
-  backgroundColor: "#f2f2f2",
-},
+    qtyButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#f2f2f2",
+        opacity: .5,
+    },
 
-qtyButtonText: {
-  fontSize: 22,
-  fontWeight: "600",
-},
-  footer: {
-    marginTop: 8,
-    display:"flex",
-    width:"100%",
-    flexDirection:"row",
-    justifyContent:"flex-end",
-    gap:8,
-    flexWrap:"wrap",
-  },
+    qtyButtonText: {
+        fontSize: 22,
+        fontWeight: "600",
+    },
+    footer: {
+        marginTop: 8,
+        display:"flex",
+        width:"100%",
+        flexDirection:"row",
+        justifyContent:"flex-end",
+        gap:8,
+        flexWrap:"wrap",
+    },
 });
