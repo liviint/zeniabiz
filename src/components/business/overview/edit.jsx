@@ -26,6 +26,7 @@ const EditBusinessModal = ({
     onSuccess,
     businessData,
     setRefreshData,
+    isUserLoggedIn
 }) => {
     const db = useSQLiteContext();
     const { globalStyles } = useThemeStyles();
@@ -45,22 +46,30 @@ const EditBusinessModal = ({
         }));
     };
 
-    const handleSave = async () => {
-        if (!formData.name.trim()) {
-            return alert("Business name is required");
-        }
-        const { company } =  await getActiveContextSync(db);
-        try {
-        await api.patch(
-            `/core/companies/${company}/`,
-            formData
-        );
-        await upsertCompany(db,formData)
+    const runAfterSave = () => {
         setRefreshData(prev => prev + 1)
         setVisible(false);
         if (onSuccess) {
             onSuccess();
         }
+    }
+
+    const handleSave = async () => {
+        if (!formData.name.trim()) {
+            return alert("Business name is required");
+        }
+            const { company, user_id } =  await getActiveContextSync(db);
+            await upsertCompany(db,{id:company,...formData, owner:user_id})
+            if(!isUserLoggedIn){
+                runAfterSave()
+                return
+            }
+        try {
+            await api.patch(
+                `/core/companies/${company}/`,
+                formData
+            );
+            runAfterSave()
         } catch (err) {
         console.log(
             "Business update error:",

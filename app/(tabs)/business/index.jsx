@@ -66,12 +66,13 @@ const BusinessPage = () => {
         setRefreshData={setRefreshData}
       />
 
-      {isAllowedToViewReports && isUserLoggedIn && 
+      {isAllowedToViewReports &&  
         <EditBusinessModal 
           visible={editBusiness}
           setVisible={setEditBusiness}
           businessData={businessData}
           setRefreshData={setRefreshData}
+          isUserLoggedIn={isUserLoggedIn}
         />
       }
 

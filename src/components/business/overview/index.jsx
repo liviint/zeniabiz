@@ -72,7 +72,7 @@ const BusinessOverview = ({
     <View style={styles.header}>
       <BodyText style={styles.title}>Business Overview</BodyText>
 
-      {isAllowedToViewReports && isUserLoggedIn  && 
+      {isAllowedToViewReports  && 
         <TouchableOpacity style={globalStyles.editBtn} onPress={handleEdit}>
           <BodyText style={styles.editBtnText}>Edit</BodyText>
         </TouchableOpacity>
@@ -86,13 +86,18 @@ const BusinessOverview = ({
     </View>
 
     <View style={styles.row}>
-      <BodyText>Currency</BodyText>
-      <BodyText>{company?.currency || "-"}</BodyText>
+      <BodyText>Phone</BodyText>
+      <BodyText>{company?.phone}</BodyText>
     </View>
 
     <View style={styles.row}>
-      <BodyText>Created</BodyText>
-      <BodyText>{dateFormat(company?.created_at)}</BodyText>
+      <BodyText>Address</BodyText>
+      <BodyText>{company?.address}</BodyText>
+    </View>
+
+    <View style={styles.row}>
+      <BodyText>Currency</BodyText>
+      <BodyText>{company?.currency || "-"}</BodyText>
     </View>
 
   </View>
