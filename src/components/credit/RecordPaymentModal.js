@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Modal,
   Pressable,
   StyleSheet,
   View,
@@ -9,7 +8,6 @@ import {
 
 import {
   BodyText,
-  Card,
   SecondaryText,
   Input,
   TextArea,
@@ -19,6 +17,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import PaymentMethodPicker from "../sales/PaymentMethodsPicker";
 import { recordCreditPayment } from "../../../src/db/query/credits";
+import AddEditModal from "../common/addEditModal";
 
 export default function RecordPaymentModal({
   visible,
@@ -95,93 +94,83 @@ export default function RecordPaymentModal({
   };
 
   return (
-    <Modal
+    <AddEditModal
       visible={visible}
-      animationType="slide"
-      transparent
-      onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
-        <View style={styles.container}>
-          <Card>
-            {/* Header */}
-            <View style={styles.header}>
-              <BodyText style={styles.title}>
-                Record Payment
-              </BodyText>
+      <View style={styles.header}>
+        <BodyText style={styles.title}>
+          Record Payment
+        </BodyText>
 
-              <SecondaryText style={styles.subtitle}>
-                Remaining Balance:
-                {" "}
-                {remainingBalance.toLocaleString()}
-              </SecondaryText>
-            </View>
-
-            {/* Amount */}
-            <View style={globalStyles.formGroup}>
-              <FormLabel >
-                Amount
-              </FormLabel>
-
-              <Input
-                value={amount}
-                onChangeText={setAmount}
-                keyboardType="numeric"
-                placeholder="0"
-                style={styles.input}
-              />
-            </View>
-
-            <PaymentMethodPicker 
-              value={paymentMethod}
-              handleMethodChange={(val) => setPaymentMethod(val)}
-            />
-
-            {/* Note */}
-            <View style={globalStyles.formGroup}>
-              <FormLabel style={styles.label}>
-                Note
-              </FormLabel>
-
-              <TextArea
-                value={note}
-                onChangeText={setNote}
-                placeholder="Optional note"
-                multiline
-                style={[styles.input, styles.noteInput]}
-              />
-            </View>
-
-            {/* Actions */}
-            <View style={styles.actions}>
-              <Pressable
-                style={globalStyles.secondaryBtn}
-                onPress={onClose}
-              >
-                <BodyText style={globalStyles.secondaryBtnText}>
-                  Cancel
-                </BodyText>
-              </Pressable>
-
-              <Pressable
-                style={[
-                  globalStyles.primaryBtn,
-                  loading && { opacity: 0.7 },
-                ]}
-                onPress={handleSave}
-                disabled={loading}
-              >
-                <BodyText style={globalStyles.primaryBtnText}>
-                  {loading
-                    ? "Saving..."
-                    : "Save Payment"}
-                </BodyText>
-              </Pressable>
-            </View>
-          </Card>
-        </View>
+        <SecondaryText style={styles.subtitle}>
+          Remaining Balance:
+          {" "}
+          {remainingBalance.toLocaleString()}
+        </SecondaryText>
       </View>
-    </Modal>
+
+      {/* Amount */}
+      <View style={globalStyles.formGroup}>
+        <FormLabel >
+          Amount
+        </FormLabel>
+
+        <Input
+          value={amount}
+          onChangeText={setAmount}
+          keyboardType="numeric"
+          placeholder="0"
+          style={styles.input}
+        />
+      </View>
+
+      <PaymentMethodPicker 
+        value={paymentMethod}
+        handleMethodChange={(val) => setPaymentMethod(val)}
+      />
+
+      {/* Note */}
+      <View style={globalStyles.formGroup}>
+        <FormLabel style={styles.label}>
+          Note
+        </FormLabel>
+
+        <TextArea
+          value={note}
+          onChangeText={setNote}
+          placeholder="Optional note"
+          multiline
+          style={[styles.input, styles.noteInput]}
+        />
+      </View>
+
+      {/* Actions */}
+      <View style={styles.actions}>
+        <Pressable
+          style={globalStyles.secondaryBtn}
+          onPress={onClose}
+        >
+          <BodyText style={globalStyles.secondaryBtnText}>
+            Cancel
+          </BodyText>
+        </Pressable>
+
+        <Pressable
+          style={[
+            globalStyles.primaryBtn,
+            loading && { opacity: 0.7 },
+          ]}
+          onPress={handleSave}
+          disabled={loading}
+        >
+          <BodyText style={globalStyles.primaryBtnText}>
+            {loading
+              ? "Saving..."
+              : "Save Payment"}
+          </BodyText>
+        </Pressable>
+      </View>
+    </AddEditModal>
   );
 }
 

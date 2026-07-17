@@ -13,9 +13,7 @@ export function CreditActionsCard({
   onMarkPaid,
   setRefreshCredit,
 }) {
-  const router = useRouter();
-  const [paymentModalVisible, setPaymentModalVisible] =
-  useState(false);
+  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
 
   const remainingBalance = Math.max(
     Number(credit.balance_due || 0),
@@ -24,24 +22,6 @@ export function CreditActionsCard({
 
   const isFullyPaid = remainingBalance <= 0;
 
-  const handleMarkPaid = () => {
-    Alert.alert(
-      "Mark Credit as Paid",
-      `Offset remaining balance of ${remainingBalance.toLocaleString()}?`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Confirm",
-          onPress: () => {
-            onMarkPaid?.();
-          },
-        },
-      ]
-    );
-  };
   if(isFullyPaid) return
 
   return (
@@ -60,19 +40,6 @@ export function CreditActionsCard({
             Record Payment
           </BodyText>
         </Pressable>
-
-
-        {/* Offset Remaining */}
-        {/* {!isFullyPaid && (
-          <Pressable
-            style={[styles.button, styles.secondaryButton]}
-            onPress={handleMarkPaid}
-          >
-            <BodyText style={styles.secondaryButtonText}>
-              Offset Balance
-            </BodyText>
-          </Pressable>
-        )} */}
         
       </View>
 
