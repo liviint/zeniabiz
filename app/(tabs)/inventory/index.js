@@ -29,7 +29,7 @@ import { TourGuideZone, useTourGuideController } from "react-native-tourguide";
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();
-  const { start } = useTourGuideController();
+  const { start, stop } = useTourGuideController();
   const { onRefresh, refreshing } = useManualSync();
   const router = useRouter();
   const isFocused = useIsFocused();
@@ -161,13 +161,22 @@ export default function ProductsListPage() {
   },[products])
 
   const shouldShowTour = products.length === 0 
+
   useEffect(() => {
-    if (!shouldShowTour) return;
+    if (!isFocused) {
+      stop();
+    }
+  }, [isFocused]);
+
+  useEffect(() => {
+    if (!isFocused || !shouldShowTour) return;
+
     const task = InteractionManager.runAfterInteractions(() => {
-        start();
+      start();
     });
+
     return () => task.cancel();
-  }, [shouldShowTour,isFocused]);
+  }, [isFocused, shouldShowTour]);
 
   const renderItem = ({ item }) => {
     const isService = item?.item_type === "service";
