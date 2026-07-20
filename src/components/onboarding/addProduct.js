@@ -1,6 +1,6 @@
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import { BodyText, SecondaryText } from "../ThemeProvider/components";
+import { BodyText, SecondaryText , Card} from "../ThemeProvider/components";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 
 export default function AddProduct() {
@@ -11,22 +11,23 @@ export default function AddProduct() {
         <View
             style={globalStyles.container}
         >
-            <BodyText style={styles.title}>
-                👋 Welcome to ZeniaBiz
-            </BodyText>
+            <Card>
+                <BodyText style={styles.title}>
+                    👋 Welcome to ZeniaBiz
+                </BodyText>
 
-            <SecondaryText style={styles.description}>
-                You&apos;re just a few taps away from tracking your business.
-                Start by adding your first product or service.
-            </SecondaryText>
+                <SecondaryText style={styles.description}>
+                    You&apos;re just a few taps away from tracking your business.
+                    Start by adding your first product or service.
+                </SecondaryText>
 
-            <TouchableOpacity
-                style={globalStyles.primaryBtn}
-                onPress={() => router.push("/inventory")}
-            >
-                <BodyText style={globalStyles.primaryBtnText}>Add Product</BodyText>
-            </TouchableOpacity>
-            
+                <TouchableOpacity
+                    style={globalStyles.primaryBtn}
+                    onPress={() => router.push("/inventory")}
+                >
+                    <BodyText style={globalStyles.primaryBtnText}>Add Product</BodyText>
+                </TouchableOpacity>
+            </Card>
         </View>
     );
 }
