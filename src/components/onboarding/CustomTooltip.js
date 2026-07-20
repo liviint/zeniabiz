@@ -1,30 +1,56 @@
-import { View, TouchableOpacity } from "react-native";
+import Tooltip from "react-native-walkthrough-tooltip";
 import { BodyText, SecondaryText } from "../ThemeProvider/components";
+import { TouchableOpacity , View} from "react-native";
+import { useThemeStyles } from "@/src/hooks/useThemeStyles";
 
 export default function CustomTooltip({
-  handleNext,
-  handleStop,
-  isLastStep,
-  currentStep,
+    visible,
+    children,
+    title,
+    description,
+    onClose,
+    btnAction=null
 }) {
-  return (
-    <View
-      style={{
-        backgroundColor: "white",
-        padding: 16,
-        borderRadius: 16,
-      }}
-    >
-      <BodyText>{currentStep?.text}</BodyText>
+    const { globalStyles } = useThemeStyles()
+    return (
+        <Tooltip
+            isVisible={visible}
+            placement="top"
+            showChildInTooltip={false}
+            displayInsets={{
+                left: 10,
+                right: 10,
+                top: 0,
+                bottom: 0,
+            }}
+            content={
+                <View>
+                    <BodyText>
+                        {title}
+                    </BodyText>
 
-      <TouchableOpacity
-        onPress={isLastStep ? handleStop : handleNext}
-        style={{ marginTop: 16 }}
-      >
-        <SecondaryText>
-          {isLastStep ? "Got it" : "Next"}
-        </SecondaryText>
-      </TouchableOpacity>
-    </View>
-  );
+                    <SecondaryText
+                        style={{ marginTop: 8 }}
+                    >
+                        {description}
+                    </SecondaryText>
+
+                    {btnAction && 
+                        <TouchableOpacity
+                            style={{...globalStyles.primaryBtn,marginTop: 16}}
+                            onPress={() => {}}
+                        >
+                            <BodyText style={globalStyles.primaryBtnText}>Add Product</BodyText>
+                        </TouchableOpacity>
+                    }
+
+                </View>
+            }
+            onClose={onClose}
+            useReactNativeModal={true}
+            backgroundColor="rgba(0,0,0,0.6)"
+        >
+            {children}
+        </Tooltip>
+    );
 }

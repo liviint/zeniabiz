@@ -25,11 +25,10 @@ import { formatNumber } from "../../../src/db/utils";
 import { canViewReports } from "../../../src/utils/rolesAndPermissions"
 import SearchProducts from "../../../src/components/barcodeScanner/searchProducts";
 import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
-import { TourGuideZone, useTourGuideController } from "react-native-tourguide";
+import CustomTooltip from "../../../src/components/onboarding/CustomTooltip"
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();
-  const { start, stop } = useTourGuideController();
   const { onRefresh, refreshing } = useManualSync();
   const router = useRouter();
   const isFocused = useIsFocused();
@@ -39,6 +38,7 @@ export default function ProductsListPage() {
   const user = useSelector((state) => state.user.userDetails);
 
   const [isAllowedToViewReports,setIsAllowedToViewReports] = useState(canViewReports())
+  const [showTip, setShowTip] = useState(false);
 
   const [products, setProducts] = useState([]);
   const [stats,setStats] = useState({})
@@ -160,23 +160,12 @@ export default function ProductsListPage() {
     })
   },[products])
 
-  const shouldShowTour = products.length === 0 
 
-  useEffect(() => {
-    if (!isFocused) {
-      stop();
+ useEffect(() => {
+    if (products.length === 0) {
+        setShowTip(true);
     }
-  }, [isFocused]);
-
-  useEffect(() => {
-    if (!isFocused || !shouldShowTour) return;
-
-    const task = InteractionManager.runAfterInteractions(() => {
-      start();
-    });
-
-    return () => task.cancel();
-  }, [isFocused, shouldShowTour]);
+}, [products,isFocused]);
 
   const renderItem = ({ item }) => {
     const isService = item?.item_type === "service";
@@ -237,18 +226,17 @@ export default function ProductsListPage() {
         }
       />
 
-      <TourGuideZone
-          zone={1}
-          title= 'Welcome'
-          text="Tap the + button to add your first product or service."
-      >
+      
         <AddButton 
-            primaryAction={{ route: "/inventory/add", label: "Add Product" }}
-            secondaryActions={[
-              {route:"/inventory/add/service",label: "Add Service"},
-            ]}
-          />
-    </TourGuideZone>
+          primaryAction={{ route: "/inventory/add", label: "Add Product" }}
+          secondaryActions={[
+            {route:"/inventory/add/service",label: "Add Service"},
+          ]}
+          showTip={showTip}
+          setShowTip={setShowTip}
+        />
+
+  
     </View>
   );
 }

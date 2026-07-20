@@ -8,10 +8,13 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Card, BodyText } from "../ThemeProvider/components";
+import CustomTooltip from "../onboarding/CustomTooltip";
 
 export const AddButton = ({
   primaryAction,
   secondaryActions = [],
+  showTip,
+  setShowTip,
 }) => {
   const router = useRouter();
   const [menuVisible, setMenuVisible] = useState(false);
@@ -33,13 +36,20 @@ export const AddButton = ({
   };
 
   return (
-    <>
-      {/* Floating Button */}
-      <Pressable style={styles.button} onPress={toggleMenu}>
-        <Text style={styles.text}>
-          {menuVisible ? "×" : "＋"}
-        </Text>
+    <View style={styles.buttonContainer}>
+      <CustomTooltip
+        visible={showTip}
+        title="Add your first product or service"
+        description="Tap + to create your first product or service."
+        onClose={() => setShowTip(false)}
+        horizontalAdjustment={-50}
+      >
+        <Pressable style={styles.button} onPress={toggleMenu}>
+          <Text style={styles.text}>
+            {menuVisible ? "×" : "＋"}
+          </Text>
       </Pressable>
+      </CustomTooltip>
 
       {/* Popup Menu */}
       <Modal
@@ -76,16 +86,18 @@ export const AddButton = ({
           </Card>
         </Pressable>
       </Modal>
-    </>
+    </View>
   );
 };
 
 
 const styles = StyleSheet.create({
-  button: {
+  buttonContainer: {
     position: "absolute",
     right: 20,
     bottom: 24,
+  },
+  button: {
     width: 56,
     height: 56,
     borderRadius: 28,

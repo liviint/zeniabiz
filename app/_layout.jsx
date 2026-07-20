@@ -9,8 +9,6 @@ import AppDataProvider from "../src/components/AppDataProvider/index"
 import AppLockProvider from "../src/components/AppDataProvider/AppLockProvider"
 import analytics from '@react-native-firebase/analytics';
 import RevenueCatProvider from "../src/components/AppDataProvider/RevenueCatProvider"
-import { TourGuideProvider } from 'react-native-tourguide';
-import CustomTooltip from "../src/components/onboarding/CustomTooltip"
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -42,9 +40,6 @@ export default function RootLayout() {
         <RevenueCatProvider>
           <AppDataProvider>
             <AppLockProvider>
-              <TourGuideProvider
-                tooltipComponent={CustomTooltip}
-              >
                   <Stack>
                     <Stack.Screen
                       name="(tabs)"
@@ -62,7 +57,6 @@ export default function RootLayout() {
                       }}
                     />
                   </Stack>
-                </TourGuideProvider>
             </AppLockProvider>
           </AppDataProvider>
         </RevenueCatProvider>
