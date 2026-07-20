@@ -9,6 +9,7 @@ import AppDataProvider from "../src/components/AppDataProvider/index"
 import AppLockProvider from "../src/components/AppDataProvider/AppLockProvider"
 import analytics from '@react-native-firebase/analytics';
 import RevenueCatProvider from "../src/components/AppDataProvider/RevenueCatProvider"
+import { TourGuideProvider } from 'react-native-tourguide';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -40,23 +41,25 @@ export default function RootLayout() {
         <RevenueCatProvider>
           <AppDataProvider>
             <AppLockProvider>
-                <Stack>
-                  <Stack.Screen
-                    name="(tabs)"
-                    options={{
-                      header: () => <Header />,
-                    }}
-                  />
+              <TourGuideProvider>
+                  <Stack>
+                    <Stack.Screen
+                      name="(tabs)"
+                      options={{
+                        header: () => <Header />,
+                      }}
+                    />
 
-                  <Stack.Screen
-                    name="modal"
-                    options={{
-                      presentation: 'modal',
-                      title: 'Modal',
-                      header: () => <Header />,
-                    }}
-                  />
-                </Stack>
+                    <Stack.Screen
+                      name="modal"
+                      options={{
+                        presentation: 'modal',
+                        title: 'Modal',
+                        header: () => <Header />,
+                      }}
+                    />
+                  </Stack>
+                </TourGuideProvider>
             </AppLockProvider>
           </AppDataProvider>
         </RevenueCatProvider>

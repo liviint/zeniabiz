@@ -1,43 +1,14 @@
-import { useIsFocused } from "@react-navigation/native";
-import { useSelector } from "react-redux";
 import { 
   View, 
   StyleSheet,
 } from "react-native";
-import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
 import { StatCard } from "../common/StatCard";
-import {getFinancialStats } from "../../db/query/dashboard";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { SecondaryText } from "../ThemeProvider/components";
-import { useDeferredEffect } from "../../hooks/useDeferredEffect";
 
-export default function SummaryCards({ isSyncing,timeState }) {
+export default function SummaryCards({ isSyncing,timeState, stats }) {
   const { colors } = useThemeStyles()
-  const isFocused = useIsFocused();
-  const db = useSQLiteContext();
-  const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
-
-  const [stats, setStats] = useState({
-    revenue: 0,
-    expenses: 0,
-    cashCollected:0,
-    outstandingCredit:0,
-    cost: 0,
-    grossProfit: 0,
-    netProfit: 0,
-    stockValue: 0,
-  });
-
-  useDeferredEffect(async (isMounted) => {
-    const summary = await getFinancialStats(db, timeState);
-
-    if (isMounted()) {
-      setStats(summary);
-    }
-  }, [db, isFocused, timeState, lastSyncedAt],{enabled: isFocused,});
-
-
+  
   const formatNumber = (num) =>
     Number(num || 0).toLocaleString();
 
