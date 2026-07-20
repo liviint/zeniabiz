@@ -11,7 +11,6 @@ import {
 import { getActiveContextSync } from "../../../db/utils";
 import { useSQLiteContext } from "expo-sqlite";
 import { api } from "../../../../api";
-import { dateFormat } from "../../../../utils/dateFormat";
 import { useThemeStyles } from "../../../hooks/useThemeStyles";
 import { getCompany , upsertCompany} from "../../../db/query/companies"
 
@@ -72,7 +71,7 @@ const BusinessOverview = ({
     <View style={styles.header}>
       <BodyText style={styles.title}>Business Overview</BodyText>
 
-      {isAllowedToViewReports  && 
+      {isAllowedToViewReports && isUserLoggedIn  && 
         <TouchableOpacity style={globalStyles.editBtn} onPress={handleEdit}>
           <BodyText style={styles.editBtnText}>Edit</BodyText>
         </TouchableOpacity>
