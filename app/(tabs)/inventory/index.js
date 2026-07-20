@@ -239,7 +239,8 @@ export default function ProductsListPage() {
 
       <TourGuideZone
           zone={1}
-          text="Tap here to add your first product or service."
+          title= 'Welcome'
+          text="Tap the + button to add your first product or service."
       >
         <AddButton 
             primaryAction={{ route: "/inventory/add", label: "Add Product" }}
