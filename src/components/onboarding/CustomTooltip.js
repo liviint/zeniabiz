@@ -18,11 +18,17 @@ export default function CustomTooltip({
             placement="top"
             showChildInTooltip={false}
             displayInsets={{
-                left: 10,
+                left: 0,
                 right: 10,
                 top: 0,
                 bottom: 0,
             }}
+            contentStyle={{
+    maxWidth: 300,
+    paddingHorizontal: 10,
+    paddingVertical: 18,
+    borderRadius: 18,
+}}
             content={
                 <View>
                     <BodyText>
