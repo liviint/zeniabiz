@@ -35,12 +35,20 @@ export const AddButton = ({
     router.push(route);
   };
 
+  let tootTipTitle = "Add your first product or service"
+  let tootTipDescription = "Tap + to create your first product or service."
+  
+  if(primaryAction.label.includes("Sale")){
+    tootTipTitle = "Add your first sale"
+    tootTipDescription = "Tap + to create your first sale."
+  }
+
   return (
     <View style={styles.buttonContainer}>
       <CustomTooltip
         visible={showTip}
-        title="Add your first product or service"
-        description="Tap + to create your first product or service."
+        title={tootTipTitle}
+        description={tootTipDescription}
         onClose={() => setShowTip(false)}
         horizontalAdjustment={-50}
       >

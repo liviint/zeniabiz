@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useNavigation , useIsFocused} from "@react-navigation/native";
+import { useIsFocused} from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import { BodyText, SecondaryText , Card} from "../ThemeProvider/components";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { useSQLiteContext } from "expo-sqlite";
@@ -10,7 +11,7 @@ import { getBusinessProgress } from "../../db/query/dashboard";
 import { useDeferredEffect } from "../../hooks/useDeferredEffect";
 
 export default function OnBoarding() {
-    const navigation = useNavigation();
+    const router = useRouter();
     const db = useSQLiteContext();
     const isFocused = useIsFocused();
     const {  colors } = useThemeStyles();
@@ -36,12 +37,12 @@ export default function OnBoarding() {
         {
             title: "Add your first product",
             completed: progress.hasProducts,
-            action: () => navigation.navigate("Products"),
+            action: () => router.push("/inventory"),
         },
         {
             title: "Record your first sale",
             completed: progress.hasSales,
-            action: () => navigation.navigate("Sales"),
+            action: () => router.push("/sales"),
         },
     ];
 

@@ -9,7 +9,6 @@ import {
     StyleSheet, 
     View , 
     RefreshControl, 
-    InteractionManager 
 } from "react-native";
 import { BodyText, Card, SecondaryText } from "../../../src/components/ThemeProvider/components";
 import { AddButton } from "../../../src/components/common/AddButton";
@@ -25,7 +24,6 @@ import { formatNumber } from "../../../src/db/utils";
 import { canViewReports } from "../../../src/utils/rolesAndPermissions"
 import SearchProducts from "../../../src/components/barcodeScanner/searchProducts";
 import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
-import CustomTooltip from "../../../src/components/onboarding/CustomTooltip"
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();
@@ -161,7 +159,7 @@ export default function ProductsListPage() {
   },[products])
 
 
- useEffect(() => {
+useEffect(() => {
     if (products.length === 0) {
         setShowTip(true);
     }

@@ -42,6 +42,7 @@ export default function SalesList() {
   const [sales, setSales] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [timeState, setTimeState] = useState(createRange("month"));
+   const [showTip, setShowTip] = useState(false);
 
   const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
   const user = useSelector((state) => state.user.userDetails);
@@ -164,6 +165,12 @@ export default function SalesList() {
 
   const useSections = sort === "newest" 
 
+  useEffect(() => {
+    if (sales.length === 0) {
+        setShowTip(true);
+    }
+}, [sales,isFocused]);
+
   return (
     <View style={globalStyles.container}>
       <RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>
@@ -240,6 +247,8 @@ export default function SalesList() {
   
       <AddButton
         primaryAction={{ route: "/sales/add", label: "Add a Sale" }}
+        showTip={showTip}
+        setShowTip={setShowTip}
       />
     </View>
   );
