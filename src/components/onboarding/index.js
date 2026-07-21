@@ -9,6 +9,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useSelector } from "react-redux";
 import { getBusinessProgress } from "../../db/query/dashboard";
 import { useDeferredEffect } from "../../hooks/useDeferredEffect";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function OnBoarding() {
     const router = useRouter();
@@ -16,6 +17,7 @@ export default function OnBoarding() {
     const isFocused = useIsFocused();
     const {  colors } = useThemeStyles();
     const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
+    const [showWelcome, setShowWelcome] = useState(true);
 
     const [progress, setProgress] = useState({
         hasProducts: false,
@@ -54,64 +56,114 @@ export default function OnBoarding() {
     }
 
     return (
-        <Card
-            style={[
-                styles.card,]}
-        >
-            <BodyText style={styles.title}>
-                🎉 Let&apos;s set up your business
-            </BodyText>
+        <>
+        {showWelcome && (
+            <Card style={styles.welcomeCard}>
+                <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => setShowWelcome(false)}
+                >
+                    <MaterialIcons
+                        name="close"
+                        size={20}
+                        color={colors.secondary}
+                    />
+                </TouchableOpacity>
 
-            <SecondaryText style={styles.subtitle}>
-                Complete these steps to unlock your dashboard.
-            </SecondaryText>
-
-            <View style={{ marginTop: 16 }}>
-                {steps.map(step => (
-                    <View key={step.title} style={styles.row}>
-                        <MaterialIcons
-                            name={
-                                step.completed
-                                    ? "check-circle"
-                                    : "radio-button-unchecked"
-                            }
-                            size={22}
-                            color={
-                                step.completed
-                                    ? "#22C55E"
-                                    : colors.secondary
-                            }
-                        />
-
-                        <BodyText
-                            style={{
-                                marginLeft: 12,
-                                flex: 1,
-                                opacity: step.completed ? 0.7 : 1,
-                            }}
-                        >
-                            {step.title}
-                        </BodyText>
-                    </View>
-                ))}
-            </View>
-
-            <TouchableOpacity
-                style={[
-                    styles.button,
-                    { backgroundColor: colors.primary },
-                ]}
-                onPress={nextStep.action}
-            >
-                <BodyText style={{ color: "#FFF", fontWeight: "600" }}>
-                    {nextStep.title}
+                <BodyText style={styles.welcomeTitle}>
+                    👋 Welcome to ZeniaBiz
                 </BodyText>
-            </TouchableOpacity>
-        </Card>
+
+                <SecondaryText style={styles.welcomeText}>
+                    We&apos;ll guide you through a quick setup so your dashboard can start showing meaningful insights.
+                </SecondaryText>
+            </Card>
+        )}
+
+        <Card
+                    style={[
+                        styles.card,]}
+                >
+                    <BodyText style={styles.title}>
+                        🎉 Let&apos;s set up your business
+                    </BodyText>
+
+                    <SecondaryText style={styles.subtitle}>
+                        Complete these steps to unlock your dashboard.
+                    </SecondaryText>
+
+                    <View style={{ marginTop: 16 }}>
+                        {steps.map(step => (
+                            <View key={step.title} style={styles.row}>
+                                <MaterialIcons
+                                    name={
+                                        step.completed
+                                            ? "check-circle"
+                                            : "radio-button-unchecked"
+                                    }
+                                    size={22}
+                                    color={
+                                        step.completed
+                                            ? "#22C55E"
+                                            : colors.secondary
+                                    }
+                                />
+
+                                <BodyText
+                                    style={{
+                                        marginLeft: 12,
+                                        flex: 1,
+                                        opacity: step.completed ? 0.7 : 1,
+                                    }}
+                                >
+                                    {step.title}
+                                </BodyText>
+                            </View>
+                        ))}
+                    </View>
+
+                    <TouchableOpacity
+                        style={[
+                            styles.button,
+                            { backgroundColor: colors.primary },
+                        ]}
+                        onPress={nextStep.action}
+                    >
+                        <BodyText style={{ color: "#FFF", fontWeight: "600" }}>
+                            {nextStep.title}
+                        </BodyText>
+                    </TouchableOpacity>
+                </Card>
+        </>
     );
 }
 
 const styles = StyleSheet.create({
+    welcomeCard: {
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 16,
+    marginBottom: 8,
+    position: "relative",
+},
+
+welcomeTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 8,
+},
+
+welcomeText: {
+    lineHeight: 22,
+    paddingRight: 24,
+},
+
+closeButton: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    padding: 4,
+},
     card: {
         borderRadius: 16,
         borderWidth: 1,
