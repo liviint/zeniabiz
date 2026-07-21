@@ -1,14 +1,50 @@
+import { useIsFocused } from "@react-navigation/native";
+import { useSelector } from "react-redux";
 import { 
   View, 
   StyleSheet,
 } from "react-native";
+import { useSQLiteContext } from "expo-sqlite";
+import { useState } from "react";
 import { StatCard } from "../common/StatCard";
+import {getFinancialStats } from "../../db/query/dashboard";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { SecondaryText } from "../ThemeProvider/components";
+import { useDeferredEffect } from "../../hooks/useDeferredEffect";
 
-export default function SummaryCards({ isSyncing,timeState, stats }) {
+export default function SummaryCards({ 
+  isSyncing,
+  timeState, 
+}) {
   const { colors } = useThemeStyles()
-  
+  const isFocused = useIsFocused();
+  const db = useSQLiteContext();
+  const [isLoading,setIsLoading] = useState(true)
+  const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
+
+  const [stats, setStats] = useState({
+    revenue: 0,
+    expenses: 0,
+    cashCollected:0,
+    outstandingCredit:0,
+    cost: 0,
+    grossProfit: 0,
+    netProfit: 0,
+    stockValue: 0,
+  });
+
+  useDeferredEffect(async (isMounted) => {
+    console.log("hello summ 12")
+    const summary = await getFinancialStats(db, timeState);
+    console.log(summary,"hello summ")
+    if (isMounted()) {
+      setStats(summary);
+    }
+    console.log(summary,"hello summ")
+    setIsLoading(false)
+  }, [db, isFocused, timeState, lastSyncedAt],{enabled: isFocused,});
+
+
   const formatNumber = (num) =>
     Number(num || 0).toLocaleString();
 
@@ -25,6 +61,10 @@ export default function SummaryCards({ isSyncing,timeState, stats }) {
   const profitRemark = stats.netProfit === 0 ? "" : stats.netProfit > 0
             ? "You're making money 📈"
             : "You're losing money 📉"
+
+  /* if (isLoading) {
+        return <PageLoader message="Loading..." />;
+    } */
 
   return (
     <View style={styles.container}>

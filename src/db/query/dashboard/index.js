@@ -364,6 +364,54 @@ const revenueResult = await db.getFirstAsync(
   };
 }
 
+export async function getBusinessProgress(db) {
+  const { company } = getActiveContextSync();
+
+  const [productsResult, salesResult, expensesResult] = await Promise.all([
+    db.getFirstAsync(
+      `
+      SELECT EXISTS(
+        SELECT 1
+        FROM products
+        WHERE company = ?
+          AND deleted_at IS NULL
+      ) AS hasProducts
+      `,
+      [company]
+    ),
+
+    db.getFirstAsync(
+      `
+      SELECT EXISTS(
+        SELECT 1
+        FROM sales
+        WHERE company = ?
+          AND deleted_at IS NULL
+      ) AS hasSales
+      `,
+      [company]
+    ),
+
+    db.getFirstAsync(
+      `
+      SELECT EXISTS(
+        SELECT 1
+        FROM expenses
+        WHERE company = ?
+          AND deleted_at IS NULL
+      ) AS hasExpenses
+      `,
+      [company]
+    ),
+  ]);
+
+  return {
+    hasProducts: Boolean(productsResult?.hasProducts),
+    hasSales: Boolean(salesResult?.hasSales),
+    hasExpenses: Boolean(expensesResult?.hasExpenses),
+  };
+}
+
 export const getPaymentsBreakdown = async (db, timeState) => {
   const { company } = getActiveContextSync();
 

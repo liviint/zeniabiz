@@ -668,15 +668,3 @@ export async function getTotalStockValue(db) {
 
   return { stock_value: total };
 }
-
-export async function hasProducts(db) {
-    const result = await db.getFirstAsync(`
-        SELECT EXISTS (
-            SELECT 1
-            FROM products
-            WHERE deleted_at IS NULL
-        ) AS has_products;
-    `);
-
-    return Boolean(result.has_products);
-}

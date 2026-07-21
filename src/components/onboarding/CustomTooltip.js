@@ -1,6 +1,6 @@
 import Tooltip from "react-native-walkthrough-tooltip";
 import { BodyText, SecondaryText } from "../ThemeProvider/components";
-import { TouchableOpacity , View} from "react-native";
+import { TouchableOpacity , View, StyleSheet} from "react-native";
 import { useThemeStyles } from "@/src/hooks/useThemeStyles";
 
 export default function CustomTooltip({
@@ -23,12 +23,7 @@ export default function CustomTooltip({
                 top: 0,
                 bottom: 0,
             }}
-            contentStyle={{
-    maxWidth: 300,
-    paddingHorizontal: 10,
-    paddingVertical: 18,
-    borderRadius: 18,
-}}
+            contentStyle={styles.tooltiPContent}
             content={
                 <View>
                     <BodyText>
@@ -60,3 +55,12 @@ export default function CustomTooltip({
         </Tooltip>
     );
 }
+
+const styles = StyleSheet.create({
+    tooltiPContent:{
+        maxWidth: 300,
+        paddingHorizontal: 10,
+        paddingVertical: 18,
+        borderRadius: 18,
+    }
+})
