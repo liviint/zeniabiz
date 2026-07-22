@@ -42,6 +42,10 @@ export const AddButton = ({
     tootTipTitle = "Add your first sale"
     tootTipDescription = "Tap + to create your first sale."
   }
+  if(primaryAction.label.includes("Expense")){
+    tootTipTitle = "Add your first expense"
+    tootTipDescription = "Tap + to create your first expense."
+  }
 
   return (
     <View style={styles.buttonContainer}>

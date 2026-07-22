@@ -43,6 +43,7 @@ export default function ExpensesListPage() {
     const isFocused = useIsFocused()
     const {globalStyles} = useThemeStyles()
     const [timeState, setTimeState] = useState(createRange("month"));
+    const [showTip, setShowTip] = useState(false);
 
     const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
     const user = useSelector((state) => state.user.userDetails);
@@ -101,6 +102,12 @@ export default function ExpensesListPage() {
     { title: "Earlier This Month", data: grouped.thisMonth },
     { title: "Older", data: grouped.older },
   ].filter(section => section.data.length > 0);
+
+  useEffect(() => {
+      if (expenses.length === 0) {
+          setShowTip(true);
+      }
+  }, [expenses,isFocused]);
 
   const renderItem = ({ item }) => (
     <Pressable
@@ -186,6 +193,8 @@ export default function ExpensesListPage() {
             {route:"/expenses/categories/add/modal",label:"Add Category"},
             {route:"/expenses/templates/add/",label:"Add Template"},
           ]}
+          showTip={showTip}
+          setShowTip={setShowTip}
         />
 
       </> 

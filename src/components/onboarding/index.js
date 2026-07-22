@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, TouchableOpacity, StyleSheet } from "react-native";
+import { View, TouchableOpacity, StyleSheet, Pressable } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useIsFocused} from "@react-navigation/native";
 import { useRouter } from "expo-router";
@@ -55,20 +55,28 @@ export default function OnBoarding() {
         return null;
     }
 
+    const handleWelcomeMessageClosing = () => {
+        setShowWelcome(false)
+    }
+
     return (
         <>
         {showWelcome && (
             <Card style={styles.welcomeCard}>
-                <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={() => setShowWelcome(false)}
+                <Pressable
+                    style={({ pressed }) => [
+                        styles.closeButton,
+                        pressed && { opacity: 0.6 },
+                    ]}
+                    hitSlop={56}
+                    onPress={handleWelcomeMessageClosing}
                 >
                     <MaterialIcons
                         name="close"
                         size={20}
                         color={colors.secondary}
                     />
-                </TouchableOpacity>
+                </Pressable>
 
                 <BodyText style={styles.welcomeTitle}>
                     👋 Welcome to ZeniaBiz
@@ -160,9 +168,12 @@ welcomeText: {
 
 closeButton: {
     position: "absolute",
-    top: 12,
-    right: 12,
-    padding: 4,
+    top: 8,
+    right: 8,
+    borderRadius: 20,
+
+    alignItems: "center",
+    justifyContent: "center",
 },
     card: {
         borderRadius: 16,
