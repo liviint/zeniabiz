@@ -19,6 +19,7 @@ export default function OnBoarding() {
     const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
     const [showWelcome, setShowWelcome] = useState(true);
     const [onboardingCompleted,setOnboardingComleted] = useState(false)
+    const [showCompletion, setShowCompletion] = useState(false);
     const [isLoading,setIsLoading] = useState(true)
 
     const [progress, setProgress] = useState({
@@ -43,19 +44,29 @@ export default function OnBoarding() {
     const nextStep = steps.find(step => !step.completed);
 
     useDeferredEffect(async (isMounted) => {
-        const [userWelcomed,onboardingCompleted, progress] = await Promise.all([
+        const [
+            userWelcomed,
+            onboardingCompleted,
+            completionAcknowledged,
+            progress,
+        ] = await Promise.all([
             getSetting(db, "welcome_message_dismissed"),
             getSetting(db, "onboarding_completed"),
+            getSetting(db, "onboarding_completion_acknowledged"),
             getBusinessProgress(db),
         ]);
 
         if (!isMounted()) return;
 
         setProgress(progress);
-
         setShowWelcome(userWelcomed);
-        setOnboardingComleted(onboardingCompleted)
-        setIsLoading(false)
+
+        const completed = onboardingCompleted;
+
+        setOnboardingComleted(completed);
+        setShowCompletion(completed && !completionAcknowledged);
+
+        setIsLoading(false);
     }, [db, isFocused, lastSyncedAt], {
         enabled: isFocused,
     });
@@ -80,6 +91,58 @@ export default function OnBoarding() {
         } catch (error) {
             console.error("Failed to save onboarding state:", error);
         }
+    }
+
+    const handleOboardingCompleted = async() => {
+        setShowCompletion(false);
+        await setSetting(db,"onboarding_completion_acknowledged","1");         
+    }
+
+    if (isLoading) {
+        return null;
+    }
+
+    if (showCompletion) {
+        return (
+            <Card style={styles.card}>
+                <MaterialIcons
+                    name="emoji-events"
+                    size={48}
+                    color="#FBBF24"
+                    style={{ alignSelf: "center", marginBottom: 12 }}
+                />
+
+                <BodyText
+                    style={[
+                        styles.title,
+                        { textAlign: "center" }
+                    ]}
+                >
+                    🎉 You&apos;re all set!
+                </BodyText>
+
+                <SecondaryText
+                    style={[
+                        styles.subtitle,
+                        { textAlign: "center", marginTop: 8 }
+                    ]}
+                >
+                    Great job! You&apos;re ready to start tracking your business. Your dashboard will become more valuable as you record sales and expenses.
+                </SecondaryText>
+
+                <TouchableOpacity
+                    style={[
+                        styles.button,
+                        { backgroundColor: colors.primary }
+                    ]}
+                    onPress={handleOboardingCompleted}
+                >
+                    <BodyText style={{ color: "#FFF", fontWeight: "600" }}>
+                        View Dashboard
+                    </BodyText>
+                </TouchableOpacity>
+            </Card>
+        );
     }
 
     if (!nextStep || onboardingCompleted || isLoading) {
@@ -110,7 +173,7 @@ export default function OnBoarding() {
                 </BodyText>
 
                 <SecondaryText style={styles.welcomeText}>
-                    We&apos;ll guide you through a quick setup so your dashboard can start showing meaningful insights.
+                    Complete a couple of quick steps to start tracking your sales and understand how your business is performing.
                 </SecondaryText>
             </Card>
         )}
@@ -124,7 +187,7 @@ export default function OnBoarding() {
             </BodyText>
 
             <SecondaryText style={styles.subtitle}>
-                Complete these steps to unlock your dashboard.
+                Complete these steps to start tracking your business performance.
             </SecondaryText>
 
             <View style={{ marginTop: 16 }}>
