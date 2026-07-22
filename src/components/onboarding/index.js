@@ -9,7 +9,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useSelector } from "react-redux";
 import { getBusinessProgress } from "../../db/query/dashboard";
 import { useDeferredEffect } from "../../hooks/useDeferredEffect";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getSetting, setSetting } from "../../db/query/settings"
 
 export default function OnBoarding() {
     const router = useRouter();
@@ -18,21 +18,13 @@ export default function OnBoarding() {
     const {  colors } = useThemeStyles();
     const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
     const [showWelcome, setShowWelcome] = useState(true);
+    const [onboardingCompleted,setOnboardingComleted] = useState(false)
+    const [isLoading,setIsLoading] = useState(true)
 
     const [progress, setProgress] = useState({
         hasProducts: false,
         hasSales: false,
         hasExpenses: false,
-    });
-
-    useDeferredEffect(async (isMounted) => {
-        const result = await getBusinessProgress(db);
-
-        if (isMounted()) {
-            setProgress(result);
-        }
-    }, [db, isFocused, lastSyncedAt], {
-        enabled: isFocused,
     });
 
     const steps = [
@@ -50,13 +42,48 @@ export default function OnBoarding() {
 
     const nextStep = steps.find(step => !step.completed);
 
-    // Hide onboarding once everything is complete
-    if (!nextStep) {
-        return null;
+    useDeferredEffect(async (isMounted) => {
+        const [userWelcomed,onboardingCompleted, progress] = await Promise.all([
+            getSetting(db, "welcome_message_dismissed"),
+            getSetting(db, "onboarding_completed"),
+            getBusinessProgress(db),
+        ]);
+
+        if (!isMounted()) return;
+
+        setProgress(progress);
+
+        setShowWelcome(userWelcomed);
+        setOnboardingComleted(onboardingCompleted)
+        setIsLoading(false)
+    }, [db, isFocused, lastSyncedAt], {
+        enabled: isFocused,
+    });
+
+    useDeferredEffect(async () => {
+        if (nextStep || onboardingCompleted) return;
+
+        setOnboardingComleted(true);
+
+        try {
+            await setSetting(db, "onboarding_completed", "1");
+        } catch (error) {
+            console.error(error);
+        }
+    }, [nextStep, onboardingCompleted]);
+
+    const handleWelcomeMessageClosing = async() => {
+        setShowWelcome(false)
+
+        try {
+            await setSetting(db, "welcome_message_dismissed", "1");
+        } catch (error) {
+            console.error("Failed to save onboarding state:", error);
+        }
     }
 
-    const handleWelcomeMessageClosing = () => {
-        setShowWelcome(false)
+    if (!nextStep || onboardingCompleted || isLoading) {
+        return null;
     }
 
     return (
@@ -89,59 +116,59 @@ export default function OnBoarding() {
         )}
 
         <Card
-                    style={[
-                        styles.card,]}
-                >
-                    <BodyText style={styles.title}>
-                        🎉 Let&apos;s set up your business
-                    </BodyText>
+            style={[
+                styles.card,]}
+        >
+            <BodyText style={styles.title}>
+                🎉 Let&apos;s set up your business
+            </BodyText>
 
-                    <SecondaryText style={styles.subtitle}>
-                        Complete these steps to unlock your dashboard.
-                    </SecondaryText>
+            <SecondaryText style={styles.subtitle}>
+                Complete these steps to unlock your dashboard.
+            </SecondaryText>
 
-                    <View style={{ marginTop: 16 }}>
-                        {steps.map(step => (
-                            <View key={step.title} style={styles.row}>
-                                <MaterialIcons
-                                    name={
-                                        step.completed
-                                            ? "check-circle"
-                                            : "radio-button-unchecked"
-                                    }
-                                    size={22}
-                                    color={
-                                        step.completed
-                                            ? "#22C55E"
-                                            : colors.secondary
-                                    }
-                                />
+            <View style={{ marginTop: 16 }}>
+                {steps.map(step => (
+                    <View key={step.title} style={styles.row}>
+                        <MaterialIcons
+                            name={
+                                step.completed
+                                    ? "check-circle"
+                                    : "radio-button-unchecked"
+                            }
+                            size={22}
+                            color={
+                                step.completed
+                                    ? "#22C55E"
+                                    : colors.secondary
+                            }
+                        />
 
-                                <BodyText
-                                    style={{
-                                        marginLeft: 12,
-                                        flex: 1,
-                                        opacity: step.completed ? 0.7 : 1,
-                                    }}
-                                >
-                                    {step.title}
-                                </BodyText>
-                            </View>
-                        ))}
-                    </View>
-
-                    <TouchableOpacity
-                        style={[
-                            styles.button,
-                            { backgroundColor: colors.primary },
-                        ]}
-                        onPress={nextStep.action}
-                    >
-                        <BodyText style={{ color: "#FFF", fontWeight: "600" }}>
-                            {nextStep.title}
+                        <BodyText
+                            style={{
+                                marginLeft: 12,
+                                flex: 1,
+                                opacity: step.completed ? 0.7 : 1,
+                            }}
+                        >
+                            {step.title}
                         </BodyText>
-                    </TouchableOpacity>
-                </Card>
+                    </View>
+                ))}
+            </View>
+
+            <TouchableOpacity
+                style={[
+                    styles.button,
+                    { backgroundColor: colors.primary },
+                ]}
+                onPress={nextStep.action}
+            >
+                <BodyText style={{ color: "#FFF", fontWeight: "600" }}>
+                    {nextStep.title}
+                </BodyText>
+            </TouchableOpacity>
+        </Card>
         </>
     );
 }
