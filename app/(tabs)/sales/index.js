@@ -166,10 +166,10 @@ export default function SalesList() {
   const useSections = sort === "newest" 
 
   useEffect(() => {
-    if (sales.length === 0) {
+    if (sales.length === 0 && !isLoading) {
         setShowTip(true);
     }
-}, [sales,isFocused]);
+}, [isLoading,sales,isFocused]);
 
   return (
     <View style={globalStyles.container}>

@@ -104,10 +104,10 @@ export default function ExpensesListPage() {
   ].filter(section => section.data.length > 0);
 
   useEffect(() => {
-      if (expenses.length === 0) {
+      if (expenses.length === 0 && !isLoading) {
           setShowTip(true);
       }
-  }, [expenses,isFocused]);
+  }, [isLoading,expenses,isFocused]);
 
   const renderItem = ({ item }) => (
     <Pressable

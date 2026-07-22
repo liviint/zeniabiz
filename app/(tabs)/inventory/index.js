@@ -160,10 +160,10 @@ export default function ProductsListPage() {
 
 
 useEffect(() => {
-    if (products.length === 0) {
+    if (products.length === 0 && !isLoading) {
         setShowTip(true);
     }
-}, [products,isFocused]);
+}, [isLoading,products,isFocused]);
 
   const renderItem = ({ item }) => {
     const isService = item?.item_type === "service";
