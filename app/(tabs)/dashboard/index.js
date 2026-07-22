@@ -24,7 +24,7 @@ export default function DashboardScreen() {
     const [onboardingCompleted, setOnboardingCompleted] = useState(true);
 
     useDeferredEffect(async (isMounted) => {
-        const completed = await getSetting(db, "onboarding_completed");
+        const completed = await getSetting(db, "onboarding_completion_acknowledged");
 
         if (!isMounted()) return;
 

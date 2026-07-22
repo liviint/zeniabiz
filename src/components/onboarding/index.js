@@ -19,7 +19,7 @@ export default function OnBoarding() {
     const {  colors } = useThemeStyles();
     const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
     const [showWelcome, setShowWelcome] = useState(true);
-    const [onboardingCompleted,setOnboardingComleted] = useState(false)
+    const [onboardingCompleted,setOnboardingCompleted] = useState(false)
     const [showCompletion, setShowCompletion] = useState(false);
     const [isLoading,setIsLoading] = useState(true)
 
@@ -60,11 +60,10 @@ export default function OnBoarding() {
         if (!isMounted()) return;
 
         setProgress(progress);
-        setShowWelcome(userWelcomed);
+        setShowWelcome(!userWelcomed);
 
-        const completed = onboardingCompleted;
-
-        setOnboardingComleted(completed);
+        const completed = Boolean(onboardingCompleted)
+        setOnboardingCompleted(completed);
         setShowCompletion(completed && !completionAcknowledged);
 
         setIsLoading(false);
@@ -81,7 +80,8 @@ export default function OnBoarding() {
 
     useDeferredEffect(async () => {
         if (nextStep || onboardingCompleted) return;
-        setOnboardingComleted(true);
+        setOnboardingCompleted(true);
+        setShowCompletion(true)
 
         try {
             await setSetting(db, "onboarding_completed", "1");
