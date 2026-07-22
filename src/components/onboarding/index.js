@@ -10,6 +10,7 @@ import { useSelector } from "react-redux";
 import { getBusinessProgress } from "../../db/query/dashboard";
 import { useDeferredEffect } from "../../hooks/useDeferredEffect";
 import { getSetting, setSetting } from "../../db/query/settings"
+import { AnalyticsService } from "../../utils/analyticsService";
 
 export default function OnBoarding() {
     const router = useRouter();
@@ -72,30 +73,36 @@ export default function OnBoarding() {
     });
 
     useDeferredEffect(async () => {
-        if (nextStep || onboardingCompleted) return;
+        if (isLoading || onboardingCompleted) return;
 
+        await AnalyticsService.logFirstEvent("onboarding_started");
+    }, [isLoading, onboardingCompleted]);
+
+
+    useDeferredEffect(async () => {
+        if (nextStep || onboardingCompleted) return;
         setOnboardingComleted(true);
 
         try {
             await setSetting(db, "onboarding_completed", "1");
+            await AnalyticsService.logFirstEvent("onboarding_completed");
         } catch (error) {
             console.error(error);
         }
     }, [nextStep, onboardingCompleted]);
 
-    const handleWelcomeMessageClosing = async() => {
-        setShowWelcome(false)
+    const handleWelcomeMessageClosing = async () => {
+        setShowWelcome(false);
 
-        try {
-            await setSetting(db, "welcome_message_dismissed", "1");
-        } catch (error) {
-            console.error("Failed to save onboarding state:", error);
-        }
-    }
+        await AnalyticsService.logFirstEvent("first_welcome_dismissed");
+
+        await setSetting(db, "welcome_message_dismissed", "1");
+    };
 
     const handleOboardingCompleted = async() => {
         setShowCompletion(false);
-        await setSetting(db,"onboarding_completion_acknowledged","1");         
+        await setSetting(db,"onboarding_completion_acknowledged","1");  
+        await AnalyticsService.logFirstEvent("dashboard_ready");       
     }
 
     if (isLoading) {
