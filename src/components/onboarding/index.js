@@ -94,7 +94,7 @@ export default function OnBoarding() {
     const handleWelcomeMessageClosing = async () => {
         setShowWelcome(false);
 
-        await AnalyticsService.logFirstEvent("first_welcome_dismissed");
+        await AnalyticsService.logFirstEvent("welcome_message_dismissed");
 
         await setSetting(db, "welcome_message_dismissed", "1");
     };
@@ -102,7 +102,7 @@ export default function OnBoarding() {
     const handleOboardingCompleted = async() => {
         setShowCompletion(false);
         await setSetting(db,"onboarding_completion_acknowledged","1");  
-        await AnalyticsService.logFirstEvent("dashboard_ready");       
+        await AnalyticsService.logFirstEvent("onboarding_completion_acknowledged");       
     }
 
     if (isLoading) {

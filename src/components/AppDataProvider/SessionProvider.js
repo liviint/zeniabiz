@@ -7,6 +7,7 @@ import { ensureLocalUser } from "../../db/query/users";
 import { loadActiveContext } from "../../db/utils";
 import { logoutUser } from "../../utils/auth/logout"
 import { authEvents } from "@/api";
+import { versionUpdates } from "@/src/utils/versionUpdates";
 
 
 export default function SessionProvider({ children }) {
@@ -50,6 +51,18 @@ useEffect(() => {
   return () => {
     authEvents.off("unauthorized", handleUnauthorized);
   };
+}, []);
+
+useEffect(() => {
+    const initialize = async () => {
+        try {
+            await versionUpdates(db);
+        } catch (error) {
+            console.error("App initialization failed:", error);
+        }
+    };
+
+    initialize();
 }, []);
 
   if (!ready) return null;
