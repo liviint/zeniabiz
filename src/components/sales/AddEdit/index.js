@@ -141,7 +141,7 @@ export default function SellPage() {
   const handleSave = async (
     fromCreditDiscount = false,
     draftForm = null,
-     paymentMethods = []
+    paymentMethods = []
   ) => {
     const form = draftForm || paymentsForm;
     if (!fromCreditDiscount && (sale?.balance_due ?? 0) > 0) {
@@ -228,14 +228,23 @@ export default function SellPage() {
       <View style={styles.footer}>
 
         <Pressable
-          style={globalStyles.primaryBtn} 
+          style={globalStyles.secondaryBtn} 
           onPress={() => {
             setCart(prev => prev.filter(item => item.quantity > 0) )
             setCheckoutModalVisible(true)
           }}
         >
-          <BodyText style={globalStyles.primaryBtnText}>
+          <BodyText style={globalStyles.secondaryBtnText}>
             Checkout
+          </BodyText>
+        </Pressable>
+
+        <Pressable
+          style={globalStyles.primaryBtn} 
+          onPress={handleSave}
+        >
+          <BodyText style={globalStyles.primaryBtnText}>
+            Complete Sale
           </BodyText>
         </Pressable>
 
