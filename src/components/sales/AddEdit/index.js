@@ -8,6 +8,7 @@ import {
   StyleSheet,
   View,
   InteractionManager,
+  ScrollView
 } from "react-native";
 import {
   BodyText,
@@ -207,7 +208,7 @@ export default function SellPage() {
   };
 
   return (
-    <View style={globalStyles.container}>
+    <ScrollView style={globalStyles.container}>
       <BodyText style={globalStyles.title}>
         {id ? "Update" : "Record"} Sale
       </BodyText>
@@ -259,13 +260,14 @@ export default function SellPage() {
         setPaymentsForm={setPaymentsForm}
       />
 
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   footer: {
     marginTop: 8,
+    marginBottom: 10,
     display:"flex",
     width:"100%",
     flexDirection:"row",

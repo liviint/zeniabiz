@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
 import {
-    FlatList,
     Pressable,
     StyleSheet,
     View,
@@ -28,6 +27,7 @@ export default function ProductsList({
     const [products, setProducts] = useState([]);
     const [search, setSearch] = useState("");
     const debouncedSearch = useDebounce(search, 400);
+    const [productsExpanded, setProductsExpanded] = useState(true);
 
     useDeferredEffect(async (isMounted) => {
     
@@ -69,38 +69,53 @@ export default function ProductsList({
                 search={search}
                 setSearch={setSearch}
             />
+
+            <Pressable
+                style={styles.productsHeader}
+                onPress={() => setProductsExpanded(prev => !prev)}
+            >
+                <BodyText style={{ fontWeight: "600" }}>
+                    Products ({products.length}) {productsExpanded ? "▼" : "▲"}
+                </BodyText>
+            </Pressable>
+
+            {productsExpanded && 
             <View style={styles.productsContainer}>
-                <FlatList
-                    data={products}
-                    numColumns={2}
-                    keyExtractor={(item) => item.id}
-                    columnWrapperStyle={{ justifyContent: "space-between" }}
-                    renderItem={({ item }) => (
-                        <Pressable
+                <View style={styles.grid}>
+                    {products.map((item) => (
+                    <Pressable
+                        key={item.id}
                         style={styles.gridItem}
                         onPress={() => addToCart(item)}
-                        >
+                    >
                         <Card style={styles.productCard}>
-                            <BodyText>{item.name}</BodyText>
-                            <SecondaryText>{item.selling_price}</SecondaryText>
+                        <BodyText>{item.name}</BodyText>
+                        <SecondaryText>{item.selling_price}</SecondaryText>
                         </Card>
-                        </Pressable>
-                    )}
-                />
-            </View>
+                    </Pressable>
+                    ))}
+                </View>
+            </View>}
         </>
     );
 }
 
 const styles = StyleSheet.create({
-    productsContainer: {
-        flex: 1,
+    productsHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingVertical: 10,
+        borderTopWidth: 1,
     },
-    productCard: {
-        padding: 12,
+    grid: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "space-between",
     },
+
     gridItem: {
-        flex: 1,
+        width: "48%",
         marginBottom: 8,
         marginHorizontal: 4,
     },

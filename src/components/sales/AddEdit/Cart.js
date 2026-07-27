@@ -189,9 +189,6 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderTopWidth: 1,
     },
-    cartList: {
-        maxHeight: 200,
-    },
     cartItem: {
         marginBottom: 8,
         padding: 12,
