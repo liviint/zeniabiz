@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useIsFocused } from "@react-navigation/native";
 import {
     Pressable,
     StyleSheet,
@@ -21,7 +20,6 @@ export default function ProductsList({
     setCart
 }) {
 
-    const isFocused = useIsFocused();
     const db = useSQLiteContext();
 
     const [products, setProducts] = useState([]);
@@ -30,6 +28,8 @@ export default function ProductsList({
     const [productsExpanded, setProductsExpanded] = useState(true);
 
     useDeferredEffect(async (isMounted) => {
+        setProducts([])
+        if(!debouncedSearch) return
     
         const fetchedProducts = await getProducts(db, { search: debouncedSearch });
 
@@ -37,7 +37,7 @@ export default function ProductsList({
             setProducts(fetchedProducts || []);
         }
 
-    }, [isFocused, debouncedSearch],{enabled: isFocused,});
+    }, [debouncedSearch]);
 
     const addToCart = (product) => {
         setSale(null)
@@ -75,7 +75,7 @@ export default function ProductsList({
                 onPress={() => setProductsExpanded(prev => !prev)}
             >
                 <BodyText style={{ fontWeight: "600" }}>
-                    Products ({products.length}) {productsExpanded ? "▼" : "▲"}
+                    Products {productsExpanded ? "▼" : "▲"}
                 </BodyText>
             </Pressable>
 
@@ -115,8 +115,6 @@ const styles = StyleSheet.create({
     },
 
     gridItem: {
-        width: "48%",
-        marginBottom: 8,
         marginHorizontal: 4,
     },
 });
