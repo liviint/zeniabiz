@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-    FlatList,
     Pressable,
     StyleSheet,
     View,
@@ -85,88 +84,94 @@ return (
             <BodyText>Total: {markedPrice.toFixed(2)}</BodyText>
         </Pressable>
         {cartExpanded && (
-            <FlatList
-                data={cart}
-                keyExtractor={(item) => item.product_id}
-                style={styles.cartList}
-                renderItem={({ item }) => (
-                    <Card style={styles.cartItem}>
-                        <View style={styles.cartTop}>
-                            <Pressable
-                                style={styles.cartInfo}
-                                onPress={() => {
-                                    setSelectedItem(item);
-                                    setEditSaleModalVisible(true);
-                                }}
-                            >
-                            <BodyText>{item.name}</BodyText>
-                            <SecondaryText>
-                                {item.price} x {item.quantity} ={" "}
-                                {(item.price * item.quantity).toFixed(2)}
-                            </SecondaryText>
-                            </Pressable>
+    <View>
+        {cart.map((item) => (
+            <Card key={item.product_id} style={styles.cartItem}>
+                <View style={styles.cartTop}>
+                    <Pressable
+                        style={styles.cartInfo}
+                        onPress={() => {
+                            setSelectedItem(item);
+                            setEditSaleModalVisible(true);
+                        }}
+                    >
+                        <BodyText>{item.name}</BodyText>
+                        <SecondaryText>
+                            {item.price} × {item.quantity} ={" "}
+                            {(item.price * item.quantity).toFixed(2)}
+                        </SecondaryText>
+                    </Pressable>
 
-                            <View style={styles.actions}>
-                                <Pressable
-                                style={styles.editButton}
-                                onPress={() => {
-                                    setSelectedItem(item);
-                                    setEditSaleModalVisible(true);
-                                }}
-                            >
-                            <MaterialIcons name="edit" size={22} color="#666" />
-                            </Pressable>
-                            <Pressable
-                                style={styles.deleteButton}
-                                onPress={() => {
-                                    deleteItem(item)
-                                }}
-                            >
-                                <MaterialIcons name="delete-outline" size={20} color="#D32F2F" />
-                            </Pressable>
-                            </View>
-                            
-                        </View>
-
-                        <View style={styles.qtyRow}>
-                            <Pressable
-                                style={{
-                                    ...styles.qtyButton,
-                                    backgroundColor: colors.accent,
-                                }}
-                                onPress={() =>
-                                    updateQuantity(item.product_id, item.quantity - 1)
-                                }
-                            >
-                            <BodyText style={{...styles.qtyButtonText}}>−</BodyText>
-                            </Pressable>
-
-                            <Input
-                                value={String(item.quantity)}
-                                keyboardType="numeric"
-                                style={styles.qtyInput}
-                                onChangeText={(text) => {
-                                    const qty = parseInt(text, 10);
-                                    updateQuantity(item.product_id, isNaN(qty) ? 0 : qty);
-                                }}
+                    <View style={styles.actions}>
+                        <Pressable
+                            style={styles.editButton}
+                            onPress={() => {
+                                setSelectedItem(item);
+                                setEditSaleModalVisible(true);
+                            }}
+                        >
+                            <MaterialIcons
+                                name="edit"
+                                size={22}
+                                color="#666"
                             />
+                        </Pressable>
 
-                            <Pressable
-                                style={{
-                                    ...styles.qtyButton,
-                                    backgroundColor: colors.accent,
-                                }}
-                                onPress={() =>
-                                    updateQuantity(item.product_id, item.quantity + 1)
-                                }
-                            >
-                            <BodyText style={{...styles.qtyButtonText}}>+</BodyText>
-                            </Pressable>
-                        </View>
-                    </Card>
-                )}
-            />
-        )}
+                        <Pressable
+                            style={styles.deleteButton}
+                            onPress={() => deleteItem(item)}
+                        >
+                            <MaterialIcons
+                                name="delete-outline"
+                                size={20}
+                                color="#D32F2F"
+                            />
+                        </Pressable>
+                    </View>
+                </View>
+
+                <View style={styles.qtyRow}>
+                    <Pressable
+                        style={{
+                            ...styles.qtyButton,
+                            backgroundColor: colors.accent,
+                        }}
+                        onPress={() =>
+                            updateQuantity(item.product_id, item.quantity - 1)
+                        }
+                    >
+                        <BodyText style={styles.qtyButtonText}>−</BodyText>
+                    </Pressable>
+
+                    <Input
+                        value={String(item.quantity)}
+                        keyboardType="numeric"
+                        style={styles.qtyInput}
+                        onChangeText={(text) => {
+                            const qty = parseInt(text, 10);
+                            updateQuantity(
+                                item.product_id,
+                                isNaN(qty) ? 0 : qty
+                            );
+                        }}
+                    />
+
+                    <Pressable
+                        style={{
+                            ...styles.qtyButton,
+                            backgroundColor: colors.accent,
+                        }}
+                        onPress={() =>
+                            updateQuantity(item.product_id, item.quantity + 1)
+                        }
+                    >
+                        <BodyText style={styles.qtyButtonText}>+</BodyText>
+                    </Pressable>
+                </View>
+            </Card>
+        ))}
+    </View>
+)}
 
         <EditSaleForm 
             styles={styles}

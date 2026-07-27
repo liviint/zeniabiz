@@ -15,6 +15,7 @@ import BarcodeScanner from './index';
 const SearchProducts = ({
     search,
     setSearch,
+    placeholder="Search name or barcode...",
 }) => {
 
     const { globalStyles } = useThemeStyles();
@@ -23,7 +24,7 @@ const SearchProducts = ({
     return (
         <View style={styles.searchRow}>
             <Input
-              placeholder="Search name or barcode..."
+              placeholder={placeholder}
               value={search}
               onChangeText={setSearch}
               style={styles.searchInput}
