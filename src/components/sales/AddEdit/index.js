@@ -4,11 +4,11 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
   Alert,
-  InteractionManager,
   Pressable,
-  ScrollView,
   StyleSheet,
-  View
+  View,
+  InteractionManager,
+  ScrollView
 } from "react-native";
 import {
   BodyText,
@@ -20,10 +20,10 @@ import {
   getSaleById,
   getSaleItems,
 } from "../../../db/query/sales";
-import { AnalyticsService } from "../../../utils/analyticsService";
 import CreditDiscountForm from "../CreditDiscountForm";
-import Cart from "./Cart";
+import { AnalyticsService } from "../../../utils/analyticsService";
 import ProductsList from "./Products";
+import Cart from "./Cart";
 
 
 export default function SellPage() {
@@ -142,7 +142,7 @@ export default function SellPage() {
   const handleSave = async (
     fromCreditDiscount = false,
     draftForm = null,
-    paymentMethods = []
+    paymentMethodsFromParam = []
   ) => {
     const form = draftForm || paymentsForm;
     if (!fromCreditDiscount && (sale?.balance_due ?? 0) > 0) {
@@ -170,6 +170,18 @@ export default function SellPage() {
         totalAmount - (form.amountPaid || 0),
         0
       );
+
+      let paymentMethods;
+
+        if (paymentMethodsFromParam.length === 0) {
+            paymentMethods = [
+                {
+                    method: "cash",
+                    amount: paymentsForm.amountPaid,
+                    id:Date.now().toString(),
+                },
+            ];
+        } else paymentMethods = paymentMethodsFromParam
 
       const saleData = {
         items: cart,
