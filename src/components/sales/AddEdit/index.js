@@ -4,11 +4,11 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
   Alert,
-  Pressable,
-  StyleSheet,
-  View,
   InteractionManager,
-  ScrollView
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View
 } from "react-native";
 import {
   BodyText,
@@ -20,10 +20,10 @@ import {
   getSaleById,
   getSaleItems,
 } from "../../../db/query/sales";
-import CreditDiscountForm from "../CreditDiscountForm";
 import { AnalyticsService } from "../../../utils/analyticsService";
-import ProductsList from "./Products";
+import CreditDiscountForm from "../CreditDiscountForm";
 import Cart from "./Cart";
+import ProductsList from "./Products";
 
 
 export default function SellPage() {
