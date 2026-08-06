@@ -56,7 +56,7 @@ export const uploadBackup = async (db) => {
   const backupData = {
     version: 1,
     timestamp: new Date().toISOString(),
-    app: "ZeniaHub",
+    app: "ZeniaBiz",
     data: dbData,
   };
 
