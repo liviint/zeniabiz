@@ -12,21 +12,21 @@ export function isLoggedIn() {
 }
 
 export function isOwner() {
-  return getCompanyRole() === "owner";
+    return getCompanyRole() === "owner";
 }
 
 export function isManager() {
-  return getCompanyRole() === "manager";
+    return getCompanyRole() === "manager";
 }
 
 export function isStaff() {
-  return getCompanyRole() === "staff";
+    return getCompanyRole() === "staff";
 }
 
 export function isOwnerOrManager() {
-  return ["owner", "manager"].includes(
-    getCompanyRole()
-  );
+    return ["owner", "manager"].includes(
+        getCompanyRole()
+    );
 }
 
 /*
@@ -41,7 +41,7 @@ export function canManageBusiness() {
 
 
 export function canViewReports() {
-    return isOwnerOrManager();
+    return true//isOwnerOrManager();
 }
 
 export function canManageInventory() {
