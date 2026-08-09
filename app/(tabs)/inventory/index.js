@@ -24,6 +24,7 @@ import { formatNumber } from "../../../src/db/utils";
 import { canViewReports } from "../../../src/utils/rolesAndPermissions"
 import SearchProducts from "../../../src/components/barcodeScanner/searchProducts";
 import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
+import { getSetting } from "../../../src/db/query/settings";
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();
@@ -160,10 +161,14 @@ export default function ProductsListPage() {
 
 
 useEffect(() => {
-    if (products.length === 0 && !isLoading) {
-        setShowTip(true);
-    }
-}, [isLoading,products,isFocused]);
+      const getShowTip = async() => {
+        const onboarding_completed = await getSetting(db,"onboarding_completed")
+        if (!onboarding_completed) {
+            setShowTip(true);
+        }
+      }
+      getShowTip()
+    }, [db]);
 
   const renderItem = ({ item }) => {
     const isService = item?.item_type === "service";

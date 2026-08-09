@@ -1,14 +1,14 @@
 import { useIsFocused } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { useEffect, useState, useMemo } from "react";
-import { 
-    Pressable, 
-    RefreshControl, 
-    SectionList, 
-    StyleSheet, 
-    View,
-    FlatList, 
+import { useEffect, useMemo, useState } from "react";
+import {
+  FlatList,
+  Pressable,
+  RefreshControl,
+  SectionList,
+  StyleSheet,
+  View,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { AddButton } from "../../../src/components/common/AddButton";
@@ -24,11 +24,14 @@ import {
 } from "../../../src/components/ThemeProvider/components";
 import { getSales } from "../../../src/db/query/sales";
 import { groupDataIntoSections } from "../../../src/helpers";
+import { useDebounce } from "../../../src/hooks/useDebounce";
+import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
 import { useManualSync } from "../../../src/hooks/useManualSync";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import { canViewReports } from "../../../src/utils/rolesAndPermissions";
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
-import { canViewReports } from "../../../src/utils/rolesAndPermissions"
-import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
+import SearchInput from "../../../src/components/common/SearchInput";
+import { getSetting } from "../../../src/db/query/settings";
 
 export default function SalesList() {
   const { onRefresh, refreshing } = useManualSync();
@@ -49,6 +52,8 @@ export default function SalesList() {
 
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("newest")
+  const [search,setSearch] = useState("")
+  const debouncedSearch = useDebounce(search)
 
   const filterOptions = [
     {
@@ -106,6 +111,7 @@ export default function SalesList() {
         timeState,
         filter,
         sort,
+        search:debouncedSearch
       });
 
       if (isMounted()) {
@@ -124,7 +130,8 @@ export default function SalesList() {
     timeState, 
     filter, 
     sort, 
-    lastSyncedAt
+    lastSyncedAt,
+    debouncedSearch
   ],{enabled: isFocused,}
   );
 
@@ -166,10 +173,14 @@ export default function SalesList() {
   const useSections = sort === "newest" 
 
   useEffect(() => {
-    if (sales.length === 0 && !isLoading) {
-        setShowTip(true);
+    const getShowTip = async() => {
+      const onboarding_completed = await getSetting(db,"onboarding_completed")
+      if (!onboarding_completed) {
+          setShowTip(true);
+      }
     }
-}, [isLoading,sales,isFocused]);
+    getShowTip()
+  }, [db]);
 
   return (
     <View style={globalStyles.container}>
@@ -179,6 +190,12 @@ export default function SalesList() {
       <TimeNavigator
           state={timeState}
           onChange={setTimeState}
+      />
+
+      <SearchInput 
+        search={search}
+        setSearch={setSearch}
+        placeholder="Search sales or customers..."
       />
 
       <View style={globalStyles.filterSortContainer}>

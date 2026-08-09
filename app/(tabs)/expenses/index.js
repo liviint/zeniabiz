@@ -27,6 +27,7 @@ import { dateFormat } from "../../../utils/dateFormat";
 import { canViewReports } from "../../../src/utils/rolesAndPermissions"
 import PageLoader from "../../../src/components/common/PageLoader";
 import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
+import { getSetting } from "../../../src/db/query/settings";
 
 export default function ExpensesListPage() {
     const { onRefresh, refreshing } = useManualSync();
@@ -104,10 +105,14 @@ export default function ExpensesListPage() {
   ].filter(section => section.data.length > 0);
 
   useEffect(() => {
-      if (expenses.length === 0 && !isLoading) {
-          setShowTip(true);
+      const getShowTip = async() => {
+        const onboarding_completed = await getSetting(db,"onboarding_completed")
+        if (!onboarding_completed) {
+            setShowTip(true);
+        }
       }
-  }, [isLoading,expenses,isFocused]);
+      getShowTip()
+    }, [db]);
 
   const renderItem = ({ item }) => (
     <Pressable

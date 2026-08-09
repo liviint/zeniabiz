@@ -112,6 +112,24 @@ export default function SaleDetails() {
             </BodyText>
           </View>
 
+          <View style={styles.summaryRow}>
+              <SecondaryText>Customer Name</SecondaryText>
+
+              <BodyText >
+                {sale?.customer_name || "N/A"}
+              </BodyText>
+            </View>
+          
+
+          
+            <View style={styles.summaryRow}>
+              <SecondaryText>Customer Phone</SecondaryText>
+
+              <BodyText >
+                {sale?.customer_phone || "N/A"}
+              </BodyText>
+            </View>
+
           {!!sale?.discount && (
             <View style={styles.summaryRow}>
               <SecondaryText>Discount</SecondaryText>

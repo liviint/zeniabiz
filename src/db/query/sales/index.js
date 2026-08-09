@@ -646,80 +646,126 @@ const createInitialPayment = async (
 };
 
 
-export async function getSales(db, { timeState, filter, sort }) {
-  const { company } = getActiveContextSync();
+export async function getSales(
+    db,
+    {
+        timeState,
+        filter,
+        sort,
+        search = "",
+    }
+) {
+    const { company } = getActiveContextSync();
 
-  let sql = `
-    SELECT *
-    FROM sales
-    WHERE company = ?
-      AND deleted_at IS NULL
-  `;
+    let sql = `
+        SELECT
+            sales.*,
+            customers.name AS customer_name,
+            customers.phone AS customer_phone
+        FROM sales
 
-  const params = [company];
+        LEFT JOIN customers
+            ON customers.id = sales.customer_id
+            AND customers.company = sales.company
+            AND customers.deleted_at IS NULL
 
-  /**
-   * =========================
-   * TIME FILTER
-   * =========================
-   */
-  if (timeState) {
-    const { startDate, endDate } = normalizeRange(timeState);
-
-    sql += `
-      AND date >= ?
-      AND date < ?
+        WHERE sales.company = ?
+          AND sales.deleted_at IS NULL
     `;
 
-    params.push(startDate, endDate);
-  }
+    const params = [company];
 
-  /**
-   * =========================
-   * FILTERS
-   * =========================
-   */
-  if (filter && filter !== "all") {
-    switch (filter) {
-      case "credit":
-        sql += ` AND is_credit_sale = 1 `;
-        break;
+    /**
+     * =========================
+     * TIME FILTER
+     * =========================
+     */
+    if (timeState) {
+        const { startDate, endDate } = normalizeRange(timeState);
 
-      case "cash":
-        sql += ` AND is_credit_sale = 0 `;
-        break;
+        sql += `
+            AND sales.date >= ?
+            AND sales.date < ?
+        `;
+
+        params.push(startDate, endDate);
     }
-  }
 
-  /**
-   * =========================
-   * SORTING
-   * =========================
-   */
-  switch (sort) {
-    case "oldest":
-      sql += ` ORDER BY datetime(date) ASC `;
-      break;
+    /**
+     * =========================
+     * FILTERS
+     * =========================
+     */
+    if (filter && filter !== "all") {
+        switch (filter) {
+            case "credit":
+                sql += ` AND sales.is_credit_sale = 1`;
+                break;
 
-    case "high_amount":
-      sql += ` ORDER BY total_amount DESC `;
-      break;
+            case "cash":
+                sql += ` AND sales.is_credit_sale = 0`;
+                break;
+        }
+    }
 
-    case "low_amount":
-      sql += ` ORDER BY total_amount ASC `;
-      break;
+    /**
+     * =========================
+     * SEARCH
+     * =========================
+     */
+    if (search?.trim()) {
+        const term = `%${search.trim()}%`;
 
-    case "high_balance":
-      sql += ` ORDER BY balance_due DESC `;
-      break;
+        sql += `
+            AND (
+                sales.title LIKE ?
+                OR sales.note LIKE ?
+                OR sales.id LIKE ?
+                OR sales.payment_status LIKE ?
+                OR customers.name LIKE ?
+                OR customers.phone LIKE ?
+            )
+        `;
 
-    case "newest":
-    default:
-      sql += ` ORDER BY datetime(date) DESC `;
-      break;
-  }
+        params.push(
+            term,
+            term,
+            term,
+            term,
+            term,
+            term
+        );
+    }
 
-  return await db.getAllAsync(sql, params);
+    /**
+     * =========================
+     * SORTING
+     * =========================
+     */
+    switch (sort) {
+        case "oldest":
+            sql += ` ORDER BY datetime(sales.date) ASC`;
+            break;
+
+        case "high_amount":
+            sql += ` ORDER BY sales.total_amount DESC`;
+            break;
+
+        case "low_amount":
+            sql += ` ORDER BY sales.total_amount ASC`;
+            break;
+
+        case "high_balance":
+            sql += ` ORDER BY sales.balance_due DESC`;
+            break;
+
+        case "newest":
+        default:
+            sql += ` ORDER BY datetime(sales.date) DESC`;
+            break;
+    }
+
+    return await db.getAllAsync(sql, params);
 }
 
 export async function getSaleItems(db, sale_id) {
@@ -749,10 +795,24 @@ export async function getSaleItems(db, sale_id) {
 }
 
 export async function getSaleById(db, sale_id) {
-  return await db.getFirstAsync(
-    `SELECT * FROM sales WHERE id = ?`,
-    [sale_id]
-  );
+    return await db.getFirstAsync(
+        `
+        SELECT
+            sales.*,
+            customers.name AS customer_name,
+            customers.phone AS customer_phone
+        FROM sales
+
+        LEFT JOIN customers
+            ON customers.id = sales.customer_id
+            AND customers.company = sales.company
+            AND customers.deleted_at IS NULL
+
+        WHERE sales.id = ?
+          AND sales.deleted_at IS NULL
+        `,
+        [sale_id]
+    );
 }
 
 export async function rebuildFIFOForProduct(db, productId) {
