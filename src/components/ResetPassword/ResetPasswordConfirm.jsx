@@ -55,7 +55,7 @@ const ResetPasswordConfirm = () => {
       return;
     }
       setLoading(true);
-      await api.post("/accounts/password-reset-confirm/", {
+      await api.post("accounts/password-reset-confirm/", {
         uid,
         token,
         new_password,
@@ -63,7 +63,10 @@ const ResetPasswordConfirm = () => {
       .then(() => {
         setSuccess("Your password has been successfully reset!");
         setFormData({ new_password: "", confirm_password: "" });
-        setTimeout(() => router.push("login"),3000)
+        setTimeout(() =>{ 
+          setSuccess("");
+          router.push("/auth/login")
+        },1000)
       })
       .catch(err => {
         console.error(err);
@@ -132,12 +135,14 @@ const ResetPasswordConfirm = () => {
       </TouchableOpacity>
 
       <Text style={styles.hint}>
-        <Text
+        <TouchableOpacity
           style={styles.link}
-          onPress={() => router.push("/login")}
+          onPress={() => {
+            router.push("/auth/login")
+          }}
         >
           Back to Login
-        </Text>
+        </TouchableOpacity>
       </Text>
     </Card>
   );

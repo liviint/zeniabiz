@@ -136,7 +136,7 @@ export const createGlobalStyles = (colors) =>
     passwordWrapper: {
       position: "relative",
       width: "100%",
-      marginBottom: 12,
+      marginBottom: 4,
     },
 
     togglePassword: {

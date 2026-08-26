@@ -141,6 +141,12 @@ export default function Index() {
             ) : null}
           </View>
         </View>
+        <TouchableOpacity
+          style={styles.forgotPass}
+          onPress={() => router.push("/auth/reset-password")}
+        >
+          <Text style={styles.forgotPassText}>Forgot password?</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           onPress={handleSubmit}
@@ -153,12 +159,7 @@ export default function Index() {
             <Text style={styles.buttonText}>Login</Text>
           )}
         </TouchableOpacity>
-        <TouchableOpacity
-  style={styles.forgotPass}
-  onPress={() => router.push("/auth/forgot-password")}
->
-  <Text style={styles.forgotPassText}>Forgot password?</Text>
-</TouchableOpacity>
+        
 
         <BodyText style={styles.hint}>
           Don’t have an account?{" "}
@@ -236,7 +237,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontWeight: "700",
   },
-  forgotPass: { marginTop: 10, alignItems: "flex-end" },
+  forgotPass: { marginTop: 0, alignItems: "flex-end" },
   forgotPassText: {
     color: "#2E8B8B",
     fontSize: 14,

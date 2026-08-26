@@ -32,7 +32,7 @@ const ResetPassword = () => {
 
     try {
       setLoading(true);
-      const response = await api.post("/accounts/password-reset/", { email:email.trim().toLowerCase() });
+      const response = await api.post("accounts/password-reset/", { email:email.trim().toLowerCase() });
       console.log("Reset email sent:", response.data);
       setSuccess("Password reset link sent to your email.");
       setEmail("");
@@ -81,7 +81,7 @@ const ResetPassword = () => {
         Remember your password?{" "}
         <Text
           style={styles.link}
-          onPress={() => router.push("/login")}
+          onPress={() => router.push("/auth/login")}
         >
           Back to Login
         </Text>
