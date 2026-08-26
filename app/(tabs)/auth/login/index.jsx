@@ -153,6 +153,12 @@ export default function Index() {
             <Text style={styles.buttonText}>Login</Text>
           )}
         </TouchableOpacity>
+        <TouchableOpacity
+  style={styles.forgotPass}
+  onPress={() => router.push("/auth/forgot-password")}
+>
+  <Text style={styles.forgotPassText}>Forgot password?</Text>
+</TouchableOpacity>
 
         <BodyText style={styles.hint}>
           Don’t have an account?{" "}
