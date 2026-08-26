@@ -134,16 +134,12 @@ const ResetPasswordConfirm = () => {
         )}
       </TouchableOpacity>
 
-      <Text style={styles.hint}>
-        <TouchableOpacity
+    <Text
           style={styles.link}
-          onPress={() => {
-            router.push("/auth/login")
-          }}
+          onPress={() => router.push("/auth/login")}
         >
           Back to Login
-        </TouchableOpacity>
-      </Text>
+        </Text>
     </Card>
   );
 };
