@@ -16,13 +16,13 @@ import {
 } from "../../../src/components/ThemeProvider/components";
 import { AddButton } from "../../../src/components/common/AddButton";
 import EmptyState from "../../../src/components/common/EmptyState";
-import SortComponent from "../../../src/components/common/SortComponent";
-import { StatCard } from "../../../src/components/common/StatCard";
 import { useManualSync } from "../../../src/hooks/useManualSync";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 import { getCustomers } from "../../../src/db/query/customers";
 import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
+import CustomersListHeader from "../../../src/components/customers/CustomersListHeader";
+import { useDebounce } from "../../../src/hooks/useDebounce";
 
 export default function CustomersList() {
     const { onRefresh, refreshing } = useManualSync();
@@ -38,44 +38,18 @@ export default function CustomersList() {
     const [timeState, setTimeState] = useState(createRange("month"));
 
     const [sort, setSort] = useState("newest");
+    const [filter, setFilter] = useState("all");
+    const [search,setSearch] = useState("")
+    const debouncedSearch = useDebounce(search)
 
     const lastSyncedAt = useSelector(
         (state) => state.sync.lastSyncedAt
     );
 
-    const sortOptions = [
-        
-        {
-            label: "Newest",
-            key: "newest",
-            action: () => setSort("newest"),
-        },
-        {
-            label: "Oldest",
-            key: "oldest",
-            action: () => setSort("oldest"),
-        },
-        {
-            label: "Top Customers",
-            key: "top_customers",
-            action: () => setSort("top_customers"),
-        },
-        {
-            label: "A-Z",
-            key: "name_asc",
-            action: () => setSort("name_asc"),
-        },
-        {
-            label: "Z-A",
-            key: "name_desc",
-            action: () => setSort("name_desc"),
-        },
-    ];
-
     useDeferredEffect(async (isMounted) => {
         if(isMounted()) setIsLoading(true);
 
-        const data = await getCustomers(db, {sort,});
+        const data = await getCustomers(db, {sort,filter,search:debouncedSearch,});
     
         if (isMounted()) {
             setCustomers(data || []);
@@ -87,6 +61,8 @@ export default function CustomersList() {
         timeState,
         sort,
         lastSyncedAt,
+        filter,
+        debouncedSearch
     ],{enabled: isFocused,});
 
     useEffect(() => {
@@ -116,24 +92,18 @@ export default function CustomersList() {
             Customers
         </BodyText>
 
-        <View style={globalStyles.filterSortContainer}>
-
-            <SortComponent
-                sortOptions={sortOptions}
-                activeSort={sort}
-            />
-
-        </View>
-
-        {customers.length > 0 && (
-            <View style={styles.statsRow}>
-            <StatCard
-                label="Total"
-                value={stats.count?.toLocaleString()}
-                subText=""
-            />
-            </View>
-        )}
+        <CustomersListHeader 
+            customers={customers}
+            stats={stats}
+            timeState={timeState} 
+            setTimeState={setTimeState}
+            sort={sort}
+            setSort={setSort}
+            filter={filter}
+            setFilter={setFilter}
+            search={search}
+            setSearch={setSearch}
+        />
 
         <FlatList
             data={customers}

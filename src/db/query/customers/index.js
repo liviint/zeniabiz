@@ -2,54 +2,140 @@ import { enqueueSync } from "../../../cloudSync/syncEvent";
 import { getActiveContextSync, newUuid, withTransaction } from "../../utils";
 
 export async function getCustomers(
-  db,
-  {
-    sort = "name_asc",
-  } = {}
+    db,
+    {
+        filter = "all",
+        sort = "name_asc",
+        search = "",
+    } = {}
 ) {
-  const whereClauses = ["c.deleted_at IS NULL"];
-  const params = [];
+    let orderBy = "c.name ASC";
+    let havingClause = "";
 
-  let orderBy = "c.name ASC";
+    /*
+     * -----------------------------------------
+     * SORTING
+     * -----------------------------------------
+     */
 
-  switch (sort) {
-    case "newest":
-      orderBy = "c.created_at DESC";
-      break;
+    switch (sort) {
+        case "name_asc":
+            orderBy = "c.name ASC";
+            break;
 
-    case "oldest":
-      orderBy = "c.created_at ASC";
-      break;
+        case "name_desc":
+            orderBy = "c.name DESC";
+            break;
 
-    case "name_desc":
-      orderBy = "c.name DESC";
-      break;
+        case "newest":
+            orderBy = "c.created_at DESC";
+            break;
 
-    case "name_asc":
-      orderBy = "c.name ASC";
-      break;
+        case "oldest":
+            orderBy = "c.created_at ASC";
+            break;
 
-    case "top_customers":
-      orderBy = "total_revenue DESC";
-      break;
-  }
+        case "high_revenue":
+            orderBy = "total_revenue DESC";
+            break;
 
-  const query = `
-    SELECT 
-      c.*,
-      COALESCE(SUM(s.total_amount), 0) AS total_revenue,
-      COALESCE(SUM(s.amount_paid), 0) AS total_paid,
-      COALESCE(SUM(s.discount), 0) AS total_discount
-    FROM customers c
-    LEFT JOIN sales s
-      ON s.customer_id = c.id
-      AND s.deleted_at IS NULL
-    WHERE ${whereClauses.join(" AND ")}
-    GROUP BY c.id
-    ORDER BY ${orderBy}
-  `;
+        case "high_balance":
+            orderBy = "balance_due DESC";
+            break;
 
-  return await db.getAllAsync(query, params);
+        default:
+            orderBy = "c.name ASC";
+            break;
+    }
+
+    /*
+     * -----------------------------------------
+     * FILTERING
+     * -----------------------------------------
+     */
+
+    switch (filter) {
+        case "with_balance":
+            havingClause = `
+                HAVING COALESCE(SUM(s.balance_due), 0) > 0
+            `;
+            break;
+
+        case "no_balance":
+            havingClause = `
+                HAVING COALESCE(SUM(s.balance_due), 0) <= 0
+            `;
+            break;
+
+        case "all":
+        default:
+            havingClause = "";
+            break;
+    }
+
+    /*
+     * -----------------------------------------
+     * SEARCH
+     * -----------------------------------------
+     */
+
+    const trimmedSearch = search.trim();
+    const searchTerm = `%${trimmedSearch}%`;
+
+    return await db.getAllAsync(
+        `
+        SELECT
+            c.*,
+
+            COUNT(s.id) AS sales_count,
+
+            COALESCE(
+                SUM(s.total_amount),
+                0
+            ) AS total_revenue,
+
+            COALESCE(
+                SUM(s.amount_paid),
+                0
+            ) AS total_paid,
+
+            COALESCE(
+                SUM(s.balance_due),
+                0
+            ) AS balance_due,
+
+            COALESCE(
+                SUM(s.discount),
+                0
+            ) AS total_discount
+
+        FROM customers c
+
+        LEFT JOIN sales s
+            ON s.customer_id = c.id
+            AND s.deleted_at IS NULL
+
+        WHERE
+            c.deleted_at IS NULL
+
+            AND (
+                ? = ''
+                OR c.name LIKE ?
+                OR c.phone LIKE ?
+            )
+
+        GROUP BY c.id
+
+        ${havingClause}
+
+        ORDER BY ${orderBy}
+        `,
+        [
+            trimmedSearch,
+            searchTerm,
+            searchTerm,
+        ]
+    );
 }
 
 export async function getCustomerById(db, id) {
