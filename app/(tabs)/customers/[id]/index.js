@@ -147,6 +147,20 @@ export default function CustomerDetails() {
 
                 <View style={styles.summaryRow}>
                     <SecondaryText>
+                        Total Discount
+                    </SecondaryText>
+
+                    <BodyText
+                        style={styles.paid}
+                    >
+                    {Number(
+                        stats.total_discount || 0
+                    ).toLocaleString()}
+                    </BodyText>
+                </View>
+
+                <View style={styles.summaryRow}>
+                    <SecondaryText>
                     Sales Count
                     </SecondaryText>
 

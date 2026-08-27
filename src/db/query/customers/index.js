@@ -38,7 +38,8 @@ export async function getCustomers(
     SELECT 
       c.*,
       COALESCE(SUM(s.total_amount), 0) AS total_revenue,
-      COALESCE(SUM(s.amount_paid), 0) AS total_paid
+      COALESCE(SUM(s.amount_paid), 0) AS total_paid,
+      COALESCE(SUM(s.discount), 0) AS total_discount
     FROM customers c
     LEFT JOIN sales s
       ON s.customer_id = c.id
@@ -70,40 +71,35 @@ export async function getCustomerStats(
   return await db.getFirstAsync(
     `
     SELECT
-      (
-        SELECT COUNT(*)
-        FROM sales
-        WHERE customer_id = ?
-          AND deleted_at IS NULL
-      ) AS sales_count,
+      COUNT(*) AS sales_count,
 
-      (
-        SELECT COALESCE(SUM(total_amount),0)
-        FROM sales
-        WHERE customer_id = ?
-          AND deleted_at IS NULL
+      COALESCE(
+        SUM(total_amount),
+        0
       ) AS total_sales,
 
-      (
-        SELECT COALESCE(SUM(amount_paid),0)
-        FROM sales
-        WHERE customer_id = ?
-          AND deleted_at IS NULL
+      COALESCE(
+        SUM(amount_paid),
+        0
       ) AS total_paid,
 
-      (
-        SELECT COALESCE(SUM(balance_due),0)
-        FROM sales
-        WHERE customer_id = ?
-          AND deleted_at IS NULL
-      ) AS balance_due
+      COALESCE(
+        SUM(balance_due),
+        0
+      ) AS balance_due,
+
+      COALESCE(
+        SUM(discount),
+        0
+      ) AS total_discount
+
+    FROM sales
+
+    WHERE
+      customer_id = ?
+      AND deleted_at IS NULL
     `,
-    [
-      customerId,
-      customerId,
-      customerId,
-      customerId,
-    ]
+    [customerId]
   );
 }
 

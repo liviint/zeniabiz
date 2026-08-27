@@ -157,6 +157,7 @@ export default function CustomersList() {
             renderItem={({ item }) => {
                 const totalPaid = Number(item.total_paid || 0);
                 const totalSales = Number(item.total_revenue || 0);
+                const totalDiscount = Number(item.total_discount || 0);
                 const outstanding = Math.max(totalSales - totalPaid, 0);
                 const isOwing = outstanding > 0;
 
@@ -197,6 +198,10 @@ export default function CustomersList() {
                         {/* Paid */}
                         <Text style={styles.customerMoney}>
                                 Paid: {totalPaid.toLocaleString()}
+                        </Text>
+
+                        <Text >
+                                Discount: {totalDiscount.toLocaleString()}
                         </Text>
 
                         {isOwing &&
