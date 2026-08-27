@@ -1,21 +1,93 @@
 import { enqueueSync } from "../../../cloudSync/syncEvent";
 import { getActiveContextSync, newUuid, withTransaction } from "../../utils";
+import { normalizeRange } from "../../../utils/timeNavigatorHelpers";
+
 
 export async function getCustomers(
     db,
     {
+        timeState,
         filter = "all",
         sort = "name_asc",
         search = "",
     } = {}
 ) {
-    let orderBy = "c.name ASC";
-    let havingClause = "";
+    const { company } = getActiveContextSync();
 
-    /*
-     * -----------------------------------------
+    let orderBy = "c.name ASC";
+
+    /**
+     * =========================
+     * TIME RANGE
+     * =========================
+     */
+
+    const range = timeState
+        ? normalizeRange(timeState)
+        : null;
+
+    /**
+     * =========================
+     * TIME FILTER
+     * =========================
+     */
+
+    let timeClause = "";
+
+    if (range) {
+        timeClause = `
+            AND s.date >= ?
+            AND s.date < ?
+        `;
+    }
+
+    /**
+     * =========================
+     * HAVING FILTERS
+     * =========================
+     */
+
+    const havingConditions = [];
+
+    // Only customers who made a sale
+    // during the selected period.
+    if (range) {
+        havingConditions.push(
+            "COUNT(s.id) > 0"
+        );
+    }
+
+    // Customers with outstanding balance.
+    if (filter === "with_balance") {
+        havingConditions.push(
+            "COALESCE(SUM(s.balance_due), 0) > 0"
+        );
+    }
+
+    // Customers with no outstanding balance.
+    if (filter === "no_balance") {
+        havingConditions.push(
+            "COALESCE(SUM(s.balance_due), 0) <= 0"
+        );
+    }
+
+    const havingClause = havingConditions.length
+        ? `HAVING ${havingConditions.join(" AND ")}`
+        : "";
+
+    /**
+     * =========================
+     * SEARCH
+     * =========================
+     */
+
+    const trimmedSearch = search?.trim() || "";
+    const searchTerm = `%${trimmedSearch}%`;
+
+    /**
+     * =========================
      * SORTING
-     * -----------------------------------------
+     * =========================
      */
 
     switch (sort) {
@@ -28,11 +100,11 @@ export async function getCustomers(
             break;
 
         case "newest":
-            orderBy = "c.created_at DESC";
+            orderBy = "datetime(c.created_at) DESC";
             break;
 
         case "oldest":
-            orderBy = "c.created_at ASC";
+            orderBy = "datetime(c.created_at) ASC";
             break;
 
         case "high_revenue":
@@ -45,45 +117,15 @@ export async function getCustomers(
 
         default:
             orderBy = "c.name ASC";
-            break;
     }
 
-    /*
-     * -----------------------------------------
-     * FILTERING
-     * -----------------------------------------
+    /**
+     * =========================
+     * QUERY
+     * =========================
      */
 
-    switch (filter) {
-        case "with_balance":
-            havingClause = `
-                HAVING COALESCE(SUM(s.balance_due), 0) > 0
-            `;
-            break;
-
-        case "no_balance":
-            havingClause = `
-                HAVING COALESCE(SUM(s.balance_due), 0) <= 0
-            `;
-            break;
-
-        case "all":
-        default:
-            havingClause = "";
-            break;
-    }
-
-    /*
-     * -----------------------------------------
-     * SEARCH
-     * -----------------------------------------
-     */
-
-    const trimmedSearch = search.trim();
-    const searchTerm = `%${trimmedSearch}%`;
-
-    return await db.getAllAsync(
-        `
+    let sql = `
         SELECT
             c.*,
 
@@ -113,28 +155,94 @@ export async function getCustomers(
 
         LEFT JOIN sales s
             ON s.customer_id = c.id
+            AND s.company = c.company
             AND s.deleted_at IS NULL
 
+            ${timeClause}
+
         WHERE
-            c.deleted_at IS NULL
+            c.company = ?
+            AND c.deleted_at IS NULL
+    `;
 
+    /**
+     * =========================
+     * SEARCH
+     * =========================
+     */
+
+    if (trimmedSearch) {
+        sql += `
             AND (
-                ? = ''
-                OR c.name LIKE ?
+                c.name LIKE ?
                 OR c.phone LIKE ?
+                OR c.email LIKE ?
             )
+        `;
+    }
 
+    /**
+     * =========================
+     * GROUPING
+     * =========================
+     */
+
+    sql += `
         GROUP BY c.id
+    `;
 
+    /**
+     * =========================
+     * HAVING
+     * =========================
+     */
+
+    sql += `
         ${havingClause}
+    `;
 
+    /**
+     * =========================
+     * SORTING
+     * =========================
+     */
+
+    sql += `
         ORDER BY ${orderBy}
-        `,
-        [
-            trimmedSearch,
+    `;
+
+    /**
+     * =========================
+     * PARAMETERS
+     * =========================
+     */
+
+    const params = [];
+
+    // Time parameters appear first
+    // because they occur in the JOIN.
+    if (range) {
+        params.push(
+            range.startDate,
+            range.endDate
+        );
+    }
+
+    // Company placeholder occurs in WHERE.
+    params.push(company);
+
+    // Search placeholders.
+    if (trimmedSearch) {
+        params.push(
             searchTerm,
             searchTerm,
-        ]
+            searchTerm
+        );
+    }
+
+    return await db.getAllAsync(
+        sql,
+        params
     );
 }
 

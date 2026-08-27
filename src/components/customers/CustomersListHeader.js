@@ -8,6 +8,7 @@ import FilterComponent from "../../../src/components/common/FilterComponent";
 import { StatCard } from "../../../src/components/common/StatCard";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import SearchInput from "../../../src/components/common/SearchInput";
+import TimeNavigator from "../common/TimeNavigator";
 
 export default function CustomersListHeader({
     customers,
@@ -18,6 +19,8 @@ export default function CustomersListHeader({
     setFilter,
     search,
     setSearch,
+    timeState,
+    setTimeState
 }) {
     const { globalStyles } = useThemeStyles();
 
@@ -86,6 +89,11 @@ export default function CustomersListHeader({
 
     return (
         <>
+            
+            <TimeNavigator
+                state={timeState}
+                onChange={setTimeState}
+            />
             <SearchInput
                 search={search}
                 setSearch={setSearch}

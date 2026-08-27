@@ -49,7 +49,12 @@ export default function CustomersList() {
     useDeferredEffect(async (isMounted) => {
         if(isMounted()) setIsLoading(true);
 
-        const data = await getCustomers(db, {sort,filter,search:debouncedSearch,});
+        const data = await getCustomers(db, {
+            sort,
+            filter,
+            search:debouncedSearch,
+            timeState
+        });
     
         if (isMounted()) {
             setCustomers(data || []);
