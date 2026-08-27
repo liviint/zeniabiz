@@ -56,16 +56,6 @@ export default function CustomersListHeader({
 
     const sortOptions = [
         {
-            label: "Name A-Z",
-            key: "name_asc",
-            action: () => setSort("name_asc"),
-        },
-        {
-            label: "Name Z-A",
-            key: "name_desc",
-            action: () => setSort("name_desc"),
-        },
-        {
             label: "Newest",
             key: "newest",
             action: () => setSort("newest"),
@@ -81,9 +71,24 @@ export default function CustomersListHeader({
             action: () => setSort("high_revenue"),
         },
         {
+            label: "Highest Paid",
+            key: "high_paid",
+            action: () => setSort("high_paid"),
+        },
+        {
             label: "Highest Balance",
             key: "high_balance",
             action: () => setSort("high_balance"),
+        },
+        {
+            label: "Name A–Z",
+            key: "name_asc",
+            action: () => setSort("name_asc"),
+        },
+        {
+            label: "Name Z–A",
+            key: "name_desc",
+            action: () => setSort("name_desc"),
         },
     ];
 

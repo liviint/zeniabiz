@@ -114,6 +114,9 @@ export async function getCustomers(
         case "high_balance":
             orderBy = "balance_due DESC";
             break;
+        case "high_paid":
+          orderBy =  "total_paid DESC";
+          break;
 
         default:
             orderBy = "c.name ASC";
