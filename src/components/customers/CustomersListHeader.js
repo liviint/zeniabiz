@@ -97,7 +97,7 @@ export default function CustomersListHeader({
             <SearchInput
                 search={search}
                 setSearch={setSearch}
-                placeholder="Search customers..."
+                placeholder="Search by name or phone..."
             />
 
             <View style={globalStyles.filterSortContainer}>

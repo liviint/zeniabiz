@@ -176,7 +176,6 @@ export async function getCustomers(
             AND (
                 c.name LIKE ?
                 OR c.phone LIKE ?
-                OR c.email LIKE ?
             )
         `;
     }
