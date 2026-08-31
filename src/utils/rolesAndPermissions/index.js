@@ -41,7 +41,7 @@ export function canManageBusiness() {
 
 
 export function canViewReports() {
-    return true//isOwnerOrManager();
+    return isOwnerOrManager();
 }
 
 export function canManageInventory() {
