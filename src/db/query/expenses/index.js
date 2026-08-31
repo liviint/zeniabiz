@@ -143,6 +143,51 @@ export async function deleteExpense(db, id) {
   }
 }
 
+export async function getExpenseStats(db, timeState) {
+  const { startDate, endDate } = normalizeRange(timeState);
+
+  const overallResult = await db.getFirstAsync(
+    `
+      SELECT
+        COUNT(*) AS count,
+        COALESCE(SUM(e.amount), 0) AS total,
+        COALESCE(AVG(e.amount), 0) AS average,
+        COALESCE(MAX(e.amount), 0) AS largest
+      FROM expenses e
+      WHERE e.deleted_at IS NULL
+        AND e.date >= ?
+        AND e.date <= ?
+    `,
+    [startDate, endDate]
+  );
+
+  // Expenses by category
+  const categoryStats = await db.getAllAsync(
+    `
+      SELECT
+        COALESCE(c.name, 'Uncategorized') AS category,
+        COALESCE(c.color, '#808080') AS color,
+        COALESCE(c.icon, 'receipt') AS icon,
+        COUNT(e.id) AS count,
+        COALESCE(SUM(e.amount), 0) AS total
+      FROM expenses e
+      LEFT JOIN expense_categories c
+        ON e.category_id = c.id
+      WHERE e.deleted_at IS NULL
+        AND e.date >= ?
+        AND e.date <= ?
+      GROUP BY e.category_id
+      ORDER BY total DESC
+    `,
+    [startDate, endDate]
+  );
+
+
+  return {
+    ...overallResult,
+    categories: categoryStats,
+  };
+}
 
 
 

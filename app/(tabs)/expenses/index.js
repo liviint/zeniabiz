@@ -222,8 +222,9 @@ const ListHeader = ({ stats, timeState,setTimeState, expenses, isAllowedToViewRe
 
     <ButtonLinks 
       links={[
-        {name:"View Templates", route:"/expenses/templates"},
-        {name:"View Categories", route:"/expenses/categories"},
+        { name: "Stats", route: "/expenses/stats" },
+        { name: "Templates", route: "/expenses/templates" },
+        { name: "Categories", route: "/expenses/categories" },
       ]}
     />
 

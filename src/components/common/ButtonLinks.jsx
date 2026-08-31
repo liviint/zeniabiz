@@ -46,6 +46,7 @@ const styles = StyleSheet.create({
         gap: 10,
         marginTop: 8,
         marginBottom: 12,
+        flexWrap:"wrap"
     },
     button: {
         borderWidth: 1,
