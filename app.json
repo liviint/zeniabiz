@@ -55,7 +55,9 @@
           "cameraPermission": "Allow ZeniaBiz to access your camera to scan barcodes."
         }
       ],
-      "./plugins/withGwpAsan"
+      "./plugins/withGwpAsan",
+      "expo-font",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true,
