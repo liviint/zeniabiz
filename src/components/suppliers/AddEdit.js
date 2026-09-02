@@ -1,3 +1,5 @@
+import { useIsFocused, useRouter } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
     Alert,
@@ -5,22 +7,19 @@ import {
     StyleSheet,
     View,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { useSQLiteContext } from "expo-sqlite";
-import {
-    BodyText,
-    Input,
-    FormLabel,
-    Card,
-} from "../ThemeProvider/components";
-import { useThemeStyles } from "../../hooks/useThemeStyles";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import {
     getSupplierById,
     upsertSupplier,
 } from "../../db/query/suppliers";
-import { useIsFocused } from "@react-navigation/native";
+import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { AnalyticsService } from "../../utils/analyticsService";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import {
+    BodyText,
+    Card,
+    FormLabel,
+    Input,
+} from "../ThemeProvider/components";
 
 export default function AddEditSupplierPage({ id }) {
     useIsFocused();

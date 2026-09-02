@@ -1,13 +1,12 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { Alert, Pressable, StyleSheet, View, ScrollView } from "react-native";
-import { useIsFocused } from "@react-navigation/native";
+import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import DeleteButton from "../../../../src/components/common/DeleteButton";
-import { BodyText, Card, SecondaryText } from "../../../../src/components/ThemeProvider/components";
-import { deleteProduct, getProductById, getProductBatches } from "../../../../src/db/query/inventory";
-import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import RestockForm from "../../../../src/components/inventory/RestockForm";
+import { BodyText, Card, SecondaryText } from "../../../../src/components/ThemeProvider/components";
+import { deleteProduct, getProductBatches, getProductById } from "../../../../src/db/query/inventory";
+import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import { dateFormat } from "../../../../utils/dateFormat";
 
 export default function ProductViewPage() {

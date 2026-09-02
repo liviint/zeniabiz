@@ -1,28 +1,28 @@
-import { useState, useEffect } from "react";
-import { useIsFocused } from "@react-navigation/native";
-import {
-    StyleSheet,
-    Alert,
-    TouchableOpacity,
-    Switch,
-    View,
-    ScrollView,
-} from "react-native";
-import { useDispatch } from "react-redux";
-import { Card, BodyText, SecondaryText } from "@/src/components/ThemeProvider/components";
-import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
-import * as SecureStore from "expo-secure-store";
-import { useSQLiteContext } from "expo-sqlite";
-import { setGoogleConnected, requestSync } from "../../../src/store/features/googleDriveSyncSlice";
+import { BodyText, Card, SecondaryText } from "@/src/components/ThemeProvider/components";
 import {
     configureGoogleDrive,
-    uploadBackup,
-    restoreBackup,
     getAccessToken,
+    restoreBackup,
+    uploadBackup,
 } from "@/src/utils/googleDriveBackupService";
-import { AnalyticsService } from "../../../src/utils/analyticsService";
-import { getSetting, setSetting, deleteSetting } from "../../../src/db/query/settings";
+import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
+import { useIsFocused } from 'expo-router';
+import * as SecureStore from "expo-secure-store";
+import { useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
+import {
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    TouchableOpacity,
+    View,
+} from "react-native";
+import { useDispatch } from "react-redux";
+import { deleteSetting, getSetting, setSetting } from "../../../src/db/query/settings";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import { requestSync, setGoogleConnected } from "../../../src/store/features/googleDriveSyncSlice";
+import { AnalyticsService } from "../../../src/utils/analyticsService";
 import { dateFormat } from "../../../utils/dateFormat";
 
 const GoogleBackUp = () => {

@@ -1,20 +1,19 @@
-import { useIsFocused } from "@react-navigation/native";
-import { useRouter } from "expo-router";
+import { useIsFocused, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import {
-  Pressable,
-  RefreshControl,
-  SectionList,
-  StyleSheet,
-  View,
+    Pressable,
+    RefreshControl,
+    SectionList,
+    StyleSheet,
+    View,
 } from "react-native";
+import { useSelector } from "react-redux";
 
 import {
-  BodyText,
-  Card,
-  SecondaryText,
+    BodyText,
+    Card,
+    SecondaryText,
 } from "../../../src/components/ThemeProvider/components";
 
 import EmptyState from "../../../src/components/common/EmptyState";
@@ -28,46 +27,47 @@ import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 import { dateFormat } from "../../../utils/dateFormat";
 
 import FilterComponent from "../../../src/components/common/FilterComponent";
-import { getCredits, getCreditStats } from "../../../src/db/query/credits";
 import { StatCard } from "../../../src/components/common/StatCard";
+import { getCredits, getCreditStats } from "../../../src/db/query/credits";
 import { formatNumber } from "../../../src/db/utils";
-import { canViewReports } from "../../../src/utils/rolesAndPermissions"
 import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
+import { canViewReports } from "../../../src/utils/rolesAndPermissions";
 
 export default function CreditsListPage() {
   const db = useSQLiteContext();
   const router = useRouter();
   const isFocused = useIsFocused();
 
-  const [isAllowedToViewReports,setIsAllowedToViewReports] = useState(canViewReports())
+  const [isAllowedToViewReports, setIsAllowedToViewReports] =
+    useState(canViewReports());
 
   const { globalStyles } = useThemeStyles();
 
   const { onRefresh, refreshing } = useManualSync();
 
   const [credits, setCredits] = useState([]);
-  const [creditStats,setCreditStats] = useState({})
+  const [creditStats, setCreditStats] = useState({});
   const [timeState, setTimeState] = useState(createRange("month"));
   const [statusFilter, setStatusFilter] = useState("outstanding");
 
   const lastSyncedAt = useSelector((state) => state.sync.lastSyncedAt);
-    const user = useSelector((state) => state.user.userDetails);
+  const user = useSelector((state) => state.user.userDetails);
 
   const filterOptions = [
     {
-      label:"Outstanding",
-      action:() => setStatusFilter("outstanding"),
-      key:"outstanding",
+      label: "Outstanding",
+      action: () => setStatusFilter("outstanding"),
+      key: "outstanding",
     },
     {
-      label:"Unpaid",
-      action:() => setStatusFilter("unpaid"),
-      key:"unpaid",
+      label: "Unpaid",
+      action: () => setStatusFilter("unpaid"),
+      key: "unpaid",
     },
     {
-      label:"Partial",
-      action:() => setStatusFilter("partial"),
-      key:"partial",
+      label: "Partial",
+      action: () => setStatusFilter("partial"),
+      key: "partial",
     },
     // {
     //   label:"Overdue",
@@ -75,29 +75,32 @@ export default function CreditsListPage() {
     //   key:"overdue",
     // }
     {
-      label:"Paid",
-      action:() => setStatusFilter("paid"),
-      key:"paid",
+      label: "Paid",
+      action: () => setStatusFilter("paid"),
+      key: "paid",
     },
-  ]
+  ];
 
-  const fetchStats = async() => {
+  const fetchStats = async () => {
     const stats = await getCreditStats(credits, statusFilter);
-    setCreditStats(stats)
-  }
+    setCreditStats(stats);
+  };
 
-  useDeferredEffect(async (isMounted) => {
-  
-    const data = await getCredits(db, timeState, statusFilter);
+  useDeferredEffect(
+    async (isMounted) => {
+      const data = await getCredits(db, timeState, statusFilter);
 
-    if (isMounted()) {
+      if (isMounted()) {
         setCredits(data);
-    }
-  }, [isFocused, timeState, lastSyncedAt, statusFilter],{enabled: isFocused,});
+      }
+    },
+    [isFocused, timeState, lastSyncedAt, statusFilter],
+    { enabled: isFocused },
+  );
 
   useEffect(() => {
-    setIsAllowedToViewReports(canViewReports())
-  },[user])
+    setIsAllowedToViewReports(canViewReports());
+  }, [user]);
 
   useEffect(() => {
     if (isFocused) {
@@ -177,9 +180,9 @@ export default function CreditsListPage() {
           <BodyText style={styles.sectionHeader}>{title}</BodyText>
         )}
         ListHeaderComponent={
-          <ListHeader 
-            timeState={timeState} 
-            setTimeState={setTimeState} 
+          <ListHeader
+            timeState={timeState}
+            setTimeState={setTimeState}
             filterOptions={filterOptions}
             statusFilter={statusFilter}
             stats={creditStats}
@@ -199,40 +202,42 @@ export default function CreditsListPage() {
   );
 }
 
-const ListHeader = ({ 
-  timeState, 
-  setTimeState, 
-  filterOptions={filterOptions}, 
+const ListHeader = ({
+  timeState,
+  setTimeState,
+  filterOptions = { filterOptions },
   statusFilter,
   stats,
   globalStyles,
-  isAllowedToViewReports
+  isAllowedToViewReports,
 }) => {
   return (
     <>
       <TimeNavigator state={timeState} onChange={setTimeState} />
 
       <View style={globalStyles.filterSortContainer}>
-        <FilterComponent 
+        <FilterComponent
           filterOptions={filterOptions}
           activeFilter={statusFilter}
         />
       </View>
 
-      {isAllowedToViewReports && <View style={styles.statsRow}>
-        <StatCard
-          label={"Balance"}
-          value={formatNumber(stats?.totalAmount)}
-          color="#FF6B6B"
-        />
+      {isAllowedToViewReports && (
+        <View style={styles.statsRow}>
+          <StatCard
+            label={"Balance"}
+            value={formatNumber(stats?.totalAmount)}
+            color="#FF6B6B"
+          />
 
-        <StatCard
-          label={"Credits"}
-          value={formatNumber(stats?.count)}
-          color="#FF6B6B"
-          subText={""}
-        />
-      </View>}
+          <StatCard
+            label={"Credits"}
+            value={formatNumber(stats?.count)}
+            color="#FF6B6B"
+            subText={""}
+          />
+        </View>
+      )}
     </>
   );
 };
@@ -291,9 +296,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: "right",
   },
-  statsRow:{
+  statsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-  }
+  },
 });

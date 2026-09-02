@@ -1,27 +1,26 @@
 import { useEffect, useState } from "react";
-import { useIsFocused } from "@react-navigation/native";
 import {
-  View,
-  TouchableOpacity,
-  Text,
-  ScrollView,
-  StyleSheet,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 
 import { useSQLiteContext } from "expo-sqlite";
 
 import {
-  BodyText,
-  Card,
-  SecondaryText,
+    BodyText,
+    Card,
+    SecondaryText,
 } from "../../../../src/components/ThemeProvider/components";
 
 import {
-  getSaleById,
-  getSaleItems,
-  deleteSale,
+    deleteSale,
+    getSaleById,
+    getSaleItems,
 } from "../../../../src/db/query/sales";
 
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";

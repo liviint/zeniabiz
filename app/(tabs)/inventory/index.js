@@ -1,30 +1,29 @@
-import { useIsFocused } from "@react-navigation/native";
-import { useSelector } from "react-redux";
-import { useRouter } from "expo-router";
+import { useIsFocused, useRouter } from 'expo-router';
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { 
-    FlatList, 
-    Pressable, 
-    StyleSheet, 
-    View , 
-    RefreshControl, 
+import {
+    FlatList,
+    Pressable,
+    RefreshControl,
+    StyleSheet,
+    View,
 } from "react-native";
+import { useSelector } from "react-redux";
 import { BodyText, Card, SecondaryText } from "../../../src/components/ThemeProvider/components";
+import SearchProducts from "../../../src/components/barcodeScanner/searchProducts";
 import { AddButton } from "../../../src/components/common/AddButton";
-import { getProducts } from "../../../src/db/query/inventory";
-import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import EmptyState from "../../../src/components/common/EmptyState";
-import { StatCard } from "../../../src/components/common/StatCard";
-import { useDebounce } from "../../../src/hooks/useDebounce";
-import { useManualSync } from "../../../src/hooks/useManualSync";
 import FilterComponent from "../../../src/components/common/FilterComponent";
 import SortComponent from "../../../src/components/common/SortComponent";
-import { formatNumber } from "../../../src/db/utils";
-import { canViewReports } from "../../../src/utils/rolesAndPermissions"
-import SearchProducts from "../../../src/components/barcodeScanner/searchProducts";
-import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
+import { StatCard } from "../../../src/components/common/StatCard";
+import { getProducts } from "../../../src/db/query/inventory";
 import { getSetting } from "../../../src/db/query/settings";
+import { formatNumber } from "../../../src/db/utils";
+import { useDebounce } from "../../../src/hooks/useDebounce";
+import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
+import { useManualSync } from "../../../src/hooks/useManualSync";
+import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
+import { canViewReports } from "../../../src/utils/rolesAndPermissions";
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();

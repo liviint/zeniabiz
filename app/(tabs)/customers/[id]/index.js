@@ -1,28 +1,27 @@
+import { useIsFocused, useLocalSearchParams, useRouter } from 'expo-router';
+import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { useIsFocused } from "@react-navigation/native";
 import {
-    View,
-    TouchableOpacity,
-    Text,
+    Pressable,
     ScrollView,
     StyleSheet,
-    Pressable,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useSQLiteContext } from "expo-sqlite";
+import DeleteButton from "../../../../src/components/common/DeleteButton";
 import {
     BodyText,
     Card,
     SecondaryText,
 } from "../../../../src/components/ThemeProvider/components";
 import {
-    getCustomerById,
-    getCustomerStats,
-    getCustomerSales,
     deleteCustomer,
+    getCustomerById,
+    getCustomerSales,
+    getCustomerStats,
 } from "../../../../src/db/query/customers";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
-import DeleteButton from "../../../../src/components/common/DeleteButton";
 import { dateFormat } from "../../../../utils/dateFormat";
 
 export default function CustomerDetails() {

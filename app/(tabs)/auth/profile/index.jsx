@@ -1,100 +1,106 @@
-import { useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert
+  Alert,
 } from "react-native";
 import { useDispatch } from "react-redux";
-import { useRouter ,  useLocalSearchParams} from "expo-router";
 import { api } from "../../../../api";
 import AccountInfoPage from "../../../../src/components/common/AccountInfoPage";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
-import { Card, BodyText } from "../../../../src/components/ThemeProvider/components";
+import {
+  Card,
+  BodyText,
+} from "../../../../src/components/ThemeProvider/components";
 import PageLoader from "../../../../src/components/common/PageLoader";
-import { useIsFocused } from "@react-navigation/native";
+import { useIsFocused, useRouter, useLocalSearchParams } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { getActiveContextSync } from "../../../../src/db/utils";
 import { logoutUser } from "../../../../src/utils/auth/logout";
 
 const ProfileView = () => {
-  const db = useSQLiteContext()
-  const {globalStyles} = useThemeStyles()
+  const db = useSQLiteContext();
+  const { globalStyles } = useThemeStyles();
   const router = useRouter();
-  const isFocused = useIsFocused()
-  const {refresh} = useLocalSearchParams()
+  const isFocused = useIsFocused();
+  const { refresh } = useLocalSearchParams();
   const dispatch = useDispatch();
-  const [activeContext,setActiveContext] = useState(null)
+  const [activeContext, setActiveContext] = useState(null);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(false);
 
-const handleLogoutOk = async() => {
-  await logoutUser({
-    db,
-    dispatch,
-    router,
-    refreshToken: activeContext?.refresh_token,
-  });
-}
-const handleTriggerLogout = () => {
-  Alert.alert(
-    "Confirm Logout",
-    "Are you sure you want to log out?",
-    [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Logout",
-        style: "destructive",
-        onPress: () => handleLogoutOk(),
-      },
-    ],
-    { cancelable: true }
-  );
-};
+  const handleLogoutOk = async () => {
+    await logoutUser({
+      db,
+      dispatch,
+      router,
+      refreshToken: activeContext?.refresh_token,
+    });
+  };
+  const handleTriggerLogout = () => {
+    Alert.alert(
+      "Confirm Logout",
+      "Are you sure you want to log out?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: () => handleLogoutOk(),
+        },
+      ],
+      { cancelable: true },
+    );
+  };
 
   const getUserData = async () => {
-    setLoading(true)
-    api.get("accounts/profile/")
-    .then(res => {
+    setLoading(true);
+    api
+      .get("accounts/profile/")
+      .then((res) => {
         setUserData(res.data);
-    }).catch(err =>  {
-      console.error(err);
-    })
-    .finally(() =>  setLoading(false))
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
-    (
-      async () => {
-        let ctx = await getActiveContextSync(db)
-        setActiveContext(ctx)
-      }
-    )()
-  },[isFocused])
+    (async () => {
+      let ctx = await getActiveContextSync(db);
+      setActiveContext(ctx);
+    })();
+  }, [isFocused]);
 
   useEffect(() => {
-      if (activeContext?.access_token) {
-        getUserData();
-      }
-      else setUserData(null)
-  },[activeContext, refresh, isFocused])
+    if (activeContext?.access_token) {
+      getUserData();
+    } else setUserData(null);
+  }, [activeContext, refresh, isFocused]);
 
-  if (loading) return <PageLoader />
+  if (loading) return <PageLoader />;
 
-  if (!userData) return <AccountInfoPage />
+  if (!userData) return <AccountInfoPage />;
 
   return (
-    <ScrollView contentContainerStyle={{...globalStyles.container,...styles.container}}>
+    <ScrollView
+      contentContainerStyle={{ ...globalStyles.container, ...styles.container }}
+    >
       <Card style={styles.card}>
-
         <BodyText style={styles.username}>Email: {userData.email}</BodyText>
 
-        {userData.username ? <BodyText style={styles.bio}>UserName: {userData.username}</BodyText> : ""}
+        {userData.username ? (
+          <BodyText style={styles.bio}>UserName: {userData.username}</BodyText>
+        ) : (
+          ""
+        )}
 
         <View style={styles.btnGroup}>
           <TouchableOpacity
@@ -114,14 +120,11 @@ const handleTriggerLogout = () => {
           </TouchableOpacity>
         </View>
       </Card>
-
-      
     </ScrollView>
   );
 };
 
 export default ProfileView;
-
 
 const styles = StyleSheet.create({
   container: {
@@ -190,27 +193,27 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   settingsSection: {
-  width: "100%",
-  marginTop: 20,
-  paddingTop: 16,
-  borderTopWidth: 1,
-  borderColor: "#E5E5E5",
-},
+    width: "100%",
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderColor: "#E5E5E5",
+  },
 
-sectionTitle: {
-  fontSize: 14,
-  fontWeight: "600",
-  marginBottom: 12,
-  opacity: 0.8,
-},
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 12,
+    opacity: 0.8,
+  },
 
-settingRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-},
+  settingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
 
-settingLabel: {
-  fontSize: 15,
-},
+  settingLabel: {
+    fontSize: 15,
+  },
 });

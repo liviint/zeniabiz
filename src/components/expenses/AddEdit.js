@@ -1,29 +1,28 @@
 
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useSelector } from "react-redux";
-import { useIsFocused } from "@react-navigation/native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useIsFocused, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { 
-  Alert, 
-  Modal, 
-  Pressable, 
-  ScrollView, 
-  StyleSheet, 
-  Text, 
-  TouchableOpacity, 
-  View,
-  InteractionManager,
-  Platform
+import {
+    Alert,
+    InteractionManager,
+    Modal,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useSelector } from "react-redux";
 import { getTransactionById, upsertExpense } from "../../db/query/expenses";
 import { getTransactionTemplates } from "../../db/query/expenses/templates";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
+import { AnalyticsService } from "../../utils/analyticsService";
 import CategoriesPicker from "../common/CategoriesPicker";
 import { BodyText, Card, FormLabel, Input, SecondaryText, TextArea } from "../ThemeProvider/components";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { AnalyticsService } from "../../utils/analyticsService";
 
 export default function AddEdit() {
   const isFocused = useIsFocused()

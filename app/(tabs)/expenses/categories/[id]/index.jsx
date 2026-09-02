@@ -1,117 +1,129 @@
-import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet} from "react-native";
-import { useEffect, useState } from "react";
-import { useIsFocused } from "@react-navigation/native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import {getCategoryById, deleteCategory} from "../../../../../src/db/query/categories"
+import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { useThemeStyles } from "../../../../../src/hooks/useThemeStyles";
-import { BodyText, SecondaryText } from "../../../../../src/components/ThemeProvider/components";
-import { dateFormat } from "../../../../../utils/dateFormat";
+import { useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 import DeleteButton from "../../../../../src/components/common/DeleteButton";
+import {
+    BodyText,
+    SecondaryText,
+} from "../../../../../src/components/ThemeProvider/components";
+import {
+    deleteCategory,
+    getCategoryById,
+} from "../../../../../src/db/query/categories";
+import { useThemeStyles } from "../../../../../src/hooks/useThemeStyles";
+import { dateFormat } from "../../../../../utils/dateFormat";
 
 export default function CategoryDetailsScreen() {
-    const db = useSQLiteContext();
-    const isFocused = useIsFocused()
-    const {globalStyles}  = useThemeStyles()
-    const { id } = useLocalSearchParams();
-    const router = useRouter();
+  const db = useSQLiteContext();
+  const isFocused = useIsFocused();
+  const { globalStyles } = useThemeStyles();
+  const { id } = useLocalSearchParams();
+  const router = useRouter();
 
-    const [category, setCategory] = useState(null);
-    const [loading, setLoading] = useState(true);
+  const [category, setCategory] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-    const loadCategory = async () => {
-        try {
-            const data = await getCategoryById(db,id);
-            setCategory(data);
-        } catch (err) {
-            console.log("Failed to load category", err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        loadCategory();
-    }, [isFocused]);
-
-    const handleDelete = async () => {
-        try {
-        await deleteCategory(db,id);
-        router.back();
-        } catch (err) {
-        console.log("Delete failed", err);
-        }
-    };
-
-    if (loading) {
-        return (
-        <View style={{ ...globalStyles.container, flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <ActivityIndicator />
-        </View>
-        );
+  const loadCategory = async () => {
+    try {
+      const data = await getCategoryById(db, id);
+      setCategory(data);
+    } catch (err) {
+      console.log("Failed to load category", err);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (!category) {
-        return (
-        <View style={{...globalStyles.container, padding: 20 }}>
-            <Text>Category not found.</Text>
-        </View>
-        );
+  useEffect(() => {
+    loadCategory();
+  }, [isFocused]);
+
+  const handleDelete = async () => {
+    try {
+      await deleteCategory(db, id);
+      router.back();
+    } catch (err) {
+      console.log("Delete failed", err);
     }
+  };
 
+  if (loading) {
     return (
-        <View style={globalStyles.container}>
-        <View>
-            <View
-                style={{...styles.icon, backgroundColor: category.color || "#EEE",}}
-            >
-                <Text style={{ fontSize: 30 }}>{category.icon || "📁"}</Text>
-            </View>
-
-            <BodyText style={{ fontSize: 24, fontWeight: "600", marginBottom: 12 }}>
-                {category.name}
-            </BodyText>
-
-            <Info label="Created" value={dateFormat(category.created_at)} />
-            <Info label="Updated" value={dateFormat(category.updated_at)} />
-
-        </View>
-
-        
-        <View style={{ gap: 12 }}>
-            
-            <TouchableOpacity
-                onPress={() => router.push(`/expenses/categories/${id}/edit`)}
-                style={globalStyles.editBtn}
-            >
-            <Text style={globalStyles.editBtnText}>
-                Edit
-            </Text>
-            </TouchableOpacity>
-
-            <DeleteButton 
-                handleOk={handleDelete}
-                item={"category"}
-            />
-        </View>
-        </View>
+      <View
+        style={{
+          ...globalStyles.container,
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ActivityIndicator />
+      </View>
     );
+  }
+
+  if (!category) {
+    return (
+      <View style={{ ...globalStyles.container, padding: 20 }}>
+        <Text>Category not found.</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={globalStyles.container}>
+      <View>
+        <View
+          style={{ ...styles.icon, backgroundColor: category.color || "#EEE" }}
+        >
+          <Text style={{ fontSize: 30 }}>{category.icon || "📁"}</Text>
+        </View>
+
+        <BodyText style={{ fontSize: 24, fontWeight: "600", marginBottom: 12 }}>
+          {category.name}
+        </BodyText>
+
+        <Info label="Created" value={dateFormat(category.created_at)} />
+        <Info label="Updated" value={dateFormat(category.updated_at)} />
+      </View>
+
+      <View style={{ gap: 12 }}>
+        <TouchableOpacity
+          onPress={() => router.push(`/expenses/categories/${id}/edit`)}
+          style={globalStyles.editBtn}
+        >
+          <Text style={globalStyles.editBtnText}>Edit</Text>
+        </TouchableOpacity>
+
+        <DeleteButton handleOk={handleDelete} item={"category"} />
+      </View>
+    </View>
+  );
 }
 
 const Info = ({ label, value }) => (
-    <View style={{ marginBottom: 12 }}>
-        <SecondaryText style={{ fontSize: 12, opacity: 0.6 }}>{label}</SecondaryText>
-        <BodyText style={{ fontSize: 16 }}>{value || "-"}</BodyText>
-    </View>
+  <View style={{ marginBottom: 12 }}>
+    <SecondaryText style={{ fontSize: 12, opacity: 0.6 }}>
+      {label}
+    </SecondaryText>
+    <BodyText style={{ fontSize: 16 }}>{value || "-"}</BodyText>
+  </View>
 );
 
 const styles = StyleSheet.create({
-    icon:{
-        width: 70,
-        height: 70,
-        borderRadius: 35,
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom: 20,   
-    }
-})
+  icon: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+});

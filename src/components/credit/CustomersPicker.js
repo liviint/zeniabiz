@@ -1,17 +1,16 @@
-import { useState, useEffect } from "react";
-import { useSelector , useDispatch} from "react-redux";
-import { View } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import { useIsFocused, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { useRouter } from "expo-router";
-import { useIsFocused } from "@react-navigation/native";
-import {
-  FormLabel,
-  CustomPicker,
-} from "../ThemeProvider/components";
-import { useThemeStyles } from "../../hooks/useThemeStyles";
+import { useEffect, useState } from "react";
+import { View } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 import { getCustomers } from "../../db/query/customers";
+import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { clearRecentlyCreatedCustomerId } from "../../store/features/entitySelectionSlice";
+import {
+    CustomPicker,
+    FormLabel,
+} from "../ThemeProvider/components";
 
 export default function CustomersPicker({
   form,

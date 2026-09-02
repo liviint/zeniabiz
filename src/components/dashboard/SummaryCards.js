@@ -1,16 +1,16 @@
-import { useIsFocused } from "@react-navigation/native";
-import { useSelector } from "react-redux";
-import { 
-  View, 
-  StyleSheet,
-} from "react-native";
+import { useIsFocused } from 'expo-router';
 import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
-import { StatCard } from "../common/StatCard";
-import {getFinancialStats } from "../../db/query/dashboard";
-import { useThemeStyles } from "../../hooks/useThemeStyles";
-import { SecondaryText } from "../ThemeProvider/components";
+import {
+    StyleSheet,
+    View,
+} from "react-native";
+import { useSelector } from "react-redux";
+import { getFinancialStats } from "../../db/query/dashboard";
 import { useDeferredEffect } from "../../hooks/useDeferredEffect";
+import { useThemeStyles } from "../../hooks/useThemeStyles";
+import { StatCard } from "../common/StatCard";
+import { SecondaryText } from "../ThemeProvider/components";
 
 export default function SummaryCards({ 
   isSyncing,

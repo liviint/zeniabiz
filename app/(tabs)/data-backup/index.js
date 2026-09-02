@@ -1,22 +1,21 @@
-import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
-import { useRouter } from "expo-router";
+import { useIsFocused, useRouter } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
 import {
-    StyleSheet, 
-    Text, 
     ScrollView,
+    StyleSheet,
+    Text,
 } from "react-native";
-import { 
-    BodyText ,
+import { useSelector } from "react-redux";
+import BackupStatusCard from "../../../src/components/data-backup/BackupStatusCard";
+import {
+    BodyText,
     Card,
     SecondaryText
 } from "../../../src/components/ThemeProvider/components";
-import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { getSetting } from "../../../src/db/query/settings";
-import { useSQLiteContext } from "expo-sqlite";
-import { useIsFocused } from "@react-navigation/native";
-import BackupStatusCard from "../../../src/components/data-backup/BackupStatusCard";
 import { getActiveContextSync } from "../../../src/db/utils";
+import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 
 export default function DataBackupScreen() {
     const db = useSQLiteContext();

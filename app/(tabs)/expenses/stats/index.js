@@ -1,9 +1,5 @@
-import { useIsFocused } from "@react-navigation/native";
+import { useIsFocused } from 'expo-router';
 import { useSQLiteContext } from "expo-sqlite";
-import { useDeferredEffect } from "../../../../src/hooks/useDeferredEffect";
-import { useManualSync } from "../../../../src/hooks/useManualSync";
-import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
-import { useSelector } from "react-redux";
 import { useState } from "react";
 import {
     RefreshControl,
@@ -11,16 +7,20 @@ import {
     StyleSheet,
     View,
 } from "react-native";
+import { useSelector } from "react-redux";
+import { useDeferredEffect } from "../../../../src/hooks/useDeferredEffect";
+import { useManualSync } from "../../../../src/hooks/useManualSync";
+import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 
 import { BodyText, Card, SecondaryText } from "../../../../src/components/ThemeProvider/components";
+import ButtonLinks from "../../../../src/components/common/ButtonLinks";
+import PageLoader from "../../../../src/components/common/PageLoader";
 import { StatCard } from "../../../../src/components/common/StatCard";
 import TimeNavigator from "../../../../src/components/common/TimeNavigator";
-import PageLoader from "../../../../src/components/common/PageLoader";
-import ButtonLinks from "../../../../src/components/common/ButtonLinks";
 
 import { getExpenseStats } from "../../../../src/db/query/expenses";
-import { createRange } from "../../../../src/utils/timeNavigatorHelpers";
 import { canViewReports } from "../../../../src/utils/rolesAndPermissions";
+import { createRange } from "../../../../src/utils/timeNavigatorHelpers";
 
 export default function ExpenseStatsPage() {
     const db = useSQLiteContext();

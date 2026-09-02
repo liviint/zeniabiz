@@ -1,29 +1,28 @@
-import { useIsFocused } from "@react-navigation/native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useIsFocused, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
-  Alert,
-  Pressable,
-  StyleSheet,
-  View,
-  InteractionManager,
-  ScrollView
+    Alert,
+    InteractionManager,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    View
 } from "react-native";
 import {
-  BodyText,
+    BodyText,
 } from "../../../../src/components/ThemeProvider/components";
 import { getCategories } from "../../../../src/db/query/categories";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import {
-  createOrUpdateSale,
-  getSaleById,
-  getSaleItems,
+    createOrUpdateSale,
+    getSaleById,
+    getSaleItems,
 } from "../../../db/query/sales";
-import CreditDiscountForm from "../CreditDiscountForm";
 import { AnalyticsService } from "../../../utils/analyticsService";
-import ProductsList from "./Products";
+import CreditDiscountForm from "../CreditDiscountForm";
 import Cart from "./Cart";
+import ProductsList from "./Products";
 
 
 export default function SellPage() {

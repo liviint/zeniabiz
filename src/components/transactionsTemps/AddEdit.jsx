@@ -1,13 +1,13 @@
-import { useIsFocused } from "@react-navigation/native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
     Alert,
+    InteractionManager,
     TouchableOpacity,
     View,
-    InteractionManager,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import {
     getTransactionTemplateByid,
     upsertExpenseTemplate,
@@ -15,7 +15,6 @@ import {
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import CategoriesPicker from "../common/CategoriesPicker";
 import { BodyText, Card, FormLabel, Input } from "../ThemeProvider/components";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 export default function AddTransactionTemplateScreen() {
   const isFocused = useIsFocused();
@@ -87,7 +86,7 @@ export default function AddTransactionTemplateScreen() {
       });
       return () => task.cancel();
     }
-  }, [id,isFocused]);
+  }, [id, isFocused]);
 
   return (
     <KeyboardAwareScrollView

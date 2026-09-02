@@ -1,5 +1,4 @@
-import { useIsFocused } from "@react-navigation/native";
-import { useRouter } from "expo-router";
+import { useIsFocused, useRouter } from 'expo-router';
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
@@ -16,13 +15,13 @@ import {
 } from "../../../src/components/ThemeProvider/components";
 import { AddButton } from "../../../src/components/common/AddButton";
 import EmptyState from "../../../src/components/common/EmptyState";
+import CustomersListHeader from "../../../src/components/customers/CustomersListHeader";
+import { getCustomers } from "../../../src/db/query/customers";
+import { useDebounce } from "../../../src/hooks/useDebounce";
+import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
 import { useManualSync } from "../../../src/hooks/useManualSync";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
-import { getCustomers } from "../../../src/db/query/customers";
-import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
-import CustomersListHeader from "../../../src/components/customers/CustomersListHeader";
-import { useDebounce } from "../../../src/hooks/useDebounce";
 
 export default function CustomersList() {
     const { onRefresh, refreshing } = useManualSync();

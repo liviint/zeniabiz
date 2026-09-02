@@ -1,26 +1,24 @@
-import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { View } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { FormLabel, CustomPicker } from "../ThemeProvider/components";
+import { useIsFocused, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
+import { View } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 import { getCategories } from "../../db/query/categories";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
-import { useRouter } from "expo-router";
-import { useIsFocused } from "@react-navigation/native";
 import { clearRecentlyCreatedCategoryId } from "../../store/features/entitySelectionSlice";
+import { CustomPicker, FormLabel } from "../ThemeProvider/components";
 
-export default function CategoriesPicker({
-  form,
-  handleCategoryChange,
-}) {
-    const dispatch = useDispatch()
-    const { globalStyles } = useThemeStyles();
-    const db = useSQLiteContext();
-    const router = useRouter();
-    const isFocused = useIsFocused()
-    const [categories, setCategories] = useState([]);
-    const recentlyCreatedCategoryId = useSelector((state) => state.entitySelection.recentlyCreatedCategoryId);
+export default function CategoriesPicker({ form, handleCategoryChange }) {
+  const dispatch = useDispatch();
+  const { globalStyles } = useThemeStyles();
+  const db = useSQLiteContext();
+  const router = useRouter();
+  const isFocused = useIsFocused();
+  const [categories, setCategories] = useState([]);
+  const recentlyCreatedCategoryId = useSelector(
+    (state) => state.entitySelection.recentlyCreatedCategoryId,
+  );
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -37,8 +35,10 @@ export default function CategoriesPicker({
 
   useEffect(() => {
     if (recentlyCreatedCategoryId && categories.length > 0) {
-      const category = categories.find((c) => c.id === recentlyCreatedCategoryId);
-      
+      const category = categories.find(
+        (c) => c.id === recentlyCreatedCategoryId,
+      );
+
       if (category) {
         const timer = setTimeout(() => {
           handleCategoryChange(category);
@@ -67,7 +67,7 @@ export default function CategoriesPicker({
       <FormLabel>Category</FormLabel>
 
       <CustomPicker
-        selectedValue={categories.find(cate => cate.id === form.category_id)}
+        selectedValue={categories.find((cate) => cate.id === form.category_id)}
         onValueChange={(value) => handleSelect(value)}
       >
         {/* Default placeholder */}

@@ -1,28 +1,29 @@
-import { useIsFocused } from "@react-navigation/native";
-import { useRouter } from "expo-router";
+import { useIsFocused, useRouter } from 'expo-router';
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useMemo, useState } from "react";
 import {
-  FlatList,
-  Pressable,
-  RefreshControl,
-  SectionList,
-  StyleSheet,
-  View,
+    FlatList,
+    Pressable,
+    RefreshControl,
+    SectionList,
+    StyleSheet,
+    View,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { AddButton } from "../../../src/components/common/AddButton";
 import EmptyState from "../../../src/components/common/EmptyState";
 import FilterComponent from "../../../src/components/common/FilterComponent";
+import SearchInput from "../../../src/components/common/SearchInput";
 import SortComponent from "../../../src/components/common/SortComponent";
 import { StatCard } from "../../../src/components/common/StatCard";
 import TimeNavigator from "../../../src/components/common/TimeNavigator";
 import {
-  BodyText,
-  Card,
-  SecondaryText,
+    BodyText,
+    Card,
+    SecondaryText,
 } from "../../../src/components/ThemeProvider/components";
 import { getSales } from "../../../src/db/query/sales";
+import { getSetting } from "../../../src/db/query/settings";
 import { groupDataIntoSections } from "../../../src/helpers";
 import { useDebounce } from "../../../src/hooks/useDebounce";
 import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
@@ -30,8 +31,6 @@ import { useManualSync } from "../../../src/hooks/useManualSync";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { canViewReports } from "../../../src/utils/rolesAndPermissions";
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
-import SearchInput from "../../../src/components/common/SearchInput";
-import { getSetting } from "../../../src/db/query/settings";
 
 export default function SalesList() {
   const { onRefresh, refreshing } = useManualSync();

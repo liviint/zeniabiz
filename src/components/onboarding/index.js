@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { View, TouchableOpacity, StyleSheet, Pressable } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useIsFocused} from "@react-navigation/native";
-import { useRouter } from "expo-router";
+import { useRouter, useIsFocused } from "expo-router";
 import { BodyText, SecondaryText , Card} from "../ThemeProvider/components";
 import { useThemeStyles } from "../../hooks/useThemeStyles";
 import { useSQLiteContext } from "expo-sqlite";

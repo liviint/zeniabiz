@@ -1,33 +1,33 @@
-import { useIsFocused } from "@react-navigation/native";
-import { useRouter } from "expo-router";
+import { useIsFocused, useRouter } from 'expo-router';
+
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { 
-  Pressable, 
-  RefreshControl, 
-  SectionList, 
-  StyleSheet, 
-  View,
+import {
+    Pressable,
+    RefreshControl,
+    SectionList,
+    StyleSheet,
+    View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { BodyText, Card, SecondaryText } from "../../../src/components/ThemeProvider/components";
 import { AddButton } from "../../../src/components/common/AddButton";
 import ButtonLinks from "../../../src/components/common/ButtonLinks";
 import EmptyState from "../../../src/components/common/EmptyState";
+import PageLoader from "../../../src/components/common/PageLoader";
 import { StatCard } from "../../../src/components/common/StatCard";
 import TimeNavigator from "../../../src/components/common/TimeNavigator";
 import { getCategories } from "../../../src/db/query/categories";
 import { getExpenses } from "../../../src/db/query/expenses";
+import { getSetting } from "../../../src/db/query/settings";
 import { groupDataIntoSections } from "../../../src/helpers";
+import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
 import { useManualSync } from "../../../src/hooks/useManualSync";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { setCategoriesMap } from "../../../src/store/features/cetegoriesSlice";
+import { canViewReports } from "../../../src/utils/rolesAndPermissions";
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 import { dateFormat } from "../../../utils/dateFormat";
-import { canViewReports } from "../../../src/utils/rolesAndPermissions"
-import PageLoader from "../../../src/components/common/PageLoader";
-import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
-import { getSetting } from "../../../src/db/query/settings";
 
 export default function ExpensesListPage() {
     const { onRefresh, refreshing } = useManualSync();

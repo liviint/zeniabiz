@@ -1,3 +1,5 @@
+import { useIsFocused, useRouter } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
     Alert,
@@ -5,21 +7,18 @@ import {
     StyleSheet,
     View,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { useSQLiteContext } from "expo-sqlite";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useDispatch } from "react-redux";
+import { getCustomerById, upsertCustomer } from "../../db/query/customers";
+import { useThemeStyles } from "../../hooks/useThemeStyles";
+import { setRecentlyCreatedCustomerId } from "../../store/features/entitySelectionSlice";
+import { AnalyticsService } from "../../utils/analyticsService";
 import {
     BodyText,
-    Input,
-    FormLabel,
     Card,
-} from "../ThemeProvider/components"
-import { useThemeStyles } from "../../hooks/useThemeStyles";
-import { upsertCustomer, getCustomerById } from "../../db/query/customers";
-import { setRecentlyCreatedCustomerId } from "../../store/features/entitySelectionSlice"
-import { useDispatch } from "react-redux";
-import { useIsFocused } from "@react-navigation/native";
-import { AnalyticsService } from "../../utils/analyticsService";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+    FormLabel,
+    Input,
+} from "../ThemeProvider/components";
 
 export default function AddEditCustomerPage({id}) {
     const isFocused = useIsFocused()

@@ -1,14 +1,14 @@
-import { StyleSheet, Dimensions } from "react-native";
-import { useSelector } from "react-redux";
-import { useIsFocused } from "@react-navigation/native";
-import { LineChart } from "react-native-chart-kit";
+import { useIsFocused } from 'expo-router';
 import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
-import { useThemeStyles } from "../../hooks/useThemeStyles";
-import { chartConfig } from "../../helpers";
-import { Card, BodyText } from "../ThemeProvider/components";
+import { Dimensions, StyleSheet } from "react-native";
+import { LineChart } from "react-native-chart-kit";
+import { useSelector } from "react-redux";
 import { getCashFlow } from "../../db/query/dashboard";
+import { chartConfig } from "../../helpers";
 import { useDeferredEffect } from "../../hooks/useDeferredEffect";
+import { useThemeStyles } from "../../hooks/useThemeStyles";
+import { BodyText, Card } from "../ThemeProvider/components";
 
 const screenWidth = Dimensions.get("window").width;
 export default function CashflowChart({timeState}) {

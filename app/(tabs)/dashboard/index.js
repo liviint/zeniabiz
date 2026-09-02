@@ -1,6 +1,6 @@
 import { View, ScrollView, RefreshControl } from "react-native";
 import { useState } from "react";
-import { useIsFocused} from "@react-navigation/native";
+import { useIsFocused} from "expo-router";
 import SummaryCards from "../../../src/components/dashboard/SummaryCards"
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { BodyText, SecondaryText } from "../../../src/components/ThemeProvider/components";

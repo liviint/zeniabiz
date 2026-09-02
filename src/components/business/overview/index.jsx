@@ -1,30 +1,23 @@
-import { useIsFocused } from "@react-navigation/native";
+import { useIsFocused } from "expo-router";
 import { useEffect, useState } from "react";
-import {
-  StyleSheet,
-  View,
-  TouchableOpacity
-} from "react-native";
-import {
-  BodyText,
-} from "../../ThemeProvider/components";
+import { StyleSheet, View, TouchableOpacity } from "react-native";
+import { BodyText } from "../../ThemeProvider/components";
 import { getActiveContextSync } from "../../../db/utils";
 import { useSQLiteContext } from "expo-sqlite";
 import { api } from "../../../../api";
 import { useThemeStyles } from "../../../hooks/useThemeStyles";
-import { getCompany , upsertCompany} from "../../../db/query/companies"
+import { getCompany, upsertCompany } from "../../../db/query/companies";
 
 const BusinessOverview = ({
   setEditBusiness,
   setBusinessData,
   refreshData,
   isAllowedToViewReports,
-  isUserLoggedIn
+  isUserLoggedIn,
 }) => {
-
   const db = useSQLiteContext();
   const isFocused = useIsFocused();
-  const { globalStyles } = useThemeStyles()
+  const { globalStyles } = useThemeStyles();
 
   const [company, setCompany] = useState(null);
 
@@ -36,71 +29,65 @@ const BusinessOverview = ({
       setCompany(localCompany);
       setBusinessData(localCompany);
     }
-    if(!isUserLoggedIn) return
+    if (!isUserLoggedIn) return;
 
     try {
-      const companyRes = await api.get(
-        `/core/companies/${companyId}`
-      );
+      const companyRes = await api.get(`/core/companies/${companyId}`);
 
       const companyData = companyRes.data;
       await upsertCompany(db, companyData);
 
       setCompany(companyData);
       setBusinessData(companyData);
-
     } catch (err) {
       console.log(
         "Failed to load company from API:",
-        err?.response?.data || err.message
+        err?.response?.data || err.message,
       );
     }
-};
+  };
 
   const handleEdit = () => {
-    setEditBusiness(true)
-  }
+    setEditBusiness(true);
+  };
 
   useEffect(() => {
     loadBusinessData();
-  }, [isFocused,refreshData]);
+  }, [isFocused, refreshData]);
 
   return (
-  <View style={styles.overviewCard}>
+    <View style={styles.overviewCard}>
+      <View style={styles.header}>
+        <BodyText style={styles.title}>Business Overview</BodyText>
 
-    <View style={styles.header}>
-      <BodyText style={styles.title}>Business Overview</BodyText>
+        {isAllowedToViewReports && isUserLoggedIn && (
+          <TouchableOpacity style={globalStyles.editBtn} onPress={handleEdit}>
+            <BodyText style={styles.editBtnText}>Edit</BodyText>
+          </TouchableOpacity>
+        )}
+      </View>
 
-      {isAllowedToViewReports && isUserLoggedIn  && 
-        <TouchableOpacity style={globalStyles.editBtn} onPress={handleEdit}>
-          <BodyText style={styles.editBtnText}>Edit</BodyText>
-        </TouchableOpacity>
-      }
+      <View style={styles.row}>
+        <BodyText>Name</BodyText>
+        <BodyText>{company?.name}</BodyText>
+      </View>
 
+      <View style={styles.row}>
+        <BodyText>Phone</BodyText>
+        <BodyText>{company?.phone}</BodyText>
+      </View>
+
+      <View style={styles.row}>
+        <BodyText>Address</BodyText>
+        <BodyText>{company?.address}</BodyText>
+      </View>
+
+      <View style={styles.row}>
+        <BodyText>Currency</BodyText>
+        <BodyText>{company?.currency || "-"}</BodyText>
+      </View>
     </View>
-
-    <View style={styles.row}>
-      <BodyText>Name</BodyText>
-      <BodyText>{company?.name}</BodyText>
-    </View>
-
-    <View style={styles.row}>
-      <BodyText>Phone</BodyText>
-      <BodyText>{company?.phone}</BodyText>
-    </View>
-
-    <View style={styles.row}>
-      <BodyText>Address</BodyText>
-      <BodyText>{company?.address}</BodyText>
-    </View>
-
-    <View style={styles.row}>
-      <BodyText>Currency</BodyText>
-      <BodyText>{company?.currency || "-"}</BodyText>
-    </View>
-
-  </View>
-);
+  );
 };
 
 export default BusinessOverview;

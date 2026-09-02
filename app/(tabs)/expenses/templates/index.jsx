@@ -1,20 +1,20 @@
-import { useIsFocused } from "@react-navigation/native";
+import { useIsFocused } from "expo-router";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { AddButton } from "../../../../src/components/common/AddButton";
 import EmptyState from "../../../../src/components/common/EmptyState";
 import {
-    BodyText,
-    Card,
-    SecondaryText,
+  BodyText,
+  Card,
+  SecondaryText,
 } from "../../../../src/components/ThemeProvider/components";
 import { getTransactionTemplates } from "../../../../src/db/query/expenses/templates";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
@@ -23,7 +23,7 @@ import { useSelector } from "react-redux";
 export default function TransactionTemplatesListScreen() {
   const isFocused = useIsFocused();
   const { globalStyles } = useThemeStyles();
-  const categoriesMap = useSelector(state => state.categories.categoriesMap);
+  const categoriesMap = useSelector((state) => state.categories.categoriesMap);
   const db = useSQLiteContext();
   const router = useRouter();
 
@@ -65,7 +65,9 @@ export default function TransactionTemplatesListScreen() {
 
         <View style={styles.metaRow}>
           <SecondaryText style={styles.category}>
-            {item.category_id ? categoriesMap[item.category_id] : "Uncategorized"}
+            {item.category_id
+              ? categoriesMap[item.category_id]
+              : "Uncategorized"}
           </SecondaryText>
         </View>
 

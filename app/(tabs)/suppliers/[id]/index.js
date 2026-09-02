@@ -1,14 +1,13 @@
+import { useIsFocused, useLocalSearchParams, useRouter } from 'expo-router';
+import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { useIsFocused } from "@react-navigation/native";
 import {
-    View,
-    TouchableOpacity,
-    Text,
     ScrollView,
     StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useSQLiteContext } from "expo-sqlite";
 
 import {
     BodyText,
@@ -17,12 +16,12 @@ import {
 } from "../../../../src/components/ThemeProvider/components";
 
 import {
-    getSupplierById,
     deleteSupplier,
+    getSupplierById,
 } from "../../../../src/db/query/suppliers";
 
-import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import DeleteButton from "../../../../src/components/common/DeleteButton";
+import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
 import { dateFormat } from "../../../../utils/dateFormat";
 
 export default function SupplierDetails() {
