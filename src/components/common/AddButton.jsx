@@ -8,7 +8,6 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Card, BodyText } from "../ThemeProvider/components";
-import CustomTooltip from "../onboarding/CustomTooltip";
 
 export const AddButton = ({
   primaryAction,
@@ -49,19 +48,12 @@ export const AddButton = ({
 
   return (
     <View style={styles.buttonContainer}>
-      <CustomTooltip
-        visible={showTip}
-        title={tootTipTitle}
-        description={tootTipDescription}
-        onClose={() => setShowTip(false)}
-        horizontalAdjustment={-50}
-      >
+      
         <Pressable style={styles.button} onPress={toggleMenu}>
           <Text style={styles.text}>
             {menuVisible ? "×" : "＋"}
           </Text>
       </Pressable>
-      </CustomTooltip>
 
       {/* Popup Menu */}
       <Modal

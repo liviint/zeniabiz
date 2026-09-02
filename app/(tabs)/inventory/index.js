@@ -1,6 +1,6 @@
 import { useIsFocused, useRouter } from 'expo-router';
 import { useSQLiteContext } from "expo-sqlite";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
     FlatList,
     Pressable,
@@ -35,11 +35,11 @@ export default function ProductsListPage() {
   const lastSyncedAt = useSelector(state => state.sync.lastSyncedAt);
   const user = useSelector((state) => state.user.userDetails);
 
-  const [isAllowedToViewReports,setIsAllowedToViewReports] = useState(canViewReports())
+  const isAllowedToViewReports =  canViewReports(user)
+
   const [showTip, setShowTip] = useState(false);
 
   const [products, setProducts] = useState([]);
-  const [stats,setStats] = useState({})
   const [isLoading,setIsLoading] = useState(true)
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 400);
@@ -147,19 +147,18 @@ export default function ProductsListPage() {
   ],
 {enabled: isFocused,});
 
-  useEffect(() => {
-    setIsAllowedToViewReports(canViewReports())
-  },[user])
+  const stats = useMemo(() => ({
+    count: products.length,
+    stockValue: products.reduce(
+      (sum, product) =>
+        sum +
+        (Number(product.cost_price) * Number(product.stock_quantity)),
+      0
+    ),
+  }), [products]);
+
 
   useEffect(() => {
-    setStats({
-      count:products.length,
-      stockValue:products.reduce((sum,product) => sum + (product.cost_price * product.stock_quantity),0)
-    })
-  },[products])
-
-
-useEffect(() => {
       const getShowTip = async() => {
         const onboarding_completed = await getSetting(db,"onboarding_completed")
         if (!onboarding_completed) {
