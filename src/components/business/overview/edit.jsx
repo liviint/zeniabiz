@@ -5,7 +5,7 @@ import {
     StyleSheet,
     TouchableOpacity,
 } from "react-native";
-import { useIsFocused  } from "@react-navigation/native";
+import { useIsFocused  } from "expo-router";
 
 import { api } from "../../../../api";
 import { useThemeStyles } from "../../../hooks/useThemeStyles";

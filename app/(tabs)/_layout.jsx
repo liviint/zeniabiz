@@ -2,7 +2,6 @@ import { IconSymbol } from "@/src/components/ui/icon-symbol.ios";
 import React,{ useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Tabs } from "expo-router";
-import { HapticTab } from "../../src/components/haptic-tab";
 import { useThemeStyles } from "../../src/hooks/useThemeStyles";
 import {  canViewReports } from "../../src/utils/rolesAndPermissions/index"
 
@@ -24,7 +23,6 @@ export default function TabLayout() {
         backBehavior="history"
         screenOptions={{
           headerShown: false,
-          tabBarButton: HapticTab,
           tabBarActiveTintColor: colors.tint,
           tabBarInactiveTintColor: colors.textMuted,
           tabBarStyle: {
