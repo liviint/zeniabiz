@@ -4,7 +4,7 @@ import { useIsFocused} from "expo-router";
 import SummaryCards from "../../../src/components/dashboard/SummaryCards"
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { BodyText, SecondaryText } from "../../../src/components/ThemeProvider/components";
-import CashflowChart from "../../../src/components/dashboard/CashflowChart";
+// import CashflowChart from "../../../src/components/dashboard/CashflowChart";
 import ExpenseBreakdown from "../../../src/components/dashboard/ExpenseBreakdown";
 import TimeNavigator from "../../../src/components/common/TimeNavigator"
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
@@ -65,9 +65,9 @@ export default function DashboardScreen() {
                     timeState={timeState}
                 />
 
-                <CashflowChart 
+                {/* <CashflowChart 
                     timeState={timeState}
-                />
+                /> */}
 
                 <View style={{ height: 24 }} />
             </ScrollView>
