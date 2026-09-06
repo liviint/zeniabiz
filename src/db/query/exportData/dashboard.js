@@ -192,6 +192,11 @@ body {
     font-size: 12px;
 
 }
+    
+@page {
+    size: A4;
+    margin: 32px;
+}
 
 
 /*
@@ -466,6 +471,7 @@ tfoot td {
  * PRINT
  * =========================================================
  */
+
 
 @media print {
 
