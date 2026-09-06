@@ -14,6 +14,8 @@ import OnBoarding from "../../../src/components/onboarding";
 import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
 import { useSQLiteContext } from "expo-sqlite";
 import { getSetting } from "../../../src/db/query/settings";
+import ExportButton from "../../../src/components/common/exportButton";
+import { exportPdf } from "../../../src/db/query/exportData";
 
 export default function DashboardScreen() {
     const isFocused = useIsFocused();
@@ -22,6 +24,27 @@ export default function DashboardScreen() {
     const { onRefresh, refreshing } = useManualSync();
     const [timeState, setTimeState] = useState(createRange("month"));
     const [onboardingCompleted, setOnboardingCompleted] = useState(true);
+    const [dashboardData,setDashBoardData] = useState({})
+
+    const handleExport = async (format) => {
+        try {
+            if (format !== "pdf") return;
+
+            await exportPdf({
+                data: dashboardData,
+                type: "dashboard",
+                fileName: "dashboard_reports",
+                options: {
+                    timeState,
+                },
+            });
+        } catch (error) {
+            console.error(
+                "Customer export failed:",
+                error
+            );
+        }
+    };
 
     useDeferredEffect(async (isMounted) => {
         const completed = await getSetting(db, "onboarding_completion_acknowledged");
@@ -47,6 +70,10 @@ export default function DashboardScreen() {
                 onChange={setTimeState}
             />
 
+            <ExportButton 
+                onExport={handleExport}
+            />
+
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 refreshControl={
@@ -55,14 +82,17 @@ export default function DashboardScreen() {
             >
                 <SummaryCards 
                     timeState={timeState}
+                    setDashBoardData={setDashBoardData}
                 />
 
                 <ExpenseBreakdown 
                     timeState={timeState}
+                    setDashBoardData={setDashBoardData}
                 /> 
 
                 <PaymentMethodsBreakdown 
                     timeState={timeState}
+                    setDashBoardData={setDashBoardData}
                 />
 
                 {/* <CashflowChart 

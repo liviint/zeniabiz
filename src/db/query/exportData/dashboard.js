@@ -151,23 +151,6 @@ export function generateDashboardReport(
             })
             .join("");
 
-
-    /*
-     * =========================================================
-     * CASH FLOW
-     * =========================================================
-     */
-
-    const cashFlowTotal =
-        cashFlow.reduce(
-            (sum, item) =>
-                sum + Number(
-                    item.amount || 0
-                ),
-            0
-        );
-
-
     /*
      * =========================================================
      * REPORT

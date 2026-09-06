@@ -31,6 +31,8 @@ import { useManualSync } from "../../../src/hooks/useManualSync";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { canViewReports } from "../../../src/utils/rolesAndPermissions";
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
+import { exportPdf } from '../../../src/db/query/exportData';
+import ExportButton from '../../../src/components/common/exportButton';
 
 export default function SalesList() {
   const { onRefresh, refreshing } = useManualSync();
@@ -171,6 +173,29 @@ export default function SalesList() {
 
   const useSections = sort === "newest" 
 
+  const handleExport = async (format) => {
+    try {
+        if (format !== "pdf") return;
+
+        await exportPdf({
+            data: sales,
+            type: "sales",
+            fileName: "sales",
+            options: {
+                filter,
+                sort,
+                search,
+                timeState,
+            },
+        });
+    } catch (error) {
+        console.error(
+            "Customer export failed:",
+            error
+        );
+    }
+  };
+
   useEffect(() => {
     const getShowTip = async() => {
       const onboarding_completed = await getSetting(db,"onboarding_completed")
@@ -206,6 +231,10 @@ export default function SalesList() {
         <SortComponent 
           sortOptions={sortOptions}
           activeSort={sort}
+        />
+
+        <ExportButton 
+          onExport={handleExport}
         />
       </View>
 

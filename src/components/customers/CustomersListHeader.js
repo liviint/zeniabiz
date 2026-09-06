@@ -9,6 +9,7 @@ import { StatCard } from "../../../src/components/common/StatCard";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import SearchInput from "../../../src/components/common/SearchInput";
 import TimeNavigator from "../common/TimeNavigator";
+import ExportButton from "../common/exportButton";
 
 export default function CustomersListHeader({
     customers,
@@ -20,7 +21,8 @@ export default function CustomersListHeader({
     search,
     setSearch,
     timeState,
-    setTimeState
+    setTimeState,
+    handleExport
 }) {
     const { globalStyles } = useThemeStyles();
 
@@ -114,6 +116,10 @@ export default function CustomersListHeader({
                 <SortComponent
                     sortOptions={sortOptions}
                     activeSort={sort}
+                />
+
+                <ExportButton 
+                    onExport={handleExport}
                 />
             </View>
 

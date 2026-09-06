@@ -22,6 +22,7 @@ import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
 import { useManualSync } from "../../../src/hooks/useManualSync";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
+import { exportPdf } from '../../../src/db/query/exportData';
 
 export default function CustomersList() {
     const { onRefresh, refreshing } = useManualSync();
@@ -69,6 +70,29 @@ export default function CustomersList() {
         debouncedSearch
     ],{enabled: isFocused,});
 
+    const handleExport = async (format) => {
+        try {
+            if (format !== "pdf") return;
+
+            await exportPdf({
+                data: customers,
+                type: "customers",
+                fileName: "customers",
+                options: {
+                    filter,
+                    sort,
+                    search,
+                    timeState,
+                },
+            });
+        } catch (error) {
+            console.error(
+                "Customer export failed:",
+                error
+            );
+        }
+    };
+
     useEffect(() => {
         setStats({
         count: customers.length,
@@ -107,6 +131,7 @@ export default function CustomersList() {
             setFilter={setFilter}
             search={search}
             setSearch={setSearch}
+            handleExport={handleExport}
         />
 
         <FlatList

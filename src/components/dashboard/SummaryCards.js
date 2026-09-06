@@ -15,6 +15,7 @@ import { SecondaryText } from "../ThemeProvider/components";
 export default function SummaryCards({ 
   isSyncing,
   timeState, 
+  setDashBoardData
 }) {
   const { colors } = useThemeStyles()
   const isFocused = useIsFocused();
@@ -34,13 +35,11 @@ export default function SummaryCards({
   });
 
   useDeferredEffect(async (isMounted) => {
-    console.log("hello summ 12")
     const summary = await getFinancialStats(db, timeState);
-    console.log(summary,"hello summ")
     if (isMounted()) {
       setStats(summary);
     }
-    console.log(summary,"hello summ")
+    setDashBoardData(prev => ({...prev,summary:summary}))
     setIsLoading(false)
   }, [db, isFocused, timeState, lastSyncedAt],{enabled: isFocused,});
 

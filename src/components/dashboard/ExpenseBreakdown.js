@@ -11,7 +11,10 @@ import { BodyText, Card } from "../ThemeProvider/components";
 
 const screenWidth = Dimensions.get("window").width;
 
-export default function ExpenseBreakdown({timeState}) {
+export default function ExpenseBreakdown({
+  timeState, 
+  setDashBoardData
+}) {
   const { colors:themeColors } = useThemeStyles()
   const isFocused = useIsFocused()
   const db = useSQLiteContext();
@@ -33,6 +36,7 @@ export default function ExpenseBreakdown({timeState}) {
     const formatted = result.map((item, index) => ({
       name: item.category || "Other",
       amount: item.total,
+      value: item.total,
       color: colors[index % colors.length],
       legendFontColor: themeColors.text,
       legendFontSize: 12,
@@ -40,6 +44,7 @@ export default function ExpenseBreakdown({timeState}) {
 
     if (isMounted()) {
       setData(formatted);
+      setDashBoardData(prev => ({...prev,expensesBreakdown:formatted}))
     }
 
   }, [db, isFocused, timeState, lastSyncedAt],{enabled: isFocused,});

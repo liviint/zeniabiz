@@ -28,6 +28,8 @@ import { setCategoriesMap } from "../../../src/store/features/cetegoriesSlice";
 import { canViewReports } from "../../../src/utils/rolesAndPermissions";
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 import { dateFormat } from "../../../utils/dateFormat";
+import { exportPdf } from '../../../src/db/query/exportData';
+import ExportButton from '../../../src/components/common/exportButton';
 
 export default function ExpensesListPage() {
     const { onRefresh, refreshing } = useManualSync();
@@ -104,6 +106,27 @@ export default function ExpensesListPage() {
     { title: "Older", data: grouped.older },
   ].filter(section => section.data.length > 0);
 
+  const handleExport = async (format) => {
+      try {
+          if (format !== "pdf") return;
+
+          await exportPdf({
+              data: expenses,
+              type: "expenses",
+              fileName: "expenses",
+              options: {
+                  timeState,
+                  categoriesMap
+              },
+          });
+      } catch (error) {
+          console.error(
+              "Expenses export failed:",
+              error
+          );
+      }
+  };
+
   useEffect(() => {
       const getShowTip = async() => {
         const onboarding_completed = await getSetting(db,"onboarding_completed")
@@ -179,6 +202,7 @@ export default function ExpensesListPage() {
               timeState={timeState}
               setTimeState={setTimeState}
               isAllowedToViewReports={isAllowedToViewReports}
+              handleExport={handleExport}
             />
           }
           ListEmptyComponent={
@@ -213,12 +237,16 @@ export default function ExpensesListPage() {
   )
 }
 
-const ListHeader = ({ stats, timeState,setTimeState, expenses, isAllowedToViewReports}) => {
+const ListHeader = ({ stats, timeState,setTimeState, expenses, isAllowedToViewReports,handleExport}) => {
   return <>
     <TimeNavigator
           state={timeState}
           onChange={setTimeState}
       /> 
+
+      <ExportButton 
+          onExport={handleExport}
+      />
 
     <ButtonLinks 
       links={[

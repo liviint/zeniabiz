@@ -23,6 +23,8 @@ import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
 import { useManualSync } from "../../../src/hooks/useManualSync";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
+import { exportPdf } from '../../../src/db/query/exportData';
+import ExportButton from '../../../src/components/common/exportButton';
 
 export default function CustomersList() {
     const { onRefresh, refreshing } = useManualSync();
@@ -101,6 +103,26 @@ export default function CustomersList() {
         });
     };
 
+    const handleExport = async (format) => {
+        try {
+            if (format !== "pdf") return;
+    
+            await exportPdf({
+                data: suppliers,
+                type: "suppliers",
+                fileName: "suppliers",
+                options: {
+                    sort
+                },
+            });
+        } catch (error) {
+            console.error(
+                "Expenses export failed:",
+                error
+            );
+        }
+    };
+
 
     return (
         <View style={globalStyles.container}>
@@ -115,6 +137,9 @@ export default function CustomersList() {
                 activeSort={sort}
             />
 
+            <ExportButton 
+                onExport={handleExport}
+            />
         </View>
 
         {suppliers.length > 0 && (

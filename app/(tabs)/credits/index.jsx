@@ -32,6 +32,8 @@ import { getCredits, getCreditStats } from "../../../src/db/query/credits";
 import { formatNumber } from "../../../src/db/utils";
 import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
 import { canViewReports } from "../../../src/utils/rolesAndPermissions";
+import { exportPdf } from '../../../src/db/query/exportData';
+import ExportButton from '../../../src/components/common/exportButton';
 
 export default function CreditsListPage() {
   const db = useSQLiteContext();
@@ -84,6 +86,26 @@ export default function CreditsListPage() {
   const fetchStats = async () => {
     const stats = await getCreditStats(credits, statusFilter);
     setCreditStats(stats);
+  };
+
+  const handleExport = async (format) => {
+    try {
+        if (format !== "pdf") return;
+
+        await exportPdf({
+            data: credits,
+            type: "credits",
+            fileName: "credits",
+            options: {
+                timeState
+            },
+        });
+    } catch (error) {
+        console.error(
+            "Expenses export failed:",
+            error
+        );
+    }
   };
 
   useDeferredEffect(
@@ -188,6 +210,7 @@ export default function CreditsListPage() {
             stats={creditStats}
             globalStyles={globalStyles}
             isAllowedToViewReports={isAllowedToViewReports}
+            handleExport={handleExport}
           />
         }
         ListEmptyComponent={
@@ -210,6 +233,7 @@ const ListHeader = ({
   stats,
   globalStyles,
   isAllowedToViewReports,
+  handleExport
 }) => {
   return (
     <>
@@ -219,6 +243,9 @@ const ListHeader = ({
         <FilterComponent
           filterOptions={filterOptions}
           activeFilter={statusFilter}
+        />
+        <ExportButton 
+          onExport={handleExport}
         />
       </View>
 

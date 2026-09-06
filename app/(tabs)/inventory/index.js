@@ -24,6 +24,8 @@ import { useDeferredEffect } from "../../../src/hooks/useDeferredEffect";
 import { useManualSync } from "../../../src/hooks/useManualSync";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { canViewReports } from "../../../src/utils/rolesAndPermissions";
+import { exportPdf } from '../../../src/db/query/exportData';
+import ExportButton from '../../../src/components/common/exportButton';
 
 export default function ProductsListPage() {
   const db = useSQLiteContext();
@@ -157,6 +159,28 @@ export default function ProductsListPage() {
     ),
   }), [products]);
 
+  const handleExport = async (format) => {
+    try {
+        if (format !== "pdf") return;
+
+        await exportPdf({
+            data: products,
+            type: "inventory",
+            fileName: "products_services",
+            options: {
+              filter,
+              sort,
+              search,
+            },
+        });
+    } catch (error) {
+        console.error(
+            "Expenses export failed:",
+            error
+        );
+    }
+};
+
 
   useEffect(() => {
       const getShowTip = async() => {
@@ -217,6 +241,7 @@ export default function ProductsListPage() {
             sort={sort}
             globalStyles={globalStyles}
             isAllowedToViewReports={isAllowedToViewReports}
+            handleExport={handleExport}
           />
         }
         ListEmptyComponent={
@@ -253,6 +278,7 @@ const ListHeader = ({
   sort,
   globalStyles,
   isAllowedToViewReports,
+  handleExport
 }) => {
   return (
     <>
@@ -271,6 +297,10 @@ const ListHeader = ({
             <SortComponent 
               sortOptions={sortOptions}
               activeSort={sort}
+            />
+
+            <ExportButton 
+              onExport={handleExport}
             />
           </View>
 

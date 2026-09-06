@@ -11,7 +11,10 @@ import { BodyText, Card } from "../ThemeProvider/components";
 
 const screenWidth = Dimensions.get("window").width;
 
-export default function PaymentMethodsBreakdown({ timeState }) {
+export default function PaymentMethodsBreakdown({ 
+  timeState, 
+  setDashBoardData 
+}) {
   const { colors: themeColors } = useThemeStyles();
   const isFocused = useIsFocused();
   const db = useSQLiteContext();
@@ -33,6 +36,7 @@ export default function PaymentMethodsBreakdown({ timeState }) {
       const formatted = result.map((item, index) => ({
         name: formatMethod(item.payment_method),
         amount: item.total,
+        value: item.total,
         color: colors[index % colors.length],
         legendFontColor: themeColors.text,
         legendFontSize: 12,
@@ -41,6 +45,7 @@ export default function PaymentMethodsBreakdown({ timeState }) {
     
     if (isMounted()) {
       setData(formatted);
+      setDashBoardData(prev => ({...prev,paymentsBreakdown:formatted}))
     }
   }, [db, isFocused, timeState, lastSyncedAt],{enabled: isFocused,});
 
