@@ -34,7 +34,7 @@ const ExportButton = ({
 
             <Pressable
                 onPress={() =>
-                    setOpen((prev) => !prev)
+                    handleExport("pdf")
                 }
                 disabled={isDisabled}
                 style={({ pressed }) => [
@@ -46,32 +46,15 @@ const ExportButton = ({
                 ]}
             >
 
-                {loading ? (
-                    <ActivityIndicator
-                        size="small"
-                        color="#333333"
-                    />
-                ) : (
+                
                     <MaterialIcons
                         name="file-download"
                         size={18}
                         color="#333333"
                     />
-                )}
+                
 
-                <Text style={styles.buttonText}>
-                    {loading
-                        ? "Exporting..."
-                        : label}
-                </Text>
-
-                {!loading && (
-                    <MaterialIcons
-                        name="keyboard-arrow-down"
-                        size={18}
-                        color="#333333"
-                    />
-                )}
+            
 
             </Pressable>
 
