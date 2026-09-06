@@ -1,7 +1,8 @@
 import {
     formatMoney,
     escapeHtml,
-    formatTimeState
+    formatTimeState,
+    formatDate
 } from "./helpers";
 
 export function generateCreditsReport(
@@ -75,11 +76,7 @@ export function generateCreditsReport(
                 <td>
                     ${escapeHtml(
                         credit.date
-                            ? new Date(
-                                credit.date
-                            ).toLocaleDateString(
-                                "en-KE"
-                            )
+                            ? formatDate(credit.date)
                             : "-"
                     )}
                 </td>

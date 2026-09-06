@@ -1,6 +1,7 @@
 import {
     escapeHtml,
-    formatTimeState
+    formatTimeState,
+    formatDate
 } from "./helpers";
 
 export function generateSuppliersReport(
@@ -48,10 +49,8 @@ export function generateSuppliersReport(
                 <td>
                     ${supplier.created_at
                         ? escapeHtml(
-                            new Date(
+                            formatDate(
                                 supplier.created_at
-                            ).toLocaleDateString(
-                                "en-KE"
                             )
                         )
                         : "-"

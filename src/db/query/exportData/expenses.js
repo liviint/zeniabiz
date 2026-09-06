@@ -1,7 +1,8 @@
 import {
     formatMoney,
     escapeHtml,
-    formatTimeState
+    formatTimeState,
+    formatDate
 } from "./helpers";
 
 export function generateExpensesReport(
@@ -30,8 +31,8 @@ export function generateExpensesReport(
                 <tr>
                     <td>
                         ${escapeHtml(
-                            expense.date ||
-                            expense.created_at ||
+                            formatDate(expense.date ||
+                            expense.created_at) ||
                             "-"
                         )}
                     </td>
