@@ -4,7 +4,8 @@ import {
     formatFilter,
     formatSort,
     escapeHtml,
-    formatTimeState
+    formatTimeState,
+    formatDate
 } from "./helpers";
 
 
@@ -311,7 +312,7 @@ tfoot td {
 
         <div>
             Generated:
-            ${new Date().toLocaleString()}
+            ${formatDate(new Date(),true)}
         </div>
 
 

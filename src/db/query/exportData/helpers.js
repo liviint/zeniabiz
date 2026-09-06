@@ -20,7 +20,7 @@ export function formatFilter(filter) {
     }
 }
 
-export function formatDate(value) {
+export function formatDate(value, showTime = false) {
     if (!value) {
         return "";
     }
@@ -31,14 +31,20 @@ export function formatDate(value) {
         return String(value);
     }
 
-    return date.toLocaleDateString(
-        "en-KE",
-        {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-        }
-    );
+    const options = {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+    };
+
+    if (showTime) {
+        options.hour = "2-digit";
+        options.minute = "2-digit";
+    }
+
+    return showTime
+        ? date.toLocaleString("en-KE", options)
+        : date.toLocaleDateString("en-KE", options);
 }
 
 

@@ -1,7 +1,8 @@
 import {
     formatMoney,
     escapeHtml,
-    formatTimeState
+    formatTimeState,
+    formatDate
 } from "./helpers";
 
 export function generateInventoryReport(
@@ -337,7 +338,7 @@ tfoot td {
 
         <div>
             Generated:
-            ${new Date().toLocaleString()}
+            ${formatDate(new Date(),true)}
         </div>
 
         <div>

@@ -1,4 +1,4 @@
-import {formatMoney,formatTimeState, escapeHtml } from "./helpers"
+import {formatMoney,formatTimeState, escapeHtml, formatDate } from "./helpers"
 
 export function generateDashboardReport(
     data,
@@ -192,7 +192,7 @@ body {
     font-size: 12px;
 
 }
-    
+
 @page {
     size: A4;
     margin: 32px;
@@ -535,7 +535,7 @@ tfoot td {
 
         <div>
             Generated:
-            ${new Date().toLocaleString()}
+            ${formatDate(new Date(),true)}
         </div>
 
         <div>

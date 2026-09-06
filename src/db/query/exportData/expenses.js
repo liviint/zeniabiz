@@ -252,7 +252,7 @@ tfoot td {
 
         <div>
             Generated:
-            ${new Date().toLocaleString()}
+            ${formatDate(new Date(),true)}
         </div>
 
         <div>
