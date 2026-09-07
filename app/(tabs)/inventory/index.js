@@ -222,7 +222,15 @@ export default function ProductsListPage() {
 
   return (
     <View style={globalStyles.container}>
-      <BodyText style={globalStyles.title}>Products & Services</BodyText>
+      <View style={globalStyles.titleContainer}>
+          <BodyText style={globalStyles.title}>
+              Products & Services
+          </BodyText>
+
+          <ExportButton 
+              onExport={handleExport}
+          />
+      </View>
       <FlatList
         data={products}
         keyExtractor={(item) => item.id}
@@ -241,7 +249,6 @@ export default function ProductsListPage() {
             sort={sort}
             globalStyles={globalStyles}
             isAllowedToViewReports={isAllowedToViewReports}
-            handleExport={handleExport}
           />
         }
         ListEmptyComponent={
@@ -278,7 +285,6 @@ const ListHeader = ({
   sort,
   globalStyles,
   isAllowedToViewReports,
-  handleExport
 }) => {
   return (
     <>
@@ -298,10 +304,7 @@ const ListHeader = ({
               sortOptions={sortOptions}
               activeSort={sort}
             />
-
-            <ExportButton 
-              onExport={handleExport}
-            />
+            
           </View>
 
       </View>

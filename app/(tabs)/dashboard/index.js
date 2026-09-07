@@ -58,8 +58,15 @@ export default function DashboardScreen() {
 
     return (
         <View style={globalStyles.container}>
-            <BodyText style={globalStyles.title}>Dashboard</BodyText>
-            <SecondaryText style={globalStyles.subTitle}>Track your business performance</SecondaryText>
+            <View style={globalStyles.titleContainer}>
+                <BodyText style={globalStyles.title}>
+                    Dashboard
+                </BodyText>
+
+                <ExportButton 
+                    onExport={handleExport}
+                />
+            </View>
 
             {!onboardingCompleted &&  
                 <OnBoarding />
@@ -68,10 +75,6 @@ export default function DashboardScreen() {
             <TimeNavigator
                 state={timeState}
                 onChange={setTimeState}
-            />
-
-            <ExportButton 
-                onExport={handleExport}
             />
 
             <ScrollView

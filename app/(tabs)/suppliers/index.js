@@ -126,9 +126,17 @@ export default function CustomersList() {
 
     return (
         <View style={globalStyles.container}>
-        <BodyText style={globalStyles.title}>
-            Suppliers
-        </BodyText>
+            
+            <View style={globalStyles.titleContainer}>
+                <BodyText style={globalStyles.title}>
+                    Suppliers
+                </BodyText>
+
+                <ExportButton 
+                    onExport={handleExport}
+                />
+            </View>
+        
 
         <View style={globalStyles.filterSortContainer}>
 
@@ -137,9 +145,7 @@ export default function CustomersList() {
                 activeSort={sort}
             />
 
-            <ExportButton 
-                onExport={handleExport}
-            />
+            
         </View>
 
         {suppliers.length > 0 && (

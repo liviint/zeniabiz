@@ -175,11 +175,14 @@ export default function ExpensesListPage() {
 
   return (
     <View style={globalStyles.container}>
+      <View style={globalStyles.titleContainer}>
+          <BodyText style={globalStyles.title}>
+              Expenses
+          </BodyText>
 
-      <View style={styles.headerRow}>
-        <BodyText style={globalStyles.title}>
-          My Expenses
-        </BodyText>
+          <ExportButton 
+              onExport={handleExport}
+          />
       </View>
           
     { !isLoading ?
@@ -202,7 +205,6 @@ export default function ExpensesListPage() {
               timeState={timeState}
               setTimeState={setTimeState}
               isAllowedToViewReports={isAllowedToViewReports}
-              handleExport={handleExport}
             />
           }
           ListEmptyComponent={
@@ -243,10 +245,6 @@ const ListHeader = ({ stats, timeState,setTimeState, expenses, isAllowedToViewRe
           state={timeState}
           onChange={setTimeState}
       /> 
-
-      <ExportButton 
-          onExport={handleExport}
-      />
 
     <ButtonLinks 
       links={[

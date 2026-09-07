@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+
+import React from "react";
 import {
     View,
-    Text,
     Pressable,
     ActivityIndicator,
     StyleSheet,
@@ -11,19 +11,14 @@ import { MaterialIcons } from "@expo/vector-icons";
 
 const ExportButton = ({
     onExport,
-    label = "Export",
     loading = false,
     disabled = false,
 }) => {
-    const [open, setOpen] = useState(false);
-
-    const handleExport = async (format) => {
+    const handleExport = async () => {
         if (loading || disabled) return;
 
-        setOpen(false);
-
         if (onExport) {
-            await onExport(format);
+            await onExport("pdf");
         }
     };
 
@@ -31,86 +26,43 @@ const ExportButton = ({
 
     return (
         <View style={styles.wrapper}>
-
             <Pressable
-                onPress={() =>
-                    handleExport("pdf")
-                }
+                onPress={handleExport}
                 disabled={isDisabled}
                 style={({ pressed }) => [
                     styles.exportButton,
                     isDisabled && styles.disabled,
-                    pressed &&
-                        !isDisabled &&
-                        styles.pressed,
+                    pressed && !isDisabled && styles.pressed,
                 ]}
             >
-
-                
-                    <MaterialIcons
-                        name="file-download"
-                        size={18}
+                {loading ? (
+                    <ActivityIndicator
+                        size="small"
                         color="#333333"
                     />
-                
-
-            
-
+                ) : (
+                    <MaterialIcons
+                        name="file-download"
+                        size={20}
+                        color="#333333"
+                    />
+                )}
             </Pressable>
-
-            {open && !loading && (
-                <View style={styles.menu}>
-
-                    <Pressable
-                        onPress={() =>
-                            handleExport("pdf")
-                        }
-                        style={({ pressed }) => [
-                            styles.menuItem,
-                            pressed &&
-                                styles.menuItemPressed,
-                        ]}
-                    >
-
-                        <MaterialIcons
-                            name="picture-as-pdf"
-                            size={18}
-                            color="#333333"
-                        />
-
-                        <Text
-                            style={
-                                styles.menuItemText
-                            }
-                        >
-                            Export as PDF
-                        </Text>
-
-                    </Pressable>
-
-                </View>
-            )}
-
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-
     wrapper: {
-        position: "relative",
         alignSelf: "flex-start",
-        zIndex: 1000,
     },
 
     exportButton: {
-        flexDirection: "row",
+        width: 40,
+        height: 30,
+
         alignItems: "center",
-
-        gap: 7,
-
-        paddingVertical: 8,
-        paddingHorizontal: 12,
+        justifyContent: "center",
 
         borderRadius: 20,
 
@@ -120,73 +72,14 @@ const styles = StyleSheet.create({
         backgroundColor: "#F4E1D2",
     },
 
-    buttonText: {
-        fontSize: 14,
-        fontWeight: "400",
-        color: "#333333",
-    },
-
     disabled: {
         opacity: 0.6,
     },
 
     pressed: {
-        opacity: 0.95,
+        opacity: 0.8,
     },
-
-    menu: {
-        position: "absolute",
-
-        top: "100%",
-        right: 0,
-
-        marginTop: 8,
-
-        minWidth: 220,
-
-        padding: 6,
-
-        backgroundColor: "#FFFFFF",
-
-        borderWidth: 1,
-        borderColor: "#DDDDDD",
-
-        borderRadius: 12,
-
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 8,
-        },
-        shadowOpacity: 0.12,
-        shadowRadius: 24,
-
-        elevation: 8,
-
-        zIndex: 1000,
-    },
-
-    menuItem: {
-        flexDirection: "row",
-        alignItems: "center",
-
-        gap: 9,
-
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-
-        borderRadius: 8,
-    },
-
-    menuItemPressed: {
-        backgroundColor: "#F4E1D2",
-    },
-
-    menuItemText: {
-        fontSize: 14,
-        color: "#333333",
-    },
-
 });
 
 export default ExportButton;
+

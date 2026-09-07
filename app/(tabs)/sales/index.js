@@ -209,7 +209,15 @@ export default function SalesList() {
   return (
     <View style={globalStyles.container}>
       <RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>
-      <BodyText style={globalStyles.title}>Sales</BodyText>
+      <View style={globalStyles.titleContainer}>
+          <BodyText style={globalStyles.title}>
+              Sales
+          </BodyText>
+
+          <ExportButton 
+              onExport={handleExport}
+          />
+      </View>
 
       <TimeNavigator
           state={timeState}
@@ -231,10 +239,6 @@ export default function SalesList() {
         <SortComponent 
           sortOptions={sortOptions}
           activeSort={sort}
-        />
-
-        <ExportButton 
-          onExport={handleExport}
         />
       </View>
 

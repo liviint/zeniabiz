@@ -12,7 +12,12 @@ export const createGlobalStyles = (colors) =>
     content: {
       paddingHorizontal: 16,
     },
-
+    titleContainer:{
+      flexDirection:"row",
+      justifyContent:"space-between",
+      gap:"20",
+      width:"100%",
+    },
     title: {
       textAlign: "center",
       fontFamily: "Poppins-Bold",

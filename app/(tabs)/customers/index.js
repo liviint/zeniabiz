@@ -23,6 +23,7 @@ import { useManualSync } from "../../../src/hooks/useManualSync";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import { createRange } from "../../../src/utils/timeNavigatorHelpers";
 import { exportPdf } from '../../../src/db/query/exportData';
+import ExportButton from '../../../src/components/common/exportButton';
 
 export default function CustomersList() {
     const { onRefresh, refreshing } = useManualSync();
@@ -116,9 +117,15 @@ export default function CustomersList() {
 
     return (
         <View style={globalStyles.container}>
-        <BodyText style={globalStyles.title}>
-            Customers
-        </BodyText>
+            <View style={globalStyles.titleContainer}>
+                <BodyText style={globalStyles.title}>
+                    Customers
+                </BodyText>
+
+                <ExportButton 
+                    onExport={handleExport}
+                />
+            </View>
 
         <CustomersListHeader 
             customers={customers}
@@ -131,7 +138,6 @@ export default function CustomersList() {
             setFilter={setFilter}
             search={search}
             setSearch={setSearch}
-            handleExport={handleExport}
         />
 
         <FlatList

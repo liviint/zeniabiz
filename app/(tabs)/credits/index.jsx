@@ -187,8 +187,14 @@ export default function CreditsListPage() {
 
   return (
     <View style={globalStyles.container}>
-      <View style={styles.headerRow}>
-        <BodyText style={globalStyles.title}>Customer Credits</BodyText>
+      <View style={globalStyles.titleContainer}>
+          <BodyText style={globalStyles.title}>
+              Customer Credits
+          </BodyText>
+
+          <ExportButton 
+              onExport={handleExport}
+          />
       </View>
 
       <SectionList
@@ -210,7 +216,6 @@ export default function CreditsListPage() {
             stats={creditStats}
             globalStyles={globalStyles}
             isAllowedToViewReports={isAllowedToViewReports}
-            handleExport={handleExport}
           />
         }
         ListEmptyComponent={
@@ -233,7 +238,6 @@ const ListHeader = ({
   stats,
   globalStyles,
   isAllowedToViewReports,
-  handleExport
 }) => {
   return (
     <>
@@ -243,9 +247,6 @@ const ListHeader = ({
         <FilterComponent
           filterOptions={filterOptions}
           activeFilter={statusFilter}
-        />
-        <ExportButton 
-          onExport={handleExport}
         />
       </View>
 
