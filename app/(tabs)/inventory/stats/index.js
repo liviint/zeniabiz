@@ -193,6 +193,7 @@ export default function InventoryStatsPage() {
                   name: "Products",
                   route: "/inventory",
                 },
+                { name: "Movements", route: "/inventory/movement" },
               ]}
             />
 
@@ -344,13 +345,16 @@ function MovementSection({
     });
   };
 
-return ( <View style={styles.movementSection}> <BodyText style={styles.movementTitle}>
-{title} </BodyText>
+return ( 
+  <View style={styles.movementSection}> 
+    <BodyText style={styles.movementTitle}>
+      {title} 
+    </BodyText>
 
 
-  <SecondaryText style={styles.movementDescription}>
-    {description}
-  </SecondaryText>
+    <SecondaryText style={styles.movementDescription}>
+      {description}
+    </SecondaryText>
 
   {items?.length > 0 ? (
     <>
