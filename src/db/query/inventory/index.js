@@ -1014,3 +1014,242 @@ export async function getInventoryInsights(db,timeState) {
     },
   };
 }
+
+export async function getInventoryMovementProducts(
+  db,
+  {
+    timeState,
+    filter = "all",
+    sort = "fast_moving",
+    search = "",
+  } = {}
+) {
+  const { company } = getActiveContextSync(db);
+
+  const { startDate, endDate } = normalizeRange(timeState);
+
+  if (!startDate || !endDate) {
+    throw new Error("Invalid time range");
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * SEARCH
+   * ---------------------------------------------------------
+   */
+
+  let searchClause = "";
+  const searchParams = [];
+
+  if (search?.trim()) {
+    const value = `%${search.trim()}%`;
+
+    searchClause = `
+      AND (
+        p.name LIKE ?
+        OR p.sku LIKE ?
+        OR p.barcode LIKE ?
+      )
+    `;
+
+    searchParams.push(
+      value,
+      value,
+      value
+    );
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * FILTER
+   * ---------------------------------------------------------
+   *
+   * All:
+   *   Return every product.
+   *
+   * No movement:
+   *   Return products that sold zero units during the
+   *   selected period.
+   */
+
+  let filterClause = "";
+
+  if (filter === "no_movement") {
+    filterClause = `
+      AND COALESCE(m.units_sold, 0) = 0
+    `;
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * SORT
+   * ---------------------------------------------------------
+   */
+
+  let orderClause = `
+    ORDER BY
+      COALESCE(m.units_sold, 0) DESC,
+      p.name COLLATE NOCASE ASC
+  `;
+
+  if (sort === "slow_moving") {
+    /*
+     * Slow moving means:
+     * - Product has at least one sale
+     * - Lowest number of units sold first
+     */
+
+    if (filter !== "no_movement") {
+      filterClause += `
+        AND COALESCE(m.units_sold, 0) > 0
+      `;
+    }
+
+    orderClause = `
+      ORDER BY
+        COALESCE(m.units_sold, 0) ASC,
+        p.name COLLATE NOCASE ASC
+    `;
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * QUERY
+   * ---------------------------------------------------------
+   */
+
+  const query = `
+    SELECT
+
+      p.id,
+      p.name,
+      p.sku,
+      p.barcode,
+      p.selling_price,
+      p.cost_price,
+
+      COALESCE(
+        m.units_sold,
+        0
+      ) AS units_sold,
+
+      COALESCE(
+        m.sales_value,
+        0
+      ) AS sales_value,
+
+      COALESCE(
+        b.stock_quantity,
+        0
+      ) AS stock_quantity
+
+    FROM products p
+
+    LEFT JOIN (
+      SELECT
+        product_id,
+
+        SUM(
+          ABS(quantity)
+        ) AS units_sold,
+
+        SUM(
+          ABS(quantity) *
+          COALESCE(selling_price, 0)
+        ) AS sales_value
+
+      FROM inventory_movements
+
+      WHERE company = ?
+        AND type = 'sale'
+        AND deleted_at IS NULL
+        AND date >= ?
+        AND date < ?
+
+      GROUP BY product_id
+
+    ) m
+      ON m.product_id = p.id
+
+    /*
+     * -------------------------------------------------------
+     * CURRENT STOCK
+     * -------------------------------------------------------
+     */
+
+    LEFT JOIN (
+      SELECT
+        product_id,
+
+        SUM(
+          quantity_on_hand
+        ) AS stock_quantity
+
+      FROM inventory_batches
+
+      WHERE company = ?
+        AND deleted_at IS NULL
+
+      GROUP BY product_id
+
+    ) b
+      ON b.product_id = p.id
+
+    /*
+     * -------------------------------------------------------
+     * PRODUCTS
+     * -------------------------------------------------------
+     */
+
+    WHERE p.company = ?
+      AND p.deleted_at IS NULL
+      AND p.item_type = 'product'
+
+      ${searchClause}
+
+      ${filterClause}
+
+    ${orderClause}
+  `;
+
+  const params = [
+    // Movement
+    company,
+    startDate,
+    endDate,
+
+    // Stock
+    company,
+
+    // Products
+    company,
+
+    // Search
+    ...searchParams,
+  ];
+
+  console.log(
+    "Inventory movement query:",
+    {
+      timeState,
+      startDate,
+      endDate,
+      filter,
+      sort,
+      search,
+      params,
+    }
+  );
+
+  const products = await db.getAllAsync(
+    query,
+    params
+  );
+
+  console.log(
+    "Inventory movement products:",
+    products.length
+  );
+
+  return products;
+}

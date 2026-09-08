@@ -64,7 +64,7 @@ export default function InventoryStatsPage() {
       }
 
       try {
-        const data = await getInventoryInsights(db, timeState);
+        const data = await getInventoryInsights(db, {timeState});
 
         if (isMounted()) {
           setStats(data);
