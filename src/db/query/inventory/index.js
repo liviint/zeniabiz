@@ -670,7 +670,7 @@ export async function getTotalStockValue(db) {
   return { stock_value: total };
 }
 
-export async function getInventoryInsights(db,timeState) {
+export async function getInventoryInsights(db,{timeState}) {
   const { company } = getActiveContextSync(db);
 
   const { startDate, endDate } = normalizeRange(timeState);
