@@ -493,7 +493,7 @@ const createServiceSaleItem = async(db,{saleId,company,item}) => {
         item.price,
         0,
         null,
-        item.item_type
+        "service"
       ]
     );
 
@@ -524,8 +524,8 @@ const handleProductSaleItem = async(db,{
     await db.runAsync(
       `
       INSERT INTO sale_items
-      (id, sale_id, company, product_id, quantity, price, cost_price, batch_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      (id, sale_id, company, product_id, quantity, price, cost_price, batch_id, item_type)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         saleItemId,
@@ -536,6 +536,7 @@ const handleProductSaleItem = async(db,{
         item.price,
         alloc.cost_price,
         alloc.batch_id,
+        "product"
       ]
     );
 

@@ -9,6 +9,7 @@ import {
     View,
 } from "react-native";
 import { useSelector } from "react-redux";
+import ButtonLinks from "../../../src/components/common/ButtonLinks";
 import { BodyText, Card, SecondaryText } from "../../../src/components/ThemeProvider/components";
 import SearchProducts from "../../../src/components/barcodeScanner/searchProducts";
 import { AddButton } from "../../../src/components/common/AddButton";
@@ -288,6 +289,7 @@ const ListHeader = ({
 }) => {
   return (
     <>
+      
       <View style={styles.filtersContainer}>
           <SearchProducts 
             search={search}
@@ -308,6 +310,11 @@ const ListHeader = ({
           </View>
 
       </View>
+      <ButtonLinks 
+            links={[
+              { name: "Stats", route: "/inventory/stats" },
+            ]}
+          />
       {isAllowedToViewReports && <View style={styles.row}>
         <StatCard 
           label="Stock Value"

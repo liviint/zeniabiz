@@ -1,5 +1,6 @@
 import { enqueueSync } from "../../../cloudSync/syncEvent";
 import { getActiveContextSync, newUuid, withTransaction } from "../../utils";
+import { normalizeRange } from "../../../utils/timeNavigatorHelpers";
 
 export async function upsertProductAndRestocking(
   db,
@@ -667,4 +668,349 @@ export async function getTotalStockValue(db) {
   }
 
   return { stock_value: total };
+}
+
+export async function getInventoryInsights(db,timeState) {
+  const { company } = getActiveContextSync(db);
+
+  const { startDate, endDate } = normalizeRange(timeState);
+  console.log(timeState,startDate,endDate,"hello dates 123...")
+
+
+  const inventory = await db.getFirstAsync(
+    `
+    SELECT
+      COUNT(*) AS products_count,
+
+      COALESCE(
+        SUM(stock_quantity),
+        0
+      ) AS units_in_stock,
+
+      COALESCE(
+        SUM(stock_value),
+        0
+      ) AS stock_value,
+
+      COALESCE(
+        SUM(
+          CASE
+            WHEN stock_quantity > 0
+              AND stock_quantity <= minimum_quantity
+            THEN 1
+            ELSE 0
+          END
+        ),
+        0
+      ) AS low_stock,
+
+      COALESCE(
+        SUM(
+          CASE
+            WHEN stock_quantity <= 0
+            THEN 1
+            ELSE 0
+          END
+        ),
+        0
+      ) AS out_of_stock
+
+    FROM (
+      SELECT
+        p.id,
+        p.minimum_quantity,
+
+        COALESCE(
+          (
+            SELECT SUM(b.quantity_on_hand)
+            FROM inventory_batches b
+            WHERE b.product_id = p.id
+              AND b.company = ?
+              AND b.deleted_at IS NULL
+          ),
+          0
+        ) AS stock_quantity,
+
+        COALESCE(
+          (
+            SELECT SUM(
+              b.quantity_on_hand * b.cost_price
+            )
+            FROM inventory_batches b
+            WHERE b.product_id = p.id
+              AND b.company = ?
+              AND b.deleted_at IS NULL
+          ),
+          0
+        ) AS stock_value
+
+      FROM products p
+
+      WHERE p.company = ?
+        AND p.deleted_at IS NULL
+        AND p.item_type = 'product'
+    )
+    `,
+    [company, company, company]
+  );
+
+  /*
+   * ---------------------------------------------------------
+   * SALES OVER SELECTED PERIOD
+   * ---------------------------------------------------------
+   */
+
+  const sales = await db.getFirstAsync(
+  `
+  SELECT
+
+    COALESCE(
+      SUM(ABS(si.quantity)),
+      0
+    ) AS units_sold,
+
+    COALESCE(
+      SUM(
+        ABS(si.quantity) * COALESCE(si.price, 0)
+      ),
+      0
+    ) AS sales_value,
+
+    COALESCE(
+      SUM(
+        ABS(si.quantity) * COALESCE(si.cost_price, 0)
+      ),
+      0
+    ) AS cost_value
+
+  FROM sale_items si
+
+  JOIN sales s
+    ON s.id = si.sale_id
+    AND s.company = si.company
+    AND s.deleted_at IS NULL
+
+  WHERE si.company = ?
+    AND si.deleted_at IS NULL
+    AND si.item_type = 'product'
+    AND s.date >= ?
+    AND s.date < ?
+  `,
+  [company, startDate, endDate]
+);
+
+  /*
+   * ---------------------------------------------------------
+   * FAST / SLOW / NO MOVEMENT
+   *
+   * We first calculate sales per product.
+   * ---------------------------------------------------------
+   */
+
+  const movement = await db.getAllAsync(
+    `
+    SELECT
+      p.id,
+      p.name,
+      p.sku,
+      p.selling_price,
+      p.cost_price,
+
+      COALESCE(
+        (
+          SELECT SUM(ABS(m.quantity))
+          FROM inventory_movements m
+          WHERE m.product_id = p.id
+            AND m.company = ?
+            AND m.type = 'sale'
+            AND m.deleted_at IS NULL
+            AND m.date >= ?
+            AND m.date < ?
+        ),
+        0
+      ) AS units_sold,
+
+      COALESCE(
+        (
+          SELECT SUM(
+            ABS(m.quantity) * COALESCE(m.selling_price, 0)
+          )
+          FROM inventory_movements m
+          WHERE m.product_id = p.id
+            AND m.company = ?
+            AND m.type = 'sale'
+            AND m.deleted_at IS NULL
+            AND m.date >= ?
+            AND m.date < ?
+        ),
+        0
+      ) AS sales_value,
+
+      COALESCE(
+        (
+          SELECT SUM(b.quantity_on_hand)
+          FROM inventory_batches b
+          WHERE b.product_id = p.id
+            AND b.company = ?
+            AND b.deleted_at IS NULL
+        ),
+        0
+      ) AS stock_quantity
+
+    FROM products p
+
+    WHERE p.company = ?
+      AND p.deleted_at IS NULL
+      AND p.item_type = 'product'
+
+    ORDER BY units_sold DESC
+    `,
+    [
+      company,
+      startDate,
+      endDate,
+
+      company,
+      startDate,
+      endDate,
+
+      company,
+
+      company,
+    ]
+  );
+
+  /*
+   * ---------------------------------------------------------
+   * CLASSIFY MOVEMENT
+   * ---------------------------------------------------------
+   */
+
+  const productsWithSales = movement.filter(
+    product => Number(product.units_sold) > 0
+  );
+
+  const productsWithoutSales = movement.filter(
+    product => Number(product.units_sold) <= 0
+  );
+
+  /*
+   *
+   * Top 20%     = fast moving
+   * Bottom 20%  = slow moving
+   * Middle       = normal
+   */
+
+  const totalMoving = productsWithSales.length;
+
+  let fastMoving = [];
+  let slowMoving = [];
+  let normalMoving = [];
+
+  if (totalMoving > 0) {
+    const fastCount = Math.max(
+      1,
+      Math.ceil(totalMoving * 0.2)
+    );
+
+    const slowCount = Math.max(
+      1,
+      Math.ceil(totalMoving * 0.2)
+    );
+
+    fastMoving = productsWithSales.slice(
+      0,
+      fastCount
+    );
+
+    slowMoving = productsWithSales.slice(
+      Math.max(
+        fastCount,
+        totalMoving - slowCount
+      )
+    );
+
+    normalMoving = productsWithSales.slice(
+      fastCount,
+      totalMoving - slowCount
+    );
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * EXPIRY HEALTH
+   * ---------------------------------------------------------
+   */
+
+  const expiry = await db.getFirstAsync(
+    `
+    SELECT
+
+      COALESCE(
+        SUM(
+          CASE
+            WHEN expiry_date IS NOT NULL
+              AND quantity_on_hand > 0
+              AND date(expiry_date) >= date('now')
+              AND date(expiry_date) <= date('now', '+30 days')
+            THEN 1
+            ELSE 0
+          END
+        ),
+        0
+      ) AS expiring_soon,
+
+      COALESCE(
+        SUM(
+          CASE
+            WHEN expiry_date IS NOT NULL
+              AND quantity_on_hand > 0
+              AND date(expiry_date) < date('now')
+            THEN 1
+            ELSE 0
+          END
+        ),
+        0
+      ) AS expired
+
+    FROM inventory_batches
+
+    WHERE company = ?
+      AND deleted_at IS NULL
+    `,
+    [company]
+  );
+
+  /*
+   * ---------------------------------------------------------
+   * RETURN
+   * ---------------------------------------------------------
+   */
+
+  console.log(sales,"hello sales")
+
+  return {
+    overview: {
+      products: Number(inventory?.products_count || 0),
+      unitsInStock: Number(inventory?.units_in_stock || 0),
+      stockValue: Number(inventory?.stock_value || 0),
+
+      unitsSold: Number(sales?.units_sold || 0),
+      salesValue: Number(sales?.sales_value || 0),
+    },
+
+    inventory: {
+      lowStock: Number(inventory?.low_stock || 0),
+      outOfStock: Number(inventory?.out_of_stock || 0),
+      expiringSoon: Number(expiry?.expiring_soon || 0),
+      expired: Number(expiry?.expired || 0),
+    },
+
+    movement: {
+      fastMoving,
+      normalMoving,
+      slowMoving,
+      noMovement: productsWithoutSales,
+    },
+  };
 }

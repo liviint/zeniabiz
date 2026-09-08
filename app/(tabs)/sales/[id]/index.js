@@ -52,7 +52,7 @@ export default function SaleDetails() {
       setSale(s);
 
       const i = await getSaleItems(db, sale_id);
-
+      console.log(i,"hello items")
       setItems(i);
     })();
   }, [sale_id, isFocused]);
