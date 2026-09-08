@@ -313,6 +313,7 @@ const ListHeader = ({
       <ButtonLinks 
             links={[
               { name: "Stats", route: "/inventory/stats" },
+              { name: "Movements", route: "/inventory/movement" },
             ]}
           />
       {isAllowedToViewReports && <View style={styles.row}>

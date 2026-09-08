@@ -331,35 +331,62 @@ function MovementSection({
   type,
   renderItem,
 }) {
-  return (
-    <View style={styles.movementSection}>
-      <BodyText style={styles.movementTitle}>
-        {title}
-      </BodyText>
+  const router = useRouter();
 
-      <SecondaryText style={styles.movementDescription}>
-        {description}
-      </SecondaryText>
+  const hasMore = items?.length > 5;
 
-      {items?.length > 0 ? (
-        items
-          .slice(0, 5)
-          .map((item) =>
-            renderItem({
-              item,
-              type,
-            })
-          )
-      ) : (
-        <Card>
-          <SecondaryText style={styles.emptyMovement}>
-            No products in this category.
-          </SecondaryText>
-        </Card>
+  const handleViewMore = () => {
+    router.push({
+      pathname: "/inventory/movement",
+      params: {
+        type,
+      },
+    });
+  };
+
+return ( <View style={styles.movementSection}> <BodyText style={styles.movementTitle}>
+{title} </BodyText>
+
+
+  <SecondaryText style={styles.movementDescription}>
+    {description}
+  </SecondaryText>
+
+  {items?.length > 0 ? (
+    <>
+      {items
+        .slice(0, 5)
+        .map((item) =>
+          renderItem({
+            item,
+            type,
+          })
+        )}
+
+      {hasMore && (
+        <Pressable
+          style={styles.viewMoreButton}
+          onPress={handleViewMore}
+        >
+          <BodyText style={styles.viewMoreText}>
+            View more ({items.length - 5})
+          </BodyText>
+        </Pressable>
       )}
-    </View>
-  );
+    </>
+  ) : (
+    <Card>
+      <SecondaryText style={styles.emptyMovement}>
+        No products in this category.
+      </SecondaryText>
+    </Card>
+  )}
+</View>
+
+
+);
 }
+
 
 const styles = StyleSheet.create({
   timeContainer: {
@@ -448,4 +475,16 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     fontSize: 12,
   },
+  viewMoreButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    marginTop: 2,
+  },
+
+  viewMoreText: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
 });
