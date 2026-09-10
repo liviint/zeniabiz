@@ -51,12 +51,17 @@ export async function getCustomers(
 
     // Only customers who made a sale
     // during the selected period.
-    if (range) {
+    if (range && filter !== "no_sales") {
         havingConditions.push(
             "COUNT(s.id) > 0"
         );
     }
 
+    if (filter === "no_sales") {
+      havingConditions.push(
+          "COUNT(s.id) = 0"
+      );
+  }
     // Customers with outstanding balance.
     if (filter === "with_balance") {
         havingConditions.push(

@@ -46,6 +46,11 @@ export default function CustomersListHeader({
             key: "no_balance",
             action: () => setFilter("no_balance"),
         },
+        {
+            label: "No Sales",
+            key: "no_sales",
+            action: () => setFilter("no_sales"),
+        },
     ];
 
     /*
