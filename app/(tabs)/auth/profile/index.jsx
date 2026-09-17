@@ -7,7 +7,7 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { api } from "../../../../api";
 import AccountInfoPage from "../../../../src/components/common/AccountInfoPage";
 import { useThemeStyles } from "../../../../src/hooks/useThemeStyles";
@@ -16,10 +16,19 @@ import {
   BodyText,
 } from "../../../../src/components/ThemeProvider/components";
 import PageLoader from "../../../../src/components/common/PageLoader";
-import { useIsFocused, useRouter, useLocalSearchParams } from "expo-router";
+import {
+  useIsFocused,
+  useRouter,
+  useLocalSearchParams,
+} from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { getActiveContextSync } from "../../../../src/db/utils";
 import { logoutUser } from "../../../../src/utils/auth/logout";
+
+import {
+  triggerManualSync,
+} from "../../../../src/store/features/syncSlice";
+import { dateFormat } from "../../../../utils/dateFormat";
 
 const ProfileView = () => {
   const db = useSQLiteContext();
@@ -28,9 +37,17 @@ const ProfileView = () => {
   const isFocused = useIsFocused();
   const { refresh } = useLocalSearchParams();
   const dispatch = useDispatch();
+
   const [activeContext, setActiveContext] = useState(null);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Sync state
+  const {
+    isSyncing,
+    lastSyncedAt,
+    error: syncError,
+  } = useSelector((state) => state.sync);
 
   const handleLogoutOk = async () => {
     await logoutUser({
@@ -40,6 +57,7 @@ const ProfileView = () => {
       refreshToken: activeContext?.refresh_token,
     });
   };
+
   const handleTriggerLogout = () => {
     Alert.alert(
       "Confirm Logout",
@@ -59,8 +77,15 @@ const ProfileView = () => {
     );
   };
 
+  const handleSync = () => {
+    if (isSyncing) return;
+
+    dispatch(triggerManualSync());
+  };
+
   const getUserData = async () => {
     setLoading(true);
+
     api
       .get("accounts/profile/")
       .then((res) => {
@@ -82,7 +107,9 @@ const ProfileView = () => {
   useEffect(() => {
     if (activeContext?.access_token) {
       getUserData();
-    } else setUserData(null);
+    } else {
+      setUserData(null);
+    }
   }, [activeContext, refresh, isFocused]);
 
   if (loading) return <PageLoader />;
@@ -91,34 +118,113 @@ const ProfileView = () => {
 
   return (
     <ScrollView
-      contentContainerStyle={{ ...globalStyles.container, ...styles.container }}
+      contentContainerStyle={{
+        ...globalStyles.container,
+        ...styles.container,
+      }}
     >
       <Card style={styles.card}>
-        <BodyText style={styles.username}>Email: {userData.email}</BodyText>
+
+        <BodyText style={styles.username}>
+          Email: {userData.email}
+        </BodyText>
 
         {userData.username ? (
-          <BodyText style={styles.bio}>UserName: {userData.username}</BodyText>
-        ) : (
-          ""
-        )}
+          <BodyText style={styles.bio}>
+            UserName: {userData.username}
+          </BodyText>
+        ) : null}
 
+        {/* Data Sync */}
+        <View style={styles.syncSection}>
+
+          <View style={styles.syncHeader}>
+            <View style={styles.syncInfo}>
+              <Text style={styles.sectionTitle}>
+                Data Sync
+              </Text>
+
+              <Text style={styles.syncDescription}>
+                Your data automatically syncs every 2 minutes.
+              </Text>
+            </View>
+
+            <Text
+              style={[
+                styles.syncStatus,
+                isSyncing
+                  ? styles.syncingStatus
+                  : syncError
+                    ? styles.errorStatus
+                    : styles.syncedStatus,
+              ]}
+            >
+              {isSyncing
+                ? "Syncing..."
+                : syncError
+                  ? "Sync failed"
+                  : "✓ Synced"}
+            </Text>
+          </View>
+
+          {lastSyncedAt && !isSyncing && (
+            <Text style={styles.lastSync}>
+              Last synced:{" "}
+              {dateFormat(lastSyncedAt,true)}
+            </Text>
+          )}
+
+          {syncError && (
+            <Text style={styles.syncError}>
+              {syncError}
+            </Text>
+          )}
+
+          <TouchableOpacity
+            style={[
+              styles.syncButton,
+              isSyncing && styles.disabledButton,
+            ]}
+            onPress={handleSync}
+            disabled={isSyncing}
+          >
+            <Text style={styles.btnText}>
+              {isSyncing
+                ? "Syncing..."
+                : "↻ Sync Now"}
+            </Text>
+          </TouchableOpacity>
+
+        </View>
+
+        {/* Profile Actions */}
         <View style={styles.btnGroup}>
+
           <TouchableOpacity
             style={styles.button}
             onPress={() => {
               router.push("/auth/profile/edit");
             }}
           >
-            <Text style={styles.btnText}>Update Profile</Text>
+            <Text style={styles.btnText}>
+              Update Profile
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.button, styles.logoutButton]}
+            style={[
+              styles.button,
+              styles.logoutButton,
+            ]}
             onPress={handleTriggerLogout}
           >
-            <Text style={styles.btnText}>Log Out</Text>
+            <Text style={styles.btnText}>
+              Log Out
+            </Text>
           </TouchableOpacity>
+
         </View>
+
       </Card>
     </ScrollView>
   );
@@ -132,12 +238,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#FAF9F7",
   },
+
   card: {
     borderRadius: 20,
     padding: 25,
@@ -146,65 +254,133 @@ const styles = StyleSheet.create({
     alignItems: "center",
     shadowColor: "#000",
     shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
     shadowRadius: 6,
     elevation: 5,
   },
-  avatarWrapper: {
-    marginBottom: 15,
+
+  username: {
+    fontSize: 16,
   },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 3,
-    borderColor: "#FF6B6B",
-  },
-  name: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#FF6B6B",
-    marginBottom: 5,
-  },
+
   bio: {
     fontSize: 15,
     marginTop: 8,
     textAlign: "center",
     lineHeight: 22,
   },
+
+  /* Sync */
+
+  syncSection: {
+    width: "100%",
+    marginTop: 25,
+    paddingTop: 18,
+    borderTopWidth: 1,
+    borderColor: "#E5E5E5",
+  },
+
+  syncHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+  },
+
+  syncInfo: {
+    flex: 1,
+    paddingRight: 10,
+  },
+
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    marginBottom: 5,
+  },
+
+  syncDescription: {
+    fontSize: 13,
+    opacity: 0.65,
+    lineHeight: 19,
+  },
+
+  syncStatus: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  syncedStatus: {
+    color: "#2E8B8B",
+  },
+
+  syncingStatus: {
+    color: "#2E8B8B",
+  },
+
+  errorStatus: {
+    color: "#FF6B6B",
+  },
+
+  lastSync: {
+    fontSize: 12,
+    opacity: 0.6,
+    marginTop: 10,
+  },
+
+  syncError: {
+    fontSize: 13,
+    color: "#FF6B6B",
+    marginTop: 8,
+    lineHeight: 19,
+  },
+
+  syncButton: {
+    backgroundColor: "#2E8B8B",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 14,
+    width: "100%",
+  },
+
+  disabledButton: {
+    opacity: 0.6,
+  },
+
+  /* Profile buttons */
+
   btnGroup: {
     flexDirection: "column",
     gap: 10,
     marginTop: 20,
     width: "100%",
   },
+
   button: {
     backgroundColor: "#2E8B8B",
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: "center",
   },
+
   logoutButton: {
     backgroundColor: "#FF6B6B",
   },
+
   btnText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },
+
   settingsSection: {
     width: "100%",
     marginTop: 20,
     paddingTop: 16,
     borderTopWidth: 1,
     borderColor: "#E5E5E5",
-  },
-
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 12,
-    opacity: 0.8,
   },
 
   settingRow: {

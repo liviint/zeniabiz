@@ -22,14 +22,22 @@ const syncSlice = createSlice({
             state.manual = false;
         },
 
-        // 🔥 NEW: lifecycle control
         syncStarted: (state) => {
             state.isSyncing = true;
+            state.error = null;
         },
 
         syncFinished: (state) => {
             state.isSyncing = false;
-            state.lastSyncedAt = Date.now(); 
+            state.lastSyncedAt = Date.now();
+            state.error = null;
+            state.manual = false;
+        },
+
+        syncFailed: (state, action) => {
+            state.isSyncing = false;
+            state.error = action.payload || "Sync failed";
+            state.manual = false;
         },
     },
 });
