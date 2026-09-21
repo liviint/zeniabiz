@@ -83,20 +83,6 @@ const ProfileView = () => {
     dispatch(triggerManualSync());
   };
 
-  const getUserData = async () => {
-    setLoading(true);
-
-    api
-      .get("accounts/profile/")
-      .then((res) => {
-        setUserData(res.data);
-      })
-      .catch((err) => {
-        console.error(err);
-      })
-      .finally(() => setLoading(false));
-  };
-
   useEffect(() => {
     (async () => {
       let ctx = await getActiveContextSync(db);
@@ -105,11 +91,23 @@ const ProfileView = () => {
   }, [isFocused]);
 
   useEffect(() => {
+    const getUserData = async () => {
+      setLoading(true);
+
+      api
+        .get("accounts/profile/")
+        .then((res) => {
+          setUserData(res.data);
+        })
+        .catch((err) => {
+          console.error(err);
+        })
+        .finally(() => setLoading(false));
+    };
+
     if (activeContext?.access_token) {
       getUserData();
-    } else {
-      setUserData(null);
-    }
+    } 
   }, [activeContext, refresh, isFocused]);
 
   if (loading) return <PageLoader />;
@@ -140,16 +138,16 @@ const ProfileView = () => {
 
           <View style={styles.syncHeader}>
             <View style={styles.syncInfo}>
-              <Text style={styles.sectionTitle}>
+              <BodyText style={styles.sectionTitle}>
                 Data Sync
-              </Text>
+              </BodyText>
 
-              <Text style={styles.syncDescription}>
+              <BodyText style={styles.syncDescription}>
                 Your data automatically syncs every 2 minutes.
-              </Text>
+              </BodyText>
             </View>
 
-            <Text
+            <BodyText
               style={[
                 styles.syncStatus,
                 isSyncing
@@ -164,14 +162,14 @@ const ProfileView = () => {
                 : syncError
                   ? "Sync failed"
                   : "✓ Synced"}
-            </Text>
+            </BodyText>
           </View>
 
           {lastSyncedAt && !isSyncing && (
-            <Text style={styles.lastSync}>
+            <BodyText style={styles.lastSync}>
               Last synced:{" "}
               {dateFormat(lastSyncedAt,true)}
-            </Text>
+            </BodyText>
           )}
 
           {syncError && (
