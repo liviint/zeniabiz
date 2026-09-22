@@ -332,3 +332,46 @@ export async function recordCreditPayment(
     throw error;
   }
 }
+
+export async function waiveCreditBalance(
+  db,
+  {
+    credit,
+    amount,
+    note,
+  }
+) {
+  const currentWaived = Number(
+    credit.amount_waived || 0
+  );
+
+  const newWaived =
+    currentWaived + Number(amount);
+
+  const newBalance = Math.max(
+    Number(credit.total_amount) -
+      Number(credit.amount_paid) -
+      newWaived,
+    0
+  );
+
+  await db.runAsync(
+    `
+      UPDATE sales
+      SET
+        amount_waived = ?,
+        balance_due = ?,
+        payment_status = ?,
+        updated_at = datetime('now')
+      WHERE id = ?
+    `,
+    [
+      newWaived,
+      newBalance,
+      newBalance === 0
+        ? "WAIVED"
+        : "PARTIAL",
+      credit.id,
+    ]
+  );
+}

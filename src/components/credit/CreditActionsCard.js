@@ -7,6 +7,7 @@ import {
     SecondaryText,
 } from "../../../src/components/ThemeProvider/components";
 import RecordPaymentModal from "./RecordPaymentModal";
+import WaiveDebtModal from "./WaiveDebtModal";
 
 export function CreditActionsCard({
   credit,
@@ -14,6 +15,7 @@ export function CreditActionsCard({
   setRefreshCredit,
 }) {
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
+  const [waiveModalVisible, setWaiveModalVisible] = useState(false);
 
   const remainingBalance = Math.max(
     Number(credit.balance_due || 0),
@@ -40,6 +42,18 @@ export function CreditActionsCard({
             Record Payment
           </BodyText>
         </Pressable>
+
+        <Pressable
+          style={[
+            styles.button,
+            styles.secondaryButton,
+          ]}
+          onPress={() => setWaiveModalVisible(true)}
+        >
+          <BodyText style={styles.secondaryButtonText}>
+            Waive Debt
+          </BodyText>
+        </Pressable>
         
       </View>
 
@@ -48,6 +62,15 @@ export function CreditActionsCard({
         onClose={() => setPaymentModalVisible(false)}
         credit={credit}
         onSuccess={() => setRefreshCredit(prev => prev + 1)}
+        />
+
+        <WaiveDebtModal
+          visible={waiveModalVisible}
+          onClose={() => setWaiveModalVisible(false)}
+          credit={credit}
+          onSuccess={() =>
+            setRefreshCredit((prev) => prev + 1)
+          }
         />
 
     </Card>

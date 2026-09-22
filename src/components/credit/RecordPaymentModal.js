@@ -16,7 +16,7 @@ import {
 import { useSQLiteContext } from "expo-sqlite";
 import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import PaymentMethodPicker from "../sales/PaymentMethodsPicker";
-import { recordCreditPayment } from "../../../src/db/query/credits";
+import { recordCreditPayment,  } from "../../../src/db/query/credits";
 import AddEditModal from "../common/addEditModal";
 
 export default function RecordPaymentModal({
