@@ -26,3 +26,12 @@ export const applySalesMigrationsV2 = async (db) => {
         END
     `);
 };
+//ADD COLUMN amount_waived REAL NOT NULL DEFAULT 0;
+export const applySalesMigrationsV3_21_9_2026 = async (db) => {
+    await addColumnIfNotExists(
+        db,
+        "sales",
+        "amount_waived",
+        "REAL NOT NULL DEFAULT 0"
+    );
+};

@@ -14,6 +14,7 @@ export async function createSalesTables(db) {
 
       total_amount REAL NOT NULL DEFAULT 0,--total to be paid(actual revenue)
       amount_paid REAL NOT NULL DEFAULT 0,--cash received
+      amount_waived REAL NOT NULL DEFAULT 0,
       balance_due REAL NOT NULL DEFAULT 0,
       is_credit_sale INTEGER DEFAULT 0,
 
