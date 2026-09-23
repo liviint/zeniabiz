@@ -360,37 +360,66 @@ export async function waiveCreditBalance(
     note,
   }
 ) {
+  const now = new Date().toISOString();
+
   const currentWaived = Number(
     credit.amount_waived || 0
   );
 
+  const waiverAmount = Number(amount);
+
   const newWaived =
-    currentWaived + Number(amount);
+    currentWaived + waiverAmount;
 
   const newBalance = Math.max(
-    Number(credit.total_amount) -
-      Number(credit.amount_paid) -
+    Number(credit.total_amount || 0) -
+      Number(credit.amount_paid || 0) -
       newWaived,
     0
   );
 
-  await db.runAsync(
-    `
+  const paymentStatus =
+    newBalance === 0
+      ? "WAIVED"
+      : "PARTIAL";
+
+  await db.runAsync("BEGIN");
+
+  try {
+    await db.runAsync(
+      `
       UPDATE sales
       SET
         amount_waived = ?,
         balance_due = ?,
         payment_status = ?,
-        updated_at = datetime('now')
+        updated_at = ?
       WHERE id = ?
-    `,
-    [
-      newWaived,
-      newBalance,
-      newBalance === 0
-        ? "WAIVED"
-        : "PARTIAL",
-      credit.id,
-    ]
-  );
+      `,
+      [
+        newWaived,
+        newBalance,
+        paymentStatus,
+        now,
+        credit.id,
+      ]
+    );
+
+    await enqueueSync(db, {
+      model: "sales",
+      record_id: credit.id,
+      operation: "upsert",
+    });
+
+    await db.runAsync("COMMIT");
+
+    return {
+      amountWaived: newWaived,
+      balanceDue: newBalance,
+      paymentStatus,
+    };
+  } catch (error) {
+    await db.runAsync("ROLLBACK");
+    throw error;
+  }
 }
