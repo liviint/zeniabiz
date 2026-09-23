@@ -101,15 +101,29 @@ export default function SaleDetails() {
             </BodyText>
           </View>
 
-          <View style={styles.summaryRow}>
-            <SecondaryText>Balance</SecondaryText>
+          {
+            sale?.balance_due && 
+              <View style={styles.summaryRow}>
+                <SecondaryText>Balance</SecondaryText>
 
-            <BodyText style={styles.balance}>
-              {Number(
-                sale?.balance_due || 0
-              ).toLocaleString()}
-            </BodyText>
-          </View>
+                <BodyText style={styles.balance}>
+                  {Number(
+                    sale?.balance_due || 0
+                  ).toLocaleString()}
+                </BodyText>
+              </View>
+          }
+
+          {
+            sale?.amount_waived  && 
+              <View style={styles.summaryRow}>
+                <SecondaryText>Waived</SecondaryText>
+
+                <BodyText style={styles.balance}>
+                  {Number(sale?.amount_waived || 0).toLocaleString()}
+                </BodyText>
+              </View>
+            }
 
           <View style={styles.summaryRow}>
               <SecondaryText>Customer Name</SecondaryText>
