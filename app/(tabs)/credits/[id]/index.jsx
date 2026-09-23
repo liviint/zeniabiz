@@ -128,6 +128,18 @@ export default function CreditDetailPage() {
               ).toLocaleString()}
             </BodyText>
           </View>
+
+          {credit.amount_waived && 
+            <View style={styles.summaryItem}>
+              <SecondaryText style={styles.summaryLabel}>
+                Waived
+              </SecondaryText>
+
+              <BodyText style={styles.summaryValue}>
+                {Number(credit.amount_waived).toLocaleString()}
+              </BodyText>
+            </View>
+          }
         </View>
       </Card>
 
