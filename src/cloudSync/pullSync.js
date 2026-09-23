@@ -50,6 +50,7 @@ const MODEL_CONFIG = {
       "title",
       "note",
       "amount",
+      "amount_waived",
       "customer_id",
       "total_amount",
       "amount_paid",
