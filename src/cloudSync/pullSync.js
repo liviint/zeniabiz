@@ -295,6 +295,13 @@ export async function applyServerChanges(db, model, items) {
       item.sale_id = item.sale_id ?? item.sale;
     }
 
+    if (model === "sales") {
+          item.amount_waived =
+            item.amount_waived == null
+              ? 0
+              : Number(item.amount_waived);
+        }
+
     if (model === "expenses") {
       item.category_id = item.category_id ?? item.category;
     }
