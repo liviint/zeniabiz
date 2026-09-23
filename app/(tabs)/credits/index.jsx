@@ -81,6 +81,11 @@ export default function CreditsListPage() {
       action: () => setStatusFilter("paid"),
       key: "paid",
     },
+    {
+      label:"Waived",
+      action:() => setStatusFilter("waived"),
+      key:"waived",
+    }
   ];
 
   const fetchStats = async () => {

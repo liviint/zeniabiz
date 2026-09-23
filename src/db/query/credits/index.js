@@ -2,16 +2,19 @@ import { newUuid } from "../../utils";
 import { normalizeRange } from "../../../utils/timeNavigatorHelpers";
 import { enqueueSync } from "../../../cloudSync/syncEvent";
 
+
 export async function getCredits(
   db,
   timeState,
   statusFilter = "outstanding"
 ) {
   const { startDate, endDate } = normalizeRange(timeState);
+
   let extraCondition = "";
 
-  let balanceCondition =
-    "AND ROUND(s.balance_due, 2) > 0";
+  let balanceCondition = `
+    AND ROUND(s.balance_due, 2) > 0
+  `;
 
   if (statusFilter === "unpaid") {
     extraCondition = `
@@ -23,6 +26,16 @@ export async function getCredits(
     extraCondition = `
       AND s.payment_status = 'PARTIAL'
     `;
+  }
+
+  if (statusFilter === "waived") {
+    extraCondition = `
+      AND ROUND(COALESCE(s.amount_waived, 0), 2) > 0
+    `;
+
+    // Waived credits should not be restricted
+    // by the outstanding balance condition.
+    balanceCondition = "";
   }
 
   if (statusFilter === "paid") {
@@ -40,6 +53,7 @@ export async function getCredits(
       s.total_amount,
       s.customer_id,
       s.amount_paid,
+      s.amount_waived,
       s.balance_due,
 
       s.payment_status,
@@ -61,14 +75,14 @@ export async function getCredits(
 
       ${balanceCondition}
 
-      AND date >= ?
-        AND date < ?
+      AND s.date >= ?
+      AND s.date < ?
 
       ${extraCondition}
 
     ORDER BY s.date DESC
     `,
-    [startDate,endDate,]
+    [startDate, endDate]
   );
 
   return result;
@@ -223,16 +237,21 @@ export function getCreditStats(
         return sum + Number(credit.amount_paid || 0);
       }
 
+      if (statusFilter === "waived") {
+        return sum + Number(credit.amount_waived || 0);
+      }
+
       return sum + Number(credit.balance_due || 0);
     },
     0
   );
-    
+
   return {
     totalAmount,
     count,
   };
 }
+
 
 export async function recordCreditPayment(
   db,
