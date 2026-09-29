@@ -29,6 +29,8 @@ export default function RevenueCatProvider({ children }) {
     !!customerInfo?.entitlements.active["premium_plus"];
 
   useEffect(() => {
+    let listener;
+
     async function init() {
       try {
         const isExpoGo = Constants.appOwnership === "expo";
@@ -40,42 +42,46 @@ export default function RevenueCatProvider({ children }) {
 
         Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
 
-        // Get the currently logged-in ZeniaBiz user
-        const { user_id } = await getActiveContextSync(db);
-
-        console.log(
-          "[RevenueCat] ZeniaBiz user ID:",
-          user_id
-        );
-
-        if (!user_id) {
-          console.warn(
-            "[RevenueCat] No ZeniaBiz user ID found."
-          );
-
-          Purchases.configure({
-            apiKey: "goog_FvtuWxXkoVKtGqnJREUOfdOiEhi",
-          });
-
-          const info = await Purchases.getCustomerInfo();
-          setCustomerInfo(info);
-
-          setLoading(false);
-          return;
-        }
-
         // Configure RevenueCat
         Purchases.configure({
           apiKey: "goog_FvtuWxXkoVKtGqnJREUOfdOiEhi",
         });
 
-        // Identify the RevenueCat customer using
-        // the same ID as the ZeniaBiz account.
-        const { customerInfo: info } =
-          await Purchases.logIn(user_id);
+        // Listen for subscription/customer-info changes
+        listener = Purchases.addCustomerInfoUpdateListener((info) => {
+          console.log("[RevenueCat] Customer info updated");
+          setCustomerInfo(info);
+        });
+
+        // Get active ZeniaBiz context
+        const context = getActiveContextSync();
+
+        const companyId = context.company;
 
         console.log(
-          "[RevenueCat] Logged in customer:",
+          "[RevenueCat] ZeniaBiz company:",
+          companyId
+        );
+
+        if (!companyId) {
+          console.warn(
+            "[RevenueCat] No ZeniaBiz company found."
+          );
+
+          const info = await Purchases.getCustomerInfo();
+
+          setCustomerInfo(info);
+          setLoading(false);
+          return;
+        }
+
+        // IMPORTANT:
+        // RevenueCat customer = Company, not individual user
+        const { customerInfo: info } =
+          await Purchases.logIn(companyId);
+
+        console.log(
+          "[RevenueCat] RevenueCat customer:",
           info.originalAppUserId
         );
 
@@ -85,15 +91,8 @@ export default function RevenueCatProvider({ children }) {
         );
 
         setCustomerInfo(info);
-
-        const listener =
-          Purchases.addCustomerInfoUpdateListener((info) => {
-            setCustomerInfo(info);
-          });
-
         setLoading(false);
 
-        return () => listener.remove();
       } catch (error) {
         console.error(
           "[RevenueCat] Initialization failed:",
@@ -105,6 +104,12 @@ export default function RevenueCatProvider({ children }) {
     }
 
     init();
+
+    return () => {
+      if (listener) {
+        listener.remove();
+      }
+    };
   }, [db]);
 
 
