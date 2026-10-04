@@ -10,11 +10,14 @@ const SubscriptionStatusCard = ({
   title,
   description,
   icon = "✓",
+  expiryDate,
 }) => {
   return (
     <Card style={styles.card}>
       <View style={styles.iconContainer}>
-        <BodyText style={styles.icon}>{icon}</BodyText>
+        <BodyText style={styles.icon}>
+          {icon}
+        </BodyText>
       </View>
 
       <BodyText style={styles.title}>
@@ -24,6 +27,18 @@ const SubscriptionStatusCard = ({
       <SecondaryText style={styles.description}>
         {description}
       </SecondaryText>
+
+      {expiryDate && (
+        <View style={styles.expiryContainer}>
+          <SecondaryText style={styles.subscriptionExpiry}>
+            Expires:{" "}
+          </SecondaryText>
+
+          <BodyText style={styles.subscriptionExpiryStrong}>
+            {expiryDate}
+          </BodyText>
+        </View>
+      )}
     </Card>
   );
 };
@@ -64,5 +79,27 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 22,
     paddingHorizontal: 10,
+  },
+
+  expiryContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 6,
+    backgroundColor: "#F7F7F7",
+  },
+
+  subscriptionExpiry: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+
+  subscriptionExpiryStrong: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "bold",
   },
 });

@@ -17,7 +17,13 @@ import {
 
 import SubscriptionStatusCard from "./SubscriptionStatusCard";
 
+import { useSubscription } from "../../../src/components/AppDataProvider/PremiumSubscriptionsProvider";
+import { dateFormat } from "../../../utils/dateFormat";
+
 export default function PremiumPlusPage() {
+  const {
+      subscription,
+  } = useSubscription();
   const { globalStyles } = useThemeStyles();
 
   const handleRestorePurchases = async () => {
@@ -57,6 +63,7 @@ export default function PremiumPlusPage() {
         icon="👑"
         title="Premium Plus Active"
         description="You're enjoying every premium feature available in ZeniaBiz."
+        expiryDate={dateFormat(subscription.expires_at)}
       />
 
       <Card style={styles.section}>
