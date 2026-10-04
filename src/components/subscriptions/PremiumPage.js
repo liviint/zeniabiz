@@ -16,7 +16,13 @@ import {
 
 import SubscriptionStatusCard from "./SubscriptionStatusCard";
 
+import { useSubscription } from "../../../src/components/AppDataProvider/PremiumSubscriptionsProvider";
+import { dateFormat } from "../../../utils/dateFormat";
+
 export default function PremiumPage() {
+  const {
+      subscription,
+  } = useSubscription();
   const { globalStyles } = useThemeStyles();
 
     const [offerings, setOfferings] = useState({});
@@ -123,6 +129,7 @@ export default function PremiumPage() {
       <SubscriptionStatusCard
         title="Premium Active"
         description="Your business is protected with automatic Google Drive backups."
+        expiryDate={dateFormat(subscription.expires_at)}
       />
 
       <Card style={styles.section}>
