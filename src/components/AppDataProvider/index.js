@@ -2,6 +2,7 @@ import { SQLiteProvider } from "expo-sqlite";
 import SessionProvider from "./SessionProvider"
 import SyncProvider from "./SyncProvider"
 import GoogleBackUpProvider from "./GoogleBackUpProvider"
+import PremiumSubscriptionsProvider from "./PremiumSubscriptionsProvider";
 import { 
   applyInventoryMigrationsV1 ,
   applyInventoryBatchesMigrationsV1,
@@ -131,9 +132,11 @@ export default function AppDataProvider({ children }) {
     <SQLiteProvider databaseName="zeniabiz.db" onInit={migrateDbIfNeeded}>
       <SessionProvider>
         <SyncProvider>
-          <GoogleBackUpProvider>
-            {children}
-          </GoogleBackUpProvider>
+          <PremiumSubscriptionsProvider>
+              <GoogleBackUpProvider>
+                {children}
+              </GoogleBackUpProvider>
+          </PremiumSubscriptionsProvider>
         </SyncProvider>
       </SessionProvider>
     </SQLiteProvider>

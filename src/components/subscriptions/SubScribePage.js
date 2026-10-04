@@ -14,13 +14,13 @@ import {
   SecondaryText,
 } from "@/src/components/ThemeProvider/components";
 
-import { useRevenueCat } from "@/src/components/AppDataProvider/RevenueCatProvider";
+import { useSubscription } from "@/src/components/AppDataProvider/PremiumSubscriptionsProvider";
 import PlanCard from "./PlanCard"
 
 
 const SubScribePage = () => {
   const { globalStyles } = useThemeStyles();
-  const { hasPremium, hasPremiumPlus, refreshCustomerInfo } = useRevenueCat();
+  const { hasPremium, hasPremiumPlus, refreshCustomerInfo } = useSubscription();
 
   const [offerings, setOfferings] = useState({});
   const [purchasing, setPurchasing] = useState(false);

@@ -1,19 +1,17 @@
-import { Stack, useRouter } from 'expo-router';
-import 'react-native-reanimated';
-import ReduxProvider from '../src/store/ReduxProvider';
-import { useEffect } from 'react';
-import Header from '../src/components/header';
-import { BackHandler } from 'react-native';
-import ThemeProvider from "../src/components/ThemeProvider"
-import AppDataProvider from "../src/components/AppDataProvider/index"
-import AppLockProvider from "../src/components/AppDataProvider/AppLockProvider"
-import analytics from '@react-native-firebase/analytics';
-import RevenueCatProvider from "../src/components/AppDataProvider/RevenueCatProvider"
+import analytics from "@react-native-firebase/analytics";
+import { Stack, useRouter } from "expo-router";
+import { useEffect } from "react";
+import { BackHandler } from "react-native";
+import "react-native-reanimated";
+import AppLockProvider from "../src/components/AppDataProvider/AppLockProvider";
+import AppDataProvider from "../src/components/AppDataProvider/index";
+import Header from "../src/components/header";
+import ThemeProvider from "../src/components/ThemeProvider";
+import ReduxProvider from "../src/store/ReduxProvider";
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: "(tabs)",
 };
-
 
 export default function RootLayout() {
   const router = useRouter();
@@ -36,31 +34,28 @@ export default function RootLayout() {
 
   return (
     <ReduxProvider>
-      <ThemeProvider >
-        
-          <AppDataProvider>
-            <RevenueCatProvider>
-              <AppLockProvider>
-                    <Stack>
-                      <Stack.Screen
-                        name="(tabs)"
-                        options={{
-                          header: () => <Header />,
-                        }}
-                      />
+      <ThemeProvider>
+        <AppDataProvider>
+            <AppLockProvider>
+              <Stack>
+                <Stack.Screen
+                  name="(tabs)"
+                  options={{
+                    header: () => <Header />,
+                  }}
+                />
 
-                      <Stack.Screen
-                        name="modal"
-                        options={{
-                          presentation: 'modal',
-                          title: 'Modal',
-                          header: () => <Header />,
-                        }}
-                      />
-                    </Stack>
-              </AppLockProvider>
-            </RevenueCatProvider>
-          </AppDataProvider>
+                <Stack.Screen
+                  name="modal"
+                  options={{
+                    presentation: "modal",
+                    title: "Modal",
+                    header: () => <Header />,
+                  }}
+                />
+              </Stack>
+            </AppLockProvider>
+        </AppDataProvider>
       </ThemeProvider>
     </ReduxProvider>
   );

@@ -1,18 +1,17 @@
-import React from "react";
+import { usePathname, useRouter } from "expo-router";
 import {
-    View,
-    Text,
-    TouchableOpacity,
+    Linking,
     Modal,
     Pressable,
-    Linking,
     StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { useRouter, usePathname } from "expo-router";
-import { useRevenueCat  } from "../AppDataProvider/RevenueCatProvider"
+import { useSubscription } from "../AppDataProvider/PremiumSubscriptionsProvider";
 
 export default function Header({ menuOpen, setMenuOpen }) {
-    const { hasPremium, hasPremiumPlus } = useRevenueCat();
+    const { hasPremium, hasPremiumPlus } = useSubscription();
     const router = useRouter();
     const pathname = usePathname();
 
