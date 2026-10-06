@@ -89,7 +89,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 6,
-    backgroundColor: "#F7F7F7",
   },
 
   subscriptionExpiry: {
