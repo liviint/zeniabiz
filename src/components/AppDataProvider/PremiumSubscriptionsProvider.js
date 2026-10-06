@@ -6,6 +6,7 @@ import React, {
 } from "react";
 import { api } from "@/api";
 import { getActiveContextSync } from "@/src/db/utils";
+import Purchases from "react-native-purchases";
 
 const SubscriptionContext = createContext(null);
 
@@ -26,20 +27,82 @@ export default function PremiumSubscriptionsProvider({ children }) {
     setReload((prev) => prev + 1);
   };
 
+  /**
+   * Initialize RevenueCat once.
+   *
+   * RevenueCat is only responsible for Android
+   * purchases through Google Play.
+   *
+   * Django remains the source of truth for
+   * subscription status and entitlements.
+   */
+  useEffect(() => {
+    const ctx = getActiveContextSync();
+
+    async function initializeRevenueCat() {
+      try {
+        if (!ctx?.company) {
+          console.warn(
+            "[RevenueCat] Cannot initialize: company is missing"
+          );
+          return;
+        }
+
+        const apiKey =
+          "goog_FvtuWxXkoVKtGqnJREUOfdOiEhi"
+
+        if (!apiKey) {
+          console.warn(
+            "[RevenueCat] Android API key is missing"
+          );
+          return;
+        }
+
+        await Purchases.configure({
+          apiKey,
+          appUserID: ctx.company,
+        });
+
+        console.log(
+          "[RevenueCat] Initialized successfully for company:",
+          ctx.company
+        );
+      } catch (error) {
+        console.error(
+          "[RevenueCat] Initialization failed:",
+          error
+        );
+      }
+    }
+
+    initializeRevenueCat();
+  }, []);
+
+  /**
+   * Fetch subscription status from Django.
+   *
+   * Django is the source of truth.
+   */
   useEffect(() => {
     let mounted = true;
-    const ctx = getActiveContextSync()
+
+    const ctx = getActiveContextSync();
 
     async function init() {
       try {
         setLoading(true);
 
-        let response = await api.get("/payments/subscriptions/", {
+        let response = await api.get(
+          "/payments/subscriptions/",
+          {
             params: {
-                company_id: ctx.company,
+              company_id: ctx.company,
             },
-        });
-        response = response.data.results
+          }
+        );
+
+        response = response.data.results;
+
         const currentSubscription =
           Array.isArray(response)
             ? response[0] ?? null
@@ -48,6 +111,7 @@ export default function PremiumSubscriptionsProvider({ children }) {
         if (!mounted) return;
 
         setSubscription(currentSubscription);
+
         const status =
           currentSubscription?.status?.toUpperCase();
 
@@ -106,11 +170,21 @@ export default function PremiumSubscriptionsProvider({ children }) {
         subscription,
         hasPremium,
         hasPremiumPlus,
-        expiresAt: subscription?.expires_at ?? null,
-        billingPeriod: subscription?.billing_period ?? null,
-        plan: subscription?.plan ?? null,
-        status: subscription?.status ?? null,
+
+        expiresAt:
+          subscription?.expires_at ?? null,
+
+        billingPeriod:
+          subscription?.billing_period ?? null,
+
+        plan:
+          subscription?.plan ?? null,
+
+        status:
+          subscription?.status ?? null,
+
         refreshSubscription,
+
         cancelling,
         message,
       }}
