@@ -1,25 +1,27 @@
 import {
-    View,
-    TouchableOpacity,
-    StyleSheet,
+  View,
+  TouchableOpacity,
+  StyleSheet,
 } from "react-native";
+
 import { useThemeStyles } from "@/src/hooks/useThemeStyles";
+
 import {
-    BodyText,
-    SecondaryText,
-    Card,
+  BodyText,
+  SecondaryText,
+  Card,
 } from "@/src/components/ThemeProvider/components";
 
- const PlanCard = ({
+const PlanCard = ({
   title,
   badge,
   offering,
   features,
   isActive,
-  handlePurchase
+  handlePurchase,
 }) => {
+  const { globalStyles } = useThemeStyles();
 
-    const { globalStyles } = useThemeStyles()
   if (!offering) return null;
 
   const monthlyPackage = offering.availablePackages.find(
@@ -30,20 +32,26 @@ import {
     (pkg) => pkg.packageType === "ANNUAL"
   );
 
-  const monthlyPrice = monthlyPackage?.product.price;
-const yearlyPrice = yearlyPackage?.product.price;
-    const savings =
-        monthlyPrice && yearlyPrice
-            ? monthlyPrice * 12 - yearlyPrice
-            : 0;
+  console.log(offering,"hello offering")
 
-  
+  // RevenueCat returns the lifetime package here
+  const lifetimePackage = offering.lifetime;
+
+  const monthlyPrice = monthlyPackage?.product.price;
+  const yearlyPrice = yearlyPackage?.product.price;
+
+  const savings =
+    monthlyPrice && yearlyPrice
+      ? monthlyPrice * 12 - yearlyPrice
+      : 0;
 
   return (
     <Card>
       {/* Header */}
       <View style={styles.cardHeader}>
-        <BodyText style={styles.cardTitle}>{title}</BodyText>
+        <BodyText style={styles.cardTitle}>
+          {title}
+        </BodyText>
 
         {!!badge && (
           <View style={globalStyles.badge}>
@@ -78,7 +86,10 @@ const yearlyPrice = yearlyPackage?.product.price;
       {/* Monthly */}
       {monthlyPackage && (
         <TouchableOpacity
-          style={{...globalStyles.primaryBtn,marginBottom:15}}
+          style={{
+            ...globalStyles.primaryBtn,
+            marginBottom: 15,
+          }}
           disabled={isActive}
           onPress={() => handlePurchase(monthlyPackage)}
         >
@@ -91,7 +102,10 @@ const yearlyPrice = yearlyPackage?.product.price;
       {/* Yearly */}
       {yearlyPackage && (
         <TouchableOpacity
-          style={globalStyles.secondaryBtn}
+          style={{
+            ...globalStyles.secondaryBtn,
+            marginBottom: 15,
+          }}
           disabled={isActive}
           onPress={() => handlePurchase(yearlyPackage)}
         >
@@ -99,8 +113,29 @@ const yearlyPrice = yearlyPackage?.product.price;
             Yearly • {yearlyPackage.product.priceString}
           </BodyText>
 
+          {savings > 0 && (
+            <SecondaryText style={styles.saveText}>
+              Save {yearlyPrice
+                ? `${monthlyPrice * 12 - yearlyPrice}`
+                : ""}
+            </SecondaryText>
+          )}
+        </TouchableOpacity>
+      )}
+
+      {/* Lifetime */}
+      {lifetimePackage && (
+        <TouchableOpacity
+          style={globalStyles.secondaryBtn}
+          disabled={isActive}
+          onPress={() => handlePurchase(lifetimePackage)}
+        >
+          <BodyText style={globalStyles.secondaryBtnText}>
+            Lifetime • {lifetimePackage.product.priceString}
+          </BodyText>
+
           <SecondaryText style={styles.saveText}>
-            Save {savings}
+            One-time payment • No recurring fees
           </SecondaryText>
         </TouchableOpacity>
       )}
@@ -108,7 +143,7 @@ const yearlyPrice = yearlyPackage?.product.price;
   );
 };
 
-export default PlanCard
+export default PlanCard;
 
 const styles = StyleSheet.create({
   cardHeader: {
@@ -145,33 +180,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginBottom: 10,
     lineHeight: 22,
-  },
-
-  primaryButton: {
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-  },
-
-  primaryButtonText: {
-    fontWeight: "700",
-    fontSize: 16,
-  },
-
-  secondaryButton: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  secondaryButtonText: {
-    fontWeight: "700",
-    fontSize: 16,
-    marginBottom: 2,
   },
 
   saveText: {

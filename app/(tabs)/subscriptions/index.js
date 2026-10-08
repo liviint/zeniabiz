@@ -8,12 +8,8 @@ const Subscriptions = () => {
     const {
         hasPremium,
         hasPremiumPlus,
-        loading,
-        subscription,
-        refreshSubscription
+        loading
     } = useSubscription();
-
-    console.log(hasPremium, hasPremiumPlus,subscription,"hell test subs 123...")
 
     AnalyticsService.logFirstEvent('first_subscription_page_viewed');
 

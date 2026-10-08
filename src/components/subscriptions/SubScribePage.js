@@ -5,15 +5,12 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-
 import Purchases from "react-native-purchases";
-
 import { useThemeStyles } from "@/src/hooks/useThemeStyles";
 import {
   BodyText,
   SecondaryText,
 } from "@/src/components/ThemeProvider/components";
-
 import { useSubscription } from "@/src/components/AppDataProvider/PremiumSubscriptionsProvider";
 import PlanCard from "./PlanCard"
 
@@ -30,7 +27,6 @@ const SubScribePage = () => {
     const fetchOfferings = async () => {
       try {
         const revenueCatOfferings = await Purchases.getOfferings();
-
         setOfferings({
           premium: revenueCatOfferings.all["premium"],
           premiumPlus: revenueCatOfferings.all["premium_plus"],
@@ -110,65 +106,66 @@ const SubScribePage = () => {
 
   return (
   <ScrollView
-  style={globalStyles.container}
-  contentContainerStyle={styles.container}
-  showsVerticalScrollIndicator={false}
->
+    style={globalStyles.container}
+    contentContainerStyle={styles.container}
+    showsVerticalScrollIndicator={false}
+  >
     <BodyText style={globalStyles.title}>
-    ZeniaBiz Premium
-  </BodyText>
+      ZeniaBiz Premium
+    </BodyText>
 
-  <SecondaryText style={styles.subtitle}>
-    Unlock premium features to protect your business data, access advanced reports,
-    and keep your business synced across all your devices.
-  </SecondaryText>
+    <SecondaryText style={styles.subtitle}>
+      Unlock premium features to protect your business data, access advanced reports,
+      and keep your business synced across all your devices.
+    </SecondaryText>
+
     <PlanCard
-    title="Premium"
-    handlePurchase={handlePurchase}
-    badge="Most Popular"
-    offering={offerings.premium}
-    isActive={hasPremium && !hasPremiumPlus}
-    features={[
-        "Google Drive Backup",
-        "Automatic Backups",
-        "Restore Backups",
-        "Advanced Reports",
-        "Priority Support",
-    ]}
-/>
+        title="Premium"
+        handlePurchase={handlePurchase}
+        badge="Most Popular"
+        offering={offerings.premium}
+        isActive={hasPremium && !hasPremiumPlus}
+        features={[
+            "Google Drive Backup",
+            "Automatic Backups",
+            "Restore Backups",
+            "Advanced Reports",
+            "Priority Support",
+        ]}
+    />
 
-<PlanCard
-    title="Premium Plus"
-    handlePurchase={handlePurchase}
-    badge="Best Value"
-    offering={offerings.premiumPlus}
-    isActive={hasPremiumPlus}
-    features={[
-        "Everything in Premium",
-        "Cloud Sync",
-        "Multiple Devices",
-        "Real-time Sync",
-        "Team Access",
-    ]}
-/>
-<TouchableOpacity
-  style={styles.restoreButton}
-  onPress={handleRestorePurchases}
->
-  <BodyText style={styles.restoreButtonText}>
-   Restore Subscription
-  </BodyText>
-</TouchableOpacity>
+    <PlanCard
+        title="Premium Plus"
+        handlePurchase={handlePurchase}
+        badge="Best Value"
+        offering={offerings.premiumPlus}
+        isActive={hasPremiumPlus}
+        features={[
+            "Everything in Premium",
+            "Cloud Sync",
+            "Multiple Devices",
+            "Real-time Sync",
+            "Team Access",
+        ]}
+    />
+    <TouchableOpacity
+      style={styles.restoreButton}
+      onPress={handleRestorePurchases}
+    >
+      <BodyText style={styles.restoreButtonText}>
+      Restore Subscription
+      </BodyText>
+    </TouchableOpacity>
 
-<SecondaryText style={styles.footerText}>
-  Subscriptions renew automatically unless cancelled at least 24 hours before the
-  end of the current billing period. You can manage or cancel your subscription at
-  any time through Google Play.
-</SecondaryText>
+  <SecondaryText style={styles.footerText}>
+    Subscriptions renew automatically unless cancelled at least 24 hours before the
+    end of the current billing period. You can manage or cancel your subscription at
+    any time through Google Play.
+  </SecondaryText>
 
-<SecondaryText style={styles.footerText}>
-  By subscribing you agree to the Terms of Service and Privacy Policy.
-</SecondaryText>
+  <SecondaryText style={styles.footerText}>
+    By subscribing you agree to the Terms of Service and Privacy Policy.
+  </SecondaryText>
 
   </ScrollView>
 );

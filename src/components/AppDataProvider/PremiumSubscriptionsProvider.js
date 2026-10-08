@@ -27,15 +27,6 @@ export default function PremiumSubscriptionsProvider({ children }) {
     setReload((prev) => prev + 1);
   };
 
-  /**
-   * Initialize RevenueCat once.
-   *
-   * RevenueCat is only responsible for Android
-   * purchases through Google Play.
-   *
-   * Django remains the source of truth for
-   * subscription status and entitlements.
-   */
   useEffect(() => {
     const ctx = getActiveContextSync();
 
@@ -78,11 +69,6 @@ export default function PremiumSubscriptionsProvider({ children }) {
     initializeRevenueCat();
   }, []);
 
-  /**
-   * Fetch subscription status from Django.
-   *
-   * Django is the source of truth.
-   */
   useEffect(() => {
     let mounted = true;
 
