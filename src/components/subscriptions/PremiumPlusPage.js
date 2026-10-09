@@ -63,7 +63,7 @@ export default function PremiumPlusPage() {
         icon="👑"
         title="Premium Plus Active"
         description="You're enjoying every premium feature available in ZeniaBiz."
-        expiryDate={dateFormat(subscription.expires_at)}
+        expiryDate={subscription.billing_period === "lifetime" ? "No Expiry" :  dateFormat(subscription.expires_at)}
       />
 
       <Card style={styles.section}>

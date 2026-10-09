@@ -117,6 +117,10 @@ export default function PremiumPage() {
         pkg => pkg.packageType === "ANNUAL"
     );
 
+    const lifetimePackage = offerings?.premiumPlus?.availablePackages?.find(
+        pkg => pkg.packageType === "LIFETIME"
+    );
+
     const monthlyPrice = monthlyPackage?.product?.price;
     const yearlyPrice = yearlyPackage?.product?.price;
     const savings =
@@ -129,7 +133,7 @@ export default function PremiumPage() {
       <SubscriptionStatusCard
         title="Premium Active"
         description="Your business is protected with automatic Google Drive backups."
-        expiryDate={dateFormat(subscription.expires_at)}
+        expiryDate={subscription.billing_period === "lifetime" ? "No Expiry" :  dateFormat(subscription.expires_at)}
       />
 
       <Card style={styles.section}>
@@ -209,6 +213,23 @@ export default function PremiumPage() {
                 Save {savings}
             </SecondaryText>
         </TouchableOpacity>
+
+        {lifetimePackage && (
+            <TouchableOpacity
+              style={globalStyles.secondaryBtn}
+              onPress={() => handleUpgrade(lifetimePackage)}
+            >
+              <BodyText style={globalStyles.secondaryBtnText}>
+                Upgrade Lifetime • {lifetimePackage.product.priceString}
+              </BodyText>
+    
+              <SecondaryText style={styles.saveText}>
+                One-time payment • No recurring fees
+              </SecondaryText>
+            </TouchableOpacity>
+          )}
+
+
 
       </Card>
 

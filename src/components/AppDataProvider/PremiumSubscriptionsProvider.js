@@ -117,12 +117,12 @@ export default function PremiumSubscriptionsProvider({ children }) {
 
         setHasPremium(
           isActive &&
-          currentSubscription?.plan?.code === "premium"
+          currentSubscription?.plan?.code === "premium" || currentSubscription?.plan?.code === "launch_offer"
         );
 
         setHasPremiumPlus(
           isActive &&
-          currentSubscription?.plan?.code === "premium_plus"
+          currentSubscription?.plan?.code === "premium_plus" || currentSubscription?.plan?.code === "launch_offer1"
         );
       } catch (error) {
         console.error(
