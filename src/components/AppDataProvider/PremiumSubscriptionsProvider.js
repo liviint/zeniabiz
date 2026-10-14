@@ -115,15 +115,18 @@ export default function PremiumSubscriptionsProvider({ children }) {
             status === "TRIALING") &&
           hasNotExpired;
 
-        setHasPremium(
-          isActive &&
-          currentSubscription?.plan?.code === "premium" || currentSubscription?.plan?.code === "launch_offer"
-        );
+          const planCode = currentSubscription?.plan?.code;
 
-        setHasPremiumPlus(
-          isActive &&
-          currentSubscription?.plan?.code === "premium_plus" || currentSubscription?.plan?.code === "launch_offer1"
-        );
+          setHasPremium(
+            isActive &&
+              ["premium", "launch_offer"].includes(planCode)
+          );
+
+          setHasPremiumPlus(
+            isActive &&
+              ["premium_plus", "launch_offer1"].includes(planCode)
+          );
+          
       } catch (error) {
         console.error(
           "[Subscription] Initialization failed:",

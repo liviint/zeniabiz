@@ -6,7 +6,6 @@ import {
     Linking,
     ScrollView
 } from "react-native";
-import Purchases from "react-native-purchases";
 
 import { useThemeStyles } from "@/src/hooks/useThemeStyles";
 import {
@@ -23,27 +22,21 @@ import { dateFormat } from "../../../utils/dateFormat";
 export default function PremiumPlusPage() {
   const {
       subscription,
+      refreshSubscription
   } = useSubscription();
   const { globalStyles } = useThemeStyles();
 
-  const handleRestorePurchases = async () => {
+  const handleReFreshSubscription = async () => {
       try {
   
-        const customerInfo = await Purchases.restorePurchases();
+        refreshSubscription()
   
-        if (Object.keys(customerInfo.entitlements.active).length > 0) {
-            Alert.alert(
-                "Purchases Restored",
-                "Your subscriptions have been restored successfully."
-            );
-        } else {
-            Alert.alert(
-                "No Purchases Found",
-                "No active subscriptions were found for this account."
-            );
-        }
+        Alert.alert(
+          "Restore Complete",
+          "Your purchases have been restored. Your subscription status is being refreshed."
+        );
   
-      } catch (error) {
+      } catch{
         Alert.alert(
           "Restore Failed",
           "Unable to restore your purchases."
@@ -122,10 +115,10 @@ export default function PremiumPlusPage() {
 
       <TouchableOpacity
         style={globalStyles.secondaryBtn}
-        onPress={handleRestorePurchases}
+        onPress={handleReFreshSubscription}
       >
         <BodyText style={globalStyles.secondaryBtnText}>
-          Restore Purchases
+          Refresh Subscription
         </BodyText>
       </TouchableOpacity>
 

@@ -17,7 +17,12 @@ import PlanCard from "./PlanCard"
 
 const SubScribePage = () => {
   const { globalStyles } = useThemeStyles();
-  const { hasPremium, hasPremiumPlus, refreshCustomerInfo } = useSubscription();
+  const { 
+    hasPremium, 
+    hasPremiumPlus, 
+    refreshCustomerInfo,
+    refreshSubscription
+  } = useSubscription();
 
   const [offerings, setOfferings] = useState({});
   const [purchasing, setPurchasing] = useState(false);
@@ -79,24 +84,17 @@ const SubScribePage = () => {
     }
   };
 
-  const handleRestorePurchases = async () => {
+  const handleReFreshSubscription = async () => {
       try {
   
-        const customerInfo = await Purchases.restorePurchases();
+        refreshSubscription()
   
-        if (Object.keys(customerInfo.entitlements.active).length > 0) {
-            Alert.alert(
-                "Purchases Restored",
-                "Your subscriptions have been restored successfully."
-            );
-        } else {
-            Alert.alert(
-                "No Purchases Found",
-                "No active subscriptions were found for this account."
-            );
-        }
+        Alert.alert(
+          "Restore Complete",
+          "Your purchases have been restored. Your subscription status is being refreshed."
+        );
   
-      } catch (error) {
+      } catch{
         Alert.alert(
           "Restore Failed",
           "Unable to restore your purchases."
@@ -150,10 +148,10 @@ const SubScribePage = () => {
     />
     <TouchableOpacity
       style={styles.restoreButton}
-      onPress={handleRestorePurchases}
+      onPress={handleReFreshSubscription}
     >
       <BodyText style={styles.restoreButtonText}>
-      Restore Subscription
+        Refresh Subscription
       </BodyText>
     </TouchableOpacity>
 
