@@ -16,258 +16,26 @@ import * as Sharing from "expo-sharing";
 import * as XLSX from "xlsx";
 import { getActiveContextSync } from "../../../../../src/db/utils";
 import { upsertProductAndRestocking } from "../../../../../src/db/query/inventory";
+import { useThemeStyles } from "../../../../../src/hooks/useThemeStyles";
+import { BodyText, SecondaryText, Card } from "../../../../../src/components/ThemeProvider/components";
+import { 
+  C , 
+  HEADERS, 
+  TEMPLATE_ROW, 
+  normalizeHeader,
+  cellString,
+  parseNumber,
+  parseExpiry,
+  parseRows
+} from "./helpers";
+import { getStyles } from "./styles";
 
-const C = {
-    teal: "#2E8B8B",
-    coral: "#FF6B6B",
-    beige: "#F4E1D2",
-    background: "#FAF9F7",
-    text: "#333333",
-    muted: "#777777",
-    border: "#E8E2DC",
-    white: "#FFFFFF",
-    red: "#B42318",
-    green: "#237A57",
-};
+const styles = StyleSheet.create(getStyles(C))
 
-const HEADERS = [
-    "Product Name",
-    "SKU",
-    "Barcode",
-    "Unit",
-    "Cost Price",
-    "Selling Price",
-    "Opening Quantity",
-    "Minimum Quantity",
-    "Item Type",
-    "Batch Number",
-    "Expiry Date",
-];
-
-const TEMPLATE_ROW = [
-    "Sugar 1 kg",
-    "SUG-001",
-    "616000000001",
-    "pcs",
-    150,
-    180,
-    50,
-    5,
-    "product",
-    "OPENING-001",
-    "",
-];
-
-function normalizeHeader(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ");
-}
-
-function cellString(value) {
-  return value == null ? "" : String(value).trim();
-}
-
-function parseNumber(value) {
-  if (value == null || String(value).trim() === "") return null;
-
-  const number =
-    typeof value === "number"
-      ? value
-      : Number(String(value).replace(/,/g, "").trim());
-
-  return Number.isFinite(number) ? number : null;
-}
-
-function parseExpiry(value) {
-  if (value == null || value === "") return null;
-
-  let date;
-
-  if (value instanceof Date) {
-    date = value;
-  } else if (typeof value === "number") {
-    const parts = XLSX.SSF.parse_date_code(value);
-
-    if (!parts) throw new Error("Invalid expiry date");
-
-    date = new Date(parts.y, parts.m - 1, parts.d);
-  } else {
-    const raw = String(value).trim();
-
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-      throw new Error("Use YYYY-MM-DD for expiry dates");
-    }
-
-    date = new Date(`${raw}T12:00:00`);
-
-    if (
-      date.getFullYear() !== Number(raw.slice(0, 4)) ||
-      date.getMonth() + 1 !== Number(raw.slice(5, 7)) ||
-      date.getDate() !== Number(raw.slice(8, 10))
-    ) {
-      throw new Error("Invalid expiry date");
-    }
-  }
-
-  if (Number.isNaN(date.getTime())) {
-    throw new Error("Invalid expiry date");
-  }
-
-  return date;
-}
-
-function parseRows(worksheet, existingBarcodes) {
-  const matrix = XLSX.utils.sheet_to_json(worksheet, {
-    header: 1,
-    defval: "",
-    raw: true,
-  });
-
-  if (matrix.length < 2) {
-    throw new Error("The Excel file has no product rows.");
-  }
-
-  const headers = (matrix[0] || []).map(normalizeHeader);
-  const column = (name) => headers.indexOf(normalizeHeader(name));
-
-  const nameCol = column("Product Name");
-  const sellingCol = column("Selling Price");
-  const costCol = column("Cost Price");
-  const barcodeCol = column("Barcode");
-  const skuCol = column("SKU");
-  const unitCol = column("Unit");
-  const quantityCol = column("Opening Quantity");
-  const minimumCol = column("Minimum Quantity");
-  const typeCol = column("Item Type");
-  const batchCol = column("Batch Number");
-  const expiryCol = column("Expiry Date");
-
-  if (nameCol < 0 || sellingCol < 0) {
-    throw new Error(
-      "Missing required columns: Product Name and Selling Price.",
-    );
-  }
-
-  const seenBarcodes = new Set();
-
-  return matrix.slice(1).map((cells, index) => {
-    const get = (col) => (col < 0 ? "" : cells[col]);
-
-    const name = cellString(get(nameCol));
-    const sku = cellString(get(skuCol)) || null;
-    const barcode = cellString(get(barcodeCol)) || null;
-    const unit = cellString(get(unitCol)) || null;
-
-    const cost = parseNumber(get(costCol));
-    const selling = parseNumber(get(sellingCol));
-    const quantity = parseNumber(get(quantityCol));
-    const minimum = parseNumber(get(minimumCol));
-
-    const rawType = cellString(get(typeCol)).toLowerCase();
-    const itemType = rawType === "service" ? "service" : "product";
-
-    const errors = [];
-    const hasData = cells.some((value) => cellString(value) !== "");
-
-    if (!hasData) {
-      return {
-        rowNumber: index + 2,
-        name: "",
-        sku: null,
-        barcode: null,
-        unit: null,
-        cost_price: 0,
-        selling_price: 0,
-        stock_quantity: 0,
-        minimum_quantity: 5,
-        item_type: "product",
-        batch_number: "",
-        expiry_date: null,
-        errors: ["Empty row"],
-      };
-    }
-
-    if (!name) errors.push("Product name is required");
-
-    if (selling == null || selling < 0) {
-      errors.push("Selling price must be zero or greater");
-    }
-
-    if (cost == null && cellString(get(costCol))) {
-      errors.push("Invalid cost price");
-    }
-
-    if (cost != null && cost < 0) {
-      errors.push("Cost price cannot be negative");
-    }
-
-    if (quantity == null && cellString(get(quantityCol))) {
-      errors.push("Invalid opening quantity");
-    }
-
-    if (
-      quantity != null &&
-      (!Number.isInteger(quantity) || quantity < 0)
-    ) {
-      errors.push("Opening quantity must be a non-negative integer");
-    }
-
-    if (
-      minimum != null &&
-      (!Number.isInteger(minimum) || minimum < 0)
-    ) {
-      errors.push("Minimum quantity must be a non-negative integer");
-    }
-
-    if (rawType && !["product", "service"].includes(rawType)) {
-      errors.push("Item Type must be product or service");
-    }
-
-    if (barcode && seenBarcodes.has(barcode)) {
-      errors.push("Duplicate barcode in this Excel file");
-    }
-
-    if (barcode && existingBarcodes.has(barcode)) {
-      errors.push("Barcode already exists in ZeniaBiz");
-    }
-
-    if (barcode) seenBarcodes.add(barcode);
-
-    let expiryDate = null;
-
-    try {
-      expiryDate = parseExpiry(get(expiryCol));
-    } catch (error) {
-      errors.push(error.message || "Invalid expiry date");
-    }
-
-    if (itemType === "service" && (quantity ?? 0) > 0) {
-      errors.push("Services cannot have opening stock");
-    }
-
-    return {
-      rowNumber: index + 2,
-      name,
-      sku,
-      barcode,
-      unit,
-      cost_price: cost ?? 0,
-      selling_price: selling ?? 0,
-      stock_quantity: quantity ?? 0,
-      minimum_quantity: minimum ?? 5,
-      item_type: itemType,
-      batch_number: cellString(get(batchCol)),
-      expiry_date: expiryDate,
-      errors,
-    };
-  });
-}
 
 export default function InventoryImportScreen() {
   const db = useSQLiteContext();
+  const { globalStyles } = useThemeStyles();
 
   const [rows, setRows] = useState([]);
   const [fileName, setFileName] = useState("");
@@ -495,78 +263,66 @@ export default function InventoryImportScreen() {
 
   return (
     <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={globalStyles.container}
     >
-      <View style={styles.header}>
-        <Text style={styles.eyebrow}>ZENIABIZ INVENTORY</Text>
 
-        <Text style={styles.title}>
-          {stage === "start"
-            ? "Add products in bulk"
-            : stage === "preview"
-              ? "Review your products"
-              : "Import results"}
-        </Text>
+      <View style={{...globalStyles.titleContainer, flexDirection:"column"}}>
+          <BodyText style={{...globalStyles.title, marginBottom:"0"}}>
+              {stage === "start"
+                ? "Add products in bulk"
+                : stage === "preview"
+                  ? "Review your products"
+                  : "Import results"
+              }
+          </BodyText>
 
-        <Text style={styles.subtitle}>
-          {stage === "start"
-            ? "Bring your existing inventory into ZeniaBiz using Excel."
-            : stage === "preview"
-              ? fileName
-              : "Your import summary"}
-        </Text>
+          <SecondaryText style={globalStyles.subTitle}>
+            {stage === "start"
+              ? "Bring your existing inventory into ZeniaBiz using Excel."
+              : stage === "preview"
+                ? fileName
+                : "Your import summary"}
+        </SecondaryText>
       </View>
 
       {stage === "start" && (
         <>
-          <View style={styles.hero}>
-            <Text style={styles.heroEmoji}>📊</Text>
-            <Text style={styles.heroTitle}>Hundreds of products?</Text>
-            <Text style={styles.heroText}>
-              Import your product list instead of entering every item
-              manually. Your file is processed on this device.
-            </Text>
-            <View style={styles.chip}>
-              <Text style={styles.chipText}>Excel .xlsx only</Text>
-            </View>
-          </View>
 
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>1. Get the Excel template</Text>
-            <Text style={styles.body}>
+          <Card >
+            <BodyText style={styles.sectionTitle}>1. Get the Excel template</BodyText>
+            <SecondaryText style={styles.body}>
               Organize product names, prices, units and opening quantities.
-            </Text>
+            </SecondaryText>
             <PrimaryButton
               label="Download Excel template"
               icon="↓"
               onPress={downloadTemplate}
             />
-          </View>
+          </Card>
 
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>2. Choose your Excel file</Text>
-            <Text style={styles.body}>
+          <Card>
+            <BodyText style={styles.sectionTitle}>2. Choose your Excel file</BodyText>
+            <SecondaryText style={styles.body}>
               Select an existing inventory spreadsheet arranged using the
               template columns.
-            </Text>
+            </SecondaryText>
             <PrimaryButton
               label="Select Excel file"
               icon="↑"
               onPress={selectExcelFile}
               disabled={loading}
             />
-          </View>
+          </Card>
 
-          <View style={styles.note}>
-            <Text style={styles.noteTitle}>Before you import</Text>
-            <Text style={styles.noteText}>
+          <Card >
+            <BodyText style={styles.noteTitle}>Before you import</BodyText>
+            <SecondaryText style={styles.noteText}>
               • Product name and selling price are required.
               {"\n"}• Opening quantity must be a whole number.
               {"\n"}• Existing barcodes are flagged.
               {"\n"}• Keep a copy of your original spreadsheet.
-            </Text>
-          </View>
+            </SecondaryText>
+          </Card>
         </>
       )}
 
@@ -598,7 +354,7 @@ export default function InventoryImportScreen() {
             </View>
           )}
 
-          <View style={styles.card}>
+          <Card >
             <Text style={styles.sectionTitle}>Product preview</Text>
             <Text style={styles.body}>
               Showing the first 20 rows.
@@ -640,7 +396,7 @@ export default function InventoryImportScreen() {
                 />
               </View>
             ))}
-          </View>
+          </Card>
 
           <PrimaryButton
             label={`Import ${validRows.length} valid products`}
@@ -686,8 +442,8 @@ export default function InventoryImportScreen() {
           {rows.some((row) =>
             row.errors.some((error) => error.startsWith("Import failed:")),
           ) && (
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Failed rows</Text>
+            <Card>
+              <BodyText style={styles.sectionTitle}>Failed rows</BodyText>
 
               {rows
                 .filter((row) =>
@@ -696,16 +452,16 @@ export default function InventoryImportScreen() {
                   ),
                 )
                 .map((row) => (
-                  <Text key={row.rowNumber} style={styles.errorText}>
+                  <SecondaryText key={row.rowNumber} style={styles.errorText}>
                     Row {row.rowNumber}: {row.name} —{" "}
                     {row.errors
                       .filter((error) =>
                         error.startsWith("Import failed:"),
                       )
                       .join(", ")}
-                  </Text>
+                  </SecondaryText>
                 ))}
-            </View>
+            </Card>
           )}
 
           <PrimaryButton
@@ -766,247 +522,4 @@ function StatCard({ value, label, color = C.text }) {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: C.background,
-  },
-  content: {
-    padding: 20,
-    paddingBottom: 44,
-    gap: 16,
-  },
-  header: {
-    gap: 8,
-    marginBottom: 4,
-  },
-  eyebrow: {
-    color: C.teal,
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 1.4,
-  },
-  title: {
-    color: C.text,
-    fontSize: 28,
-    lineHeight: 34,
-    fontWeight: "800",
-  },
-  subtitle: {
-    color: C.muted,
-    fontSize: 14,
-    lineHeight: 21,
-  },
-  hero: {
-    backgroundColor: C.beige,
-    borderRadius: 22,
-    padding: 22,
-    gap: 12,
-  },
-  heroEmoji: {
-    fontSize: 36,
-  },
-  heroTitle: {
-    color: C.text,
-    fontSize: 21,
-    fontWeight: "800",
-  },
-  heroText: {
-    color: C.text,
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  chip: {
-    alignSelf: "flex-start",
-    backgroundColor: C.white,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
-  },
-  chipText: {
-    color: C.teal,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  card: {
-    backgroundColor: C.white,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: C.border,
-    padding: 18,
-    gap: 12,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    color: C.text,
-    fontWeight: "800",
-  },
-  body: {
-    fontSize: 13,
-    color: C.muted,
-    lineHeight: 20,
-  },
-  primaryButton: {
-    minHeight: 50,
-    borderRadius: 13,
-    backgroundColor: C.teal,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 9,
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-  },
-  primaryButtonText: {
-    color: C.white,
-    fontWeight: "800",
-    fontSize: 14,
-  },
-  buttonIcon: {
-    color: C.white,
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  disabledButton: {
-    opacity: 0.5,
-  },
-  secondaryButton: {
-    borderRadius: 13,
-    borderWidth: 1,
-    borderColor: C.teal,
-    minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 12,
-  },
-  secondaryButtonText: {
-    color: C.teal,
-    fontWeight: "800",
-  },
-  note: {
-    padding: 16,
-    borderRadius: 14,
-    backgroundColor: "#F1EFEB",
-    gap: 8,
-  },
-  noteTitle: {
-    fontWeight: "800",
-    color: C.text,
-  },
-  noteText: {
-    color: C.muted,
-    fontSize: 12,
-    lineHeight: 21,
-  },
-  statsRow: {
-    flexDirection: "row",
-    gap: 9,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: C.white,
-    borderWidth: 1,
-    borderColor: C.border,
-    borderRadius: 15,
-    padding: 12,
-    gap: 5,
-  },
-  statValue: {
-    fontSize: 22,
-    fontWeight: "800",
-  },
-  statLabel: {
-    fontSize: 11,
-    color: C.muted,
-  },
-  warning: {
-    padding: 16,
-    borderRadius: 14,
-    backgroundColor: "#FFF0E9",
-    gap: 6,
-  },
-  warningTitle: {
-    color: C.red,
-    fontWeight: "800",
-  },
-  warningText: {
-    color: C.text,
-    fontSize: 13,
-    lineHeight: 19,
-  },
-  productRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: C.border,
-  },
-  productNumber: {
-    backgroundColor: C.beige,
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  productNumberText: {
-    fontSize: 11,
-    color: C.text,
-    fontWeight: "800",
-  },
-  productInfo: {
-    flex: 1,
-    gap: 4,
-  },
-  productName: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: C.text,
-  },
-  productMeta: {
-    fontSize: 12,
-    color: C.muted,
-  },
-  errorText: {
-    color: C.red,
-    fontSize: 11,
-    lineHeight: 17,
-    marginTop: 4,
-  },
-  statusDot: {
-    width: 9,
-    height: 9,
-    borderRadius: 5,
-    marginTop: 5,
-  },
-  successHero: {
-    backgroundColor: "#E7F3ED",
-    padding: 22,
-    borderRadius: 20,
-    alignItems: "flex-start",
-    gap: 10,
-  },
-  successIcon: {
-    width: 42,
-    height: 42,
-    overflow: "hidden",
-    borderRadius: 21,
-    textAlign: "center",
-    textAlignVertical: "center",
-    backgroundColor: C.green,
-    color: C.white,
-    fontSize: 24,
-    fontWeight: "800",
-  },
-  loading: {
-    padding: 20,
-    alignItems: "center",
-    gap: 10,
-  },
-  loadingText: {
-    color: C.teal,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-});
+
