@@ -265,6 +265,7 @@ export default function ProductsListPage() {
           primaryAction={{ route: "/inventory/add", label: "Add Product" }}
           secondaryActions={[
             {route:"/inventory/add/service",label: "Add Service"},
+            {route:"/inventory/add/import",label: "Import Data"},
           ]}
           showTip={showTip}
           setShowTip={setShowTip}

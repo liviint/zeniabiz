@@ -38,6 +38,8 @@
     "expo-camera": "~57.0.5",
     "expo-constants": "~57.0.16",
     "expo-dev-client": "~57.0.19",
+    "expo-document-picker": "~57.0.3",
+    "expo-file-system": "~57.0.7",
     "expo-font": "~57.0.2",
     "expo-haptics": "~57.0.3",
     "expo-linking": "~57.0.10",
@@ -45,7 +47,7 @@
     "expo-print": "~57.0.2",
     "expo-router": "~57.0.21",
     "expo-secure-store": "~57.0.4",
-    "expo-sharing": "~57.0.20",
+    "expo-sharing": "~57.0.23",
     "expo-splash-screen": "~57.0.9",
     "expo-sqlite": "~57.0.3",
     "expo-status-bar": "~57.0.1",
@@ -72,7 +74,8 @@
     "react-redux": "^9.2.0",
     "react-test-renderer": "19.2.3",
     "redux-persist": "^6.0.0",
-    "styled-components": "^6.3.12"
+    "styled-components": "^6.3.12",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@testing-library/react-native": "^13.3.3",
