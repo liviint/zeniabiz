@@ -89,10 +89,6 @@ export default function DataBackupScreen() {
     };
 
     const handleAccountPress = () => {
-        if (!isAuthenticated) {
-            router.push("/auth/profile");
-            return;
-        }
 
         if (!hasPremiumPlus) {
             setShowPremiumPlusModal(true);

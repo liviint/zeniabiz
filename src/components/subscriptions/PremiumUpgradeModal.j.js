@@ -1,13 +1,14 @@
 
 import React from "react";
 import {
-    Modal,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
     View,
 } from "react-native";
+import AddEditModal from "../common/addEditModal";
+import { BodyText, SecondaryText, Card } from "../ThemeProvider/components";
 
 export default function PremiumUpgradeModal({
     open,
@@ -15,97 +16,74 @@ export default function PremiumUpgradeModal({
     onUpgrade,
 }) {
     return (
-        <Modal
+        <AddEditModal
             visible={open}
-            transparent
-            animationType="fade"
-            onRequestClose={onClose}
-            statusBarTranslucent
+            onClose={onClose}
         >
-            <View style={styles.overlay}>
-                <Pressable
-                    style={StyleSheet.absoluteFill}
-                    onPress={onClose}
-                    accessibilityLabel="Close upgrade dialog"
-                />
-
-                <View style={styles.modal}>
-                    <ScrollView
-                        showsVerticalScrollIndicator={false}
-                        contentContainerStyle={styles.content}
-                    >
-                        <Pressable
-                            onPress={onClose}
-                            style={styles.closeButton}
-                            accessibilityRole="button"
-                            accessibilityLabel="Close"
-                            hitSlop={10}
-                        >
-                            <Text style={styles.closeText}>✕</Text>
-                        </Pressable>
-
-                        <View style={styles.iconContainer}>
-                            <Text style={styles.icon}>☁️</Text>
-                        </View>
-
-                        <Text style={styles.title}>
-                            Protect your business records
-                        </Text>
-
-                        <Text style={styles.description}>
-                            Your business records matter. Keep them safe
-                            with Google Drive backup and restore them when
-                            you need them.
-                        </Text>
-
-                        <View style={styles.featureList}>
-                            <Feature
-                                title="Google Drive backup"
-                                description="Keep a backup of your business data."
-                            />
-
-                            <Feature
-                                title="Restore your records"
-                                description="Recover your data when changing devices or reinstalling the app."
-                            />
-
-                            <Feature
-                                title="Advanced business reports"
-                                description="Understand your performance and profits in greater detail."
-                            />
-                        </View>
-
-                        <Pressable
-                            onPress={onUpgrade}
-                            accessibilityRole="button"
-                            style={({ pressed }) => [
-                                styles.primaryButton,
-                                pressed && styles.buttonPressed,
-                            ]}
-                        >
-                            <Text style={styles.primaryButtonText}>
-                                Explore Premium Plans
-                            </Text>
-                        </Pressable>
-
-                        <Pressable
-                            onPress={onClose}
-                            accessibilityRole="button"
-                            style={styles.secondaryButton}
-                        >
-                            <Text style={styles.secondaryButtonText}>
-                                Maybe later
-                            </Text>
-                        </Pressable>
-
-                        <Text style={styles.footnote}>
-                            Your existing business records remain accessible
-                            without Premium.
-                        </Text>
-                    </ScrollView>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.content}
+            >
+                <View style={styles.iconContainer}>
+                    <Text style={styles.icon}>☁️</Text>
                 </View>
-            </View>
-        </Modal>
+
+                <BodyText style={styles.title}>
+                    Protect your business records
+                </BodyText>
+
+                <SecondaryText style={styles.description}>
+                    Your business records matter. Keep them safe
+                    with Google Drive backup and restore them when
+                    you need them.
+                </SecondaryText>
+
+                <Card style={styles.featureList}>
+                    <Feature
+                        title="Google Drive backup"
+                        description="Keep a backup of your business data."
+                    />
+
+                    <Feature
+                        title="Restore your records"
+                        description="Recover your data when changing devices or reinstalling the app."
+                    />
+
+                    <Feature
+                        title="Advanced business reports"
+                        description="Understand your performance and profits in greater detail."
+                    />
+                </Card>
+
+                <Pressable
+                    onPress={onUpgrade}
+                    accessibilityRole="button"
+                    style={({ pressed }) => [
+                        styles.primaryButton,
+                        pressed && styles.buttonPressed,
+                    ]}
+                >
+                    <Text style={styles.primaryButtonText}>
+                        Explore Premium Plans
+                    </Text>
+                </Pressable>
+
+                <Pressable
+                    onPress={onClose}
+                    accessibilityRole="button"
+                    style={styles.secondaryButton}
+                >
+                    <Text style={styles.secondaryButtonText}>
+                        Maybe later
+                    </Text>
+                </Pressable>
+
+                <Text style={styles.footnote}>
+                    Your existing business records remain accessible
+                    without Premium.
+                </Text>
+            </ScrollView>
+        </AddEditModal>
     );
 }
 
@@ -117,52 +95,21 @@ function Feature({ title, description }) {
             </View>
 
             <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>{title}</Text>
+                <BodyText style={styles.featureTitle}>{title}</BodyText>
 
-                <Text style={styles.featureDescription}>
+                <SecondaryText style={styles.featureDescription}>
                     {description}
-                </Text>
+                </SecondaryText>
             </View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    overlay: {
-        flex: 1,
-        backgroundColor: "rgba(0, 0, 0, 0.55)",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 20,
-    },
-    modal: {
-        width: "100%",
-        maxWidth: 440,
-        maxHeight: "90%",
-        backgroundColor: "#FFFFFF",
-        borderRadius: 20,
-        overflow: "hidden",
-    },
     content: {
         alignItems: "center",
         padding: 22,
         paddingTop: 28,
-    },
-    closeButton: {
-        position: "absolute",
-        top: 12,
-        right: 12,
-        zIndex: 1,
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: "#F5F5F5",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    closeText: {
-        color: "#555555",
-        fontSize: 16,
     },
     iconContainer: {
         width: 64,
@@ -177,14 +124,12 @@ const styles = StyleSheet.create({
         fontSize: 30,
     },
     title: {
-        color: "#333333",
         fontSize: 21,
         fontWeight: "700",
         textAlign: "center",
         marginBottom: 10,
     },
     description: {
-        color: "#666666",
         fontSize: 14,
         lineHeight: 21,
         textAlign: "center",
@@ -192,10 +137,6 @@ const styles = StyleSheet.create({
     },
     featureList: {
         width: "100%",
-        backgroundColor: "#FAF9F7",
-        borderWidth: 1,
-        borderColor: "#EEEEEE",
-        borderRadius: 12,
         padding: 15,
         gap: 17,
         marginBottom: 20,
@@ -222,13 +163,11 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     featureTitle: {
-        color: "#333333",
         fontSize: 13,
         fontWeight: "600",
         marginBottom: 4,
     },
     featureDescription: {
-        color: "#777777",
         fontSize: 12,
         lineHeight: 18,
     },
