@@ -35,6 +35,7 @@
     "axios": "^1.15.2",
     "eventemitter3": "^5.0.4",
     "expo": "~57.0.30",
+    "expo-build-properties": "~57.0.22",
     "expo-camera": "~57.0.6",
     "expo-constants": "~57.0.16",
     "expo-dev-client": "~57.0.20",
