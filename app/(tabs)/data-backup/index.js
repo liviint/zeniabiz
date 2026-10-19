@@ -80,20 +80,20 @@ export default function DataBackupScreen() {
     }, [isFocused, db]);
 
     const handleGoogleDrivePress = () => {
-        if (!hasPremium) {
-            setShowPremiumModal(true);
-            return;
-        }
+        // if (!hasPremium) {
+        //     setShowPremiumModal(true);
+        //     return;
+        // }
 
         router.push("/google-drive");
     };
 
     const handleAccountPress = () => {
 
-        if (!hasPremiumPlus) {
-            setShowPremiumPlusModal(true);
-            return;
-        }
+        // if (!hasPremiumPlus) {
+        //     setShowPremiumPlusModal(true);
+        //     return;
+        // }
 
         router.push("/auth/profile");
     };
