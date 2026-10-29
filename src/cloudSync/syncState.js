@@ -1,56 +1,45 @@
+import { getActiveContextSync } from "../db/utils";
+
 export async function getSyncCursor(db, model) {
-  const row = await db.getFirstAsync(
-    `
-    SELECT cursor, version
-    FROM sync_state
-    WHERE model = ?
-    `,
-    [model]
-  );
+    const { company } = getActiveContextSync();
+    const row = await db.getFirstAsync(
+        `
+        SELECT cursor, version
+        FROM sync_state
+        WHERE company = ?
+          AND model = ?
+        `,
+        [company, model]
+    );
 
-  return {
-    cursor: row?.cursor
-      ? Number(row.cursor)
-      : 0,
+    return {
+        cursor: row?.cursor != null
+            ? Number(row.cursor)
+            : 0,
 
-    version: row?.version ?? 0,
-  };
+        version: row?.version ?? 0,
+    };
 }
 
-export async function saveSyncCursor(
-  db,
-  model,
-  cursor
-) {
-  await db.runAsync(
-    `
-    INSERT INTO sync_state
-    (model, cursor, version, updated_at)
+export async function saveSyncCursor(db, model, cursor) {
+    const { company } = getActiveContextSync();
+    await db.runAsync(
+        `
+        INSERT INTO sync_state (
+            company,
+            model,
+            cursor,
+            version,
+            updated_at
+        )
+        VALUES (?, ?, ?, 1, datetime('now'))
 
-    VALUES (
-      ?,
-      ?,
-      COALESCE(
-        (
-          SELECT version
-          FROM sync_state
-          WHERE model = ?
-        ),
-        0
-      ) + 1,
-      datetime('now')
-    )
-
-    ON CONFLICT(model)
-    DO UPDATE SET
-      cursor = excluded.cursor,
-      version = sync_state.version + 1,
-      updated_at = excluded.updated_at
-    `,
-    [
-      model,
-      String(cursor),
-      model,
-    ]
-  );
+        ON CONFLICT(company, model)
+        DO UPDATE SET
+            cursor = excluded.cursor,
+            version = sync_state.version + 1,
+            updated_at = excluded.updated_at
+        `,
+        [company, model, String(cursor)]
+    );
 }

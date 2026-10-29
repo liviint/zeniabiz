@@ -21,6 +21,48 @@ export const applySyncMigrationsV1 = async (db) => {
     );
 };
 
+export async function applySyncMigrationsV2(db) {
+    const columns = await db.getAllAsync(`PRAGMA table_info(sync_state)`);
+
+    // No table exists yet, or it already has the new schema.
+    if (
+        columns.length === 0 ||
+        columns.some((column) => column.name === "company")
+    ) {
+        await db.execAsync(`
+            CREATE TABLE IF NOT EXISTS sync_state (
+                company TEXT NOT NULL,
+                model TEXT NOT NULL,
+                cursor TEXT,
+                version INTEGER DEFAULT 0,
+                updated_at TEXT,
+                PRIMARY KEY (company, model)
+            );
+        `);
+
+        return;
+    }
+
+    // Legacy schema: model is the only primary key.
+    // Its cursor cannot safely be attributed to a company.
+    await db.execAsync(`
+        BEGIN TRANSACTION;
+
+        DROP TABLE sync_state;
+
+        CREATE TABLE sync_state (
+            company TEXT NOT NULL,
+            model TEXT NOT NULL,
+            cursor TEXT,
+            version INTEGER DEFAULT 0,
+            updated_at TEXT,
+            PRIMARY KEY (company, model)
+        );
+
+        COMMIT;
+    `);
+}
+
 const SYNCABLE_TABLES = [
     "expenses",
     "expense_categories",

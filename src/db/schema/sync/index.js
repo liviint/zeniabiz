@@ -29,10 +29,14 @@ export async function createSyncTables(db) {
         ON sync_queue(status, next_retry_at);
 
         CREATE TABLE IF NOT EXISTS sync_state (
-            model TEXT PRIMARY KEY,
+            company TEXT NOT NULL,
+            model TEXT NOT NULL,
             cursor TEXT,
             version INTEGER DEFAULT 0,
-            updated_at TEXT
+            updated_at TEXT,
+
+            PRIMARY KEY (company, model)
         );
     `);
 }
+
