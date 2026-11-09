@@ -22,13 +22,10 @@ import {
   C , 
   HEADERS, 
   TEMPLATE_ROW, 
-  normalizeHeader,
-  cellString,
-  parseNumber,
-  parseExpiry,
   parseRows
 } from "./helpers";
 import { getStyles } from "./styles";
+import { StatCard } from "../../../../../src/components/common/StatCard";
 
 const styles = StyleSheet.create(getStyles(C))
 
@@ -262,8 +259,8 @@ export default function InventoryImportScreen() {
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={globalStyles.container}
+    <View
+      style={globalStyles.container}
     >
 
       <View style={{...globalStyles.titleContainer, flexDirection:"column"}}>
@@ -293,11 +290,12 @@ export default function InventoryImportScreen() {
             <SecondaryText style={styles.body}>
               Organize product names, prices, units and opening quantities.
             </SecondaryText>
-            <PrimaryButton
-              label="Download Excel template"
-              icon="↓"
+            <TouchableOpacity
               onPress={downloadTemplate}
-            />
+              style={globalStyles.primaryBtn}
+            >
+              <BodyText style={globalStyles.primaryBtnText}>Download Excel template</BodyText>
+          </TouchableOpacity>
           </Card>
 
           <Card>
@@ -306,12 +304,14 @@ export default function InventoryImportScreen() {
               Select an existing inventory spreadsheet arranged using the
               template columns.
             </SecondaryText>
-            <PrimaryButton
-              label="Select Excel file"
-              icon="↑"
+
+            <TouchableOpacity
               onPress={selectExcelFile}
+              style={globalStyles.primaryBtn}
               disabled={loading}
-            />
+            >
+              <BodyText style={globalStyles.primaryBtnText}>Select Excel file</BodyText>
+          </TouchableOpacity>
           </Card>
 
           <Card >
@@ -354,60 +354,82 @@ export default function InventoryImportScreen() {
             </View>
           )}
 
-          <Card >
-            <Text style={styles.sectionTitle}>Product preview</Text>
-            <Text style={styles.body}>
-              Showing the first 20 rows.
-            </Text>
+          {loading && (
+            <View style={styles.loading}>
+              <ActivityIndicator color={C.teal} size="large" />
+              <Text style={styles.loadingText}>
+                {stage === "start"
+                  ? "Reading Excel file..."
+                  : `Importing products... ${progress}%`}
+              </Text>
+            </View>
+          )}
 
-            {rows.slice(0, 20).map((row) => (
-              <View key={row.rowNumber} style={styles.productRow}>
-                <View style={styles.productNumber}>
-                  <Text style={styles.productNumberText}>
-                    {row.rowNumber}
-                  </Text>
-                </View>
+            <View style={styles.actionBn}>
+                <TouchableOpacity
+                  onPress={confirmImport}
+                  style={globalStyles.primaryBtn}
+                  disabled={loading || validRows.length === 0}
+                >
+                  <BodyText style={globalStyles.primaryBtnText}>{`Import ${validRows.length} valid products`}</BodyText>
+                </TouchableOpacity>
+            </View>
 
-                <View style={styles.productInfo}>
-                  <Text style={styles.productName}>
-                    {row.name || "Unnamed product"}
-                  </Text>
+          <View style={styles.actionBn}>
+            <TouchableOpacity
+                  onPress={resetImport}
+                  style={globalStyles.secondaryBtn}
+                  disabled={loading || validRows.length === 0}
+                >
+                  <BodyText style={globalStyles.secondaryBtnText}>Choose another file</BodyText>
+                </TouchableOpacity>
+          </View>
+  
+          <Card>
+            <BodyText style={styles.sectionTitle}>Product preview</BodyText>
+            <SecondaryText style={styles.body}>
+              Showing the first 100 rows.
+            </SecondaryText>
 
-                  <Text style={styles.productMeta}>
-                    KES {row.selling_price.toLocaleString("en-KE")} · Stock{" "}
-                    {row.stock_quantity}
-                  </Text>
-
-                  {row.errors.length > 0 && (
-                    <Text style={styles.errorText}>
-                      {row.errors.join(" · ")}
+            <ScrollView style={styles.recordsContainer}>
+              {rows.slice(0, 100).map((row) => (
+                <View key={row.rowNumber} style={styles.productRow}>
+                  <View style={styles.productNumber}>
+                    <Text style={styles.productNumberText}>
+                      {row.rowNumber}
                     </Text>
-                  )}
+                  </View>
+
+                  <View style={styles.productInfo}>
+                    <SecondaryText style={styles.productName}>
+                      {row.name || "Unnamed product"}
+                    </SecondaryText>
+
+                    <BodyText style={styles.productMeta}>
+                      KES {row.selling_price.toLocaleString("en-KE")} · Stock{" "}
+                      {row.stock_quantity}
+                    </BodyText>
+
+                    {row.errors.length > 0 && (
+                      <Text style={styles.errorText}>
+                        {row.errors.join(" · ")}
+                      </Text>
+                    )}
+                  </View>
+
+                  <View
+                    style={[
+                      styles.statusDot,
+                      {
+                        backgroundColor:
+                          row.errors.length > 0 ? C.coral : C.teal,
+                      },
+                    ]}
+                  />
                 </View>
-
-                <View
-                  style={[
-                    styles.statusDot,
-                    {
-                      backgroundColor:
-                        row.errors.length > 0 ? C.coral : C.teal,
-                    },
-                  ]}
-                />
-              </View>
-            ))}
+              ))}
+            </ScrollView>
           </Card>
-
-          <PrimaryButton
-            label={`Import ${validRows.length} valid products`}
-            onPress={confirmImport}
-            disabled={loading || validRows.length === 0}
-          />
-
-          <SecondaryButton
-            label="Choose another file"
-            onPress={resetImport}
-          />
         </>
       )}
 
@@ -464,62 +486,22 @@ export default function InventoryImportScreen() {
             </Card>
           )}
 
-          <PrimaryButton
-            label="Import another file"
+          <TouchableOpacity
             onPress={resetImport}
-          />
+            activeOpacity={0.8}
+            style={globalStyles.primaryBtn}
+          >
+            <BodyText style={globalStyles.primaryBtnText}>Import another file</BodyText>
+          </TouchableOpacity>
+
+
         </>
       )}
 
-      {loading && (
-        <View style={styles.loading}>
-          <ActivityIndicator color={C.teal} size="large" />
-          <Text style={styles.loadingText}>
-            {stage === "start"
-              ? "Reading Excel file..."
-              : `Importing products... ${progress}%`}
-          </Text>
-        </View>
-      )}
-    </ScrollView>
-  );
-}
-
-function PrimaryButton({ label, onPress, disabled = false, icon }) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={disabled}
-      activeOpacity={0.8}
-      style={[
-        styles.primaryButton,
-        disabled && styles.disabledButton,
-      ]}
-    >
-      {icon ? <Text style={styles.buttonIcon}>{icon}</Text> : null}
-      <Text style={styles.primaryButtonText}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
-function SecondaryButton({ label, onPress }) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={styles.secondaryButton}
-    >
-      <Text style={styles.secondaryButtonText}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
-function StatCard({ value, label, color = C.text }) {
-  return (
-    <View style={styles.statCard}>
-      <Text style={[styles.statValue, { color }]}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      
     </View>
   );
 }
+
 
 

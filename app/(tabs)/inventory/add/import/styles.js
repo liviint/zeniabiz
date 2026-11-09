@@ -110,6 +110,8 @@ export const getStyles = (C) => ({
     borderRadius: 14,
     backgroundColor: "#FFF0E9",
     gap: 6,
+    marginTop:10,
+    marginBottom:10,
   },
   warningTitle: {
     color: C.red,
@@ -119,6 +121,13 @@ export const getStyles = (C) => ({
     color: C.text,
     fontSize: 13,
     lineHeight: 19,
+  },
+  actionBn:{
+    marginBottom:5,
+    marginTop:5,
+  },
+  recordsContainer:{
+    height:"70%",
   },
   productRow: {
     flexDirection: "row",
@@ -148,11 +157,9 @@ export const getStyles = (C) => ({
   productName: {
     fontSize: 13,
     fontWeight: "700",
-    color: C.text,
   },
   productMeta: {
     fontSize: 12,
-    color: C.muted,
   },
   errorText: {
     color: C.red,
