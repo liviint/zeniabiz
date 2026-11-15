@@ -32,7 +32,7 @@ export default function CustomersListHeader({
 
     const filterOptions = [
         {
-            label: "All",
+            label: "With Sales",
             key: "all",
             action: () => setFilter("all"),
         },

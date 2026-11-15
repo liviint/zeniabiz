@@ -1,6 +1,6 @@
 import { useIsFocused, useRouter } from 'expo-router';
 import { useSQLiteContext } from "expo-sqlite";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
     FlatList,
     Pressable,
@@ -33,10 +33,10 @@ export default function CustomersList() {
     const router = useRouter();
 
     const [customers, setCustomers] = useState([]);
-    const [stats, setStats] = useState({});
+    let stats = {}
     const [isLoading, setIsLoading] = useState(true);
 
-    const [timeState, setTimeState] = useState(createRange("month"));
+    const [timeState, setTimeState] = useState(createRange("all"));
 
     const [sort, setSort] = useState("newest");
     const [filter, setFilter] = useState("all");
@@ -94,15 +94,6 @@ export default function CustomersList() {
         }
     };
 
-    useEffect(() => {
-        setStats({
-        count: customers.length,
-        withPhone: customers.filter(
-            (customer) => customer.phone
-        ).length,
-        });
-    }, [customers]);
-
     const formatDate = (date) => {
         if (!date) return "";
 
@@ -114,6 +105,20 @@ export default function CustomersList() {
         });
     };
 
+
+    stats = useMemo(() => ({
+        count: customers.length,
+        totalRevenue: customers.reduce(
+            (sum, customer) =>
+                sum + Number(customer.total_revenue || 0),
+            0
+        ),
+        outstanding: customers.reduce(
+            (sum, customer) =>
+                sum + Number(customer.balance_due || 0),
+            0
+        ),
+    }), [customers]);
 
     return (
         <View style={globalStyles.container}>
@@ -127,21 +132,22 @@ export default function CustomersList() {
                 />
             </View>
 
-        <CustomersListHeader 
-            customers={customers}
-            stats={stats}
-            timeState={timeState} 
-            setTimeState={setTimeState}
-            sort={sort}
-            setSort={setSort}
-            filter={filter}
-            setFilter={setFilter}
-            search={search}
-            setSearch={setSearch}
-        />
-
         <FlatList
             data={customers}
+            ListHeaderComponent={
+                <CustomersListHeader 
+                    customers={customers}
+                    stats={stats}
+                    timeState={timeState} 
+                    setTimeState={setTimeState}
+                    sort={sort}
+                    setSort={setSort}
+                    filter={filter}
+                    setFilter={setFilter}
+                    search={search}
+                    setSearch={setSearch}
+                />
+            }
             keyExtractor={(item) => item.id}
             refreshControl={
             <RefreshControl
@@ -161,10 +167,8 @@ export default function CustomersList() {
             )}
             renderItem={({ item }) => {
                 const totalPaid = Number(item.total_paid || 0);
-                const totalSales = Number(item.total_revenue || 0);
                 const totalDiscount = Number(item.total_discount || 0);
-                const outstanding = Math.max(totalSales - totalPaid, 0);
-                const isOwing = outstanding > 0;
+                const isOwing = item.balance_due > 0;
 
                 return (
                     <Pressable
@@ -216,7 +220,7 @@ export default function CustomersList() {
                                 isOwing && styles.owingText,
                                 ]}
                             >
-                            Owes: {outstanding.toLocaleString()}
+                            Owes: {item.balance_due.toLocaleString()}
                             </Text>
                             }
 
