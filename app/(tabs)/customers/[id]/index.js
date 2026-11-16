@@ -102,19 +102,7 @@ export default function CustomerDetails() {
                 </Card>
 
                 <Card style={styles.statsCard}>
-                <View style={styles.summaryRow}>
-                    <SecondaryText>
-                    Outstanding Balance
-                    </SecondaryText>
-
-                    <BodyText
-                    style={styles.balance}
-                    >
-                    {Number(
-                        stats.balance_due || 0
-                    ).toLocaleString()}
-                    </BodyText>
-                </View>
+                
 
                 <View style={styles.summaryRow}>
                     <SecondaryText>
@@ -132,7 +120,7 @@ export default function CustomerDetails() {
 
                 <View style={styles.summaryRow}>
                     <SecondaryText>
-                    Total Paid
+                    Amount Paid
                     </SecondaryText>
 
                     <BodyText
@@ -154,6 +142,34 @@ export default function CustomerDetails() {
                     >
                     {Number(
                         stats.total_discount || 0
+                    ).toLocaleString()}
+                    </BodyText>
+                </View>
+
+                <View style={styles.summaryRow}>
+                    <SecondaryText>
+                        Outstanding Balance
+                    </SecondaryText>
+
+                    <BodyText
+                    style={styles.balance}
+                    >
+                    {Number(
+                        stats.balance_due || 0
+                    ).toLocaleString()}
+                    </BodyText>
+                </View>
+
+                <View style={styles.summaryRow}>
+                    <SecondaryText>
+                        Waived Debt
+                    </SecondaryText>
+
+                    <BodyText
+                        style={styles.paid}
+                    >
+                    {Number(
+                        stats.amount_waived || 0
                     ).toLocaleString()}
                     </BodyText>
                 </View>

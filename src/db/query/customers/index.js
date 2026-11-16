@@ -290,6 +290,11 @@ export async function getCustomerStats(
       ) AS balance_due,
 
       COALESCE(
+          SUM(amount_waived),
+          0
+      ) AS amount_waived,
+
+      COALESCE(
         SUM(discount),
         0
       ) AS total_discount
