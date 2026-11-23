@@ -233,8 +233,6 @@ export default function SellPage() {
           cart={cart}
           setCart={setCart}
           id={id}
-          date={date}
-          setDate={setDate}
         />
 
       <View style={styles.footer}>
@@ -269,6 +267,8 @@ export default function SellPage() {
         setCheckoutModalVisible={setCheckoutModalVisible}
         paymentsForm={paymentsForm}
         setPaymentsForm={setPaymentsForm}
+        date={date}
+        setDate={setDate}
       />
 
     </ScrollView>

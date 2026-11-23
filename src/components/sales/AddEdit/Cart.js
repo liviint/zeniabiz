@@ -19,8 +19,6 @@ export default function Cart({
     cart,
     setCart,
     id,
-    date,
-    setDate
 }) {
     const {colors} = useThemeStyles()
 
@@ -180,8 +178,6 @@ return (
             setCart={setCart}
             selectedItem={selectedItem}
             setSelectedItem={setSelectedItem}
-            date={date}
-            setDate={setDate}
         />
     </>
 );

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
     Pressable,
     View,
+    TouchableOpacity
 } from "react-native";
 import {
     BodyText,
@@ -12,6 +13,7 @@ import { useThemeStyles } from "../../../src/hooks/useThemeStyles";
 import CustomersPicker from "../credit/CustomersPicker";
 import PaymentMethodsForm from "./PaymentMethodsForm";
 import AddEditModal from "../common/addEditModal";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 const CreditDiscountForm = ({
     markedPrice,
@@ -21,10 +23,14 @@ const CreditDiscountForm = ({
     paymentsForm,
     setPaymentsForm,
     setPaymentModalVisible,
+    setDate,
+    date
 }) => {
     const { globalStyles } = useThemeStyles();
 
     const [draftForm, setDraftForm] = useState(paymentsForm);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showTimePicker, setShowTimePicker] = useState(false);
 
     const [paymentMethodsDraft, setPaymentMethodsDraft] = useState(
         [
@@ -116,6 +122,28 @@ const CreditDiscountForm = ({
         setCheckoutModalVisible(false);
     };
 
+    const handleDateChange = (event, selectedDate) => {
+        setShowDatePicker(false);
+        if (selectedDate) {
+        const updated = new Date(date);
+        updated.setFullYear(selectedDate.getFullYear());
+        updated.setMonth(selectedDate.getMonth());
+        updated.setDate(selectedDate.getDate());
+        setDate(updated);
+        }
+    };
+    
+    const handleTimeChange = (event, selectedTime) => {
+        setShowTimePicker(false);
+        if (selectedTime) {
+        const updated = new Date(date);
+        updated.setHours(selectedTime.getHours());
+        updated.setMinutes(selectedTime.getMinutes());
+        updated.setSeconds(selectedTime.getSeconds());
+        setDate(updated);
+        }
+    };
+
     const balance = (markedPrice - draftForm.amountPaid  - draftForm.discount)
     const balanceUi = balance >= 0  ? balance : 0
 
@@ -128,6 +156,62 @@ const CreditDiscountForm = ({
             <View style={globalStyles.formGroup}>
                 <FormLabel>Marked Price</FormLabel>
                 <BodyText>{markedPrice.toFixed(2)}</BodyText>
+            </View>
+
+            <View style={globalStyles.formGroup}>
+                <FormLabel>Date & Time</FormLabel>
+                <View style={{ flexDirection: "row", gap: 12 }}>
+                <TouchableOpacity
+                    onPress={() => setShowDatePicker(true)}
+                    style={{
+                    flex: 1,
+                    paddingVertical: 8,
+                    paddingHorizontal: 4,
+                    alignItems: "center",
+                    ...globalStyles.formBorder
+                    }}
+                >
+                    <BodyText>{date?.toDateString()}</BodyText>
+                </TouchableOpacity>
+
+                {/* Time Button */}
+                <TouchableOpacity
+                    onPress={() => setShowTimePicker(true)}
+                    style={{
+                    flex: 1,
+                    paddingVertical: 8,
+                    paddingHorizontal: 4,
+                    borderRadius: 14,
+                    alignItems: "center",
+                    justifyContent:"center",
+                    ...globalStyles.formBorder
+                    }}
+                >
+                    <BodyText>
+                    {date?.getHours().toString().padStart(2, "0")}:
+                    {date?.getMinutes().toString().padStart(2, "0")}
+                    </BodyText>
+                </TouchableOpacity>
+                </View>
+
+                {showDatePicker && (
+                <DateTimePicker
+                    value={date}
+                    mode="date"
+                    display="calendar"
+                    onChange={handleDateChange}
+                    maximumDate={new Date()} 
+                />
+                )}
+
+                {showTimePicker && (
+                <DateTimePicker
+                    value={date}
+                    mode="time"
+                    display="spinner"
+                    onChange={handleTimeChange}
+                />
+                )}
             </View>
 
             <View style={globalStyles.formGroup}>
