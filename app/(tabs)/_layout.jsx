@@ -95,80 +95,92 @@ export default function TabLayout() {
         <Tabs.Screen
           name="auth"
           options={{
-            href: null,
-          }}
+                tabBarButton: () => null,
+                tabBarItemStyle: { display: "none" },
+            }}
         />
         <Tabs.Screen
           name="feedback"
           options={{
-            href: null,
-          }}
+                tabBarButton: () => null,
+                tabBarItemStyle: { display: "none" },
+            }}
         />
         <Tabs.Screen
           name="credits"
           options={{
-            href: null,
-          }}
+                tabBarButton: () => null,
+                tabBarItemStyle: { display: "none" },
+            }}
         />
         <Tabs.Screen
-          name="customers"
-          options={{
-            href: null,
-          }}
+            name="customers"
+            options={{
+                tabBarButton: () => null,
+                tabBarItemStyle: { display: "none" },
+            }}
         />
         <Tabs.Screen
           name="suppliers"
           options={{
-            href: null,
-          }}
+                tabBarButton: () => null,
+                tabBarItemStyle: { display: "none" },
+            }}
         />
       <Tabs.Screen
           name="business/index"
           options={{
-            href: null,
-          }}
+                tabBarButton: () => null,
+                tabBarItemStyle: { display: "none" },
+            }}
         />
 
         <Tabs.Screen
           name="data-backup"
           options={{
-            href: null,
-          }}
+                tabBarButton: () => null,
+                tabBarItemStyle: { display: "none" },
+            }}
         />
 
         <Tabs.Screen
           name="google-drive"
           options={{
-            href: null,
-          }}
+                tabBarButton: () => null,
+                tabBarItemStyle: { display: "none" },
+            }}
         />
 
         <Tabs.Screen
           name="settings/index"
           options={{
-            href: null,
-          }}
+                tabBarButton: () => null,
+                tabBarItemStyle: { display: "none" },
+            }}
         />
 
         <Tabs.Screen
           name="subscriptions"
           options={{
-            href: null,
-          }}
+                tabBarButton: () => null,
+                tabBarItemStyle: { display: "none" },
+            }}
         />
 
         <Tabs.Screen
           name="support/index"
           options={{
-            href: null,
-          }}
+                tabBarButton: () => null,
+                tabBarItemStyle: { display: "none" },
+            }}
         />
 
         <Tabs.Screen
           name="[...notfound]"
           options={{
-            href: null,
-          }}
+                tabBarButton: () => null,
+                tabBarItemStyle: { display: "none" },
+            }}
         />
       </Tabs>
     </>
