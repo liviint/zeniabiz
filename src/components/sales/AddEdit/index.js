@@ -3,7 +3,6 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
     Alert,
-    InteractionManager,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -104,15 +103,11 @@ export default function SellPage() {
       }
     };
 
-    // Stagger execution until native slide transition animations finish completely
-    const task = InteractionManager.runAfterInteractions(() => {
-      hydrateScreenData();
-    });
+   
+    hydrateScreenData();
+    
 
-    return () => {
-      isMounted = false;
-      task.cancel();
-    };
+    
   }, [isFocused, id]);
 
   useEffect(() => {

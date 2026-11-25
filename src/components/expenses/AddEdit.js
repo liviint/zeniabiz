@@ -5,7 +5,6 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
     Alert,
-    InteractionManager,
     Modal,
     Platform,
     Pressable,
@@ -159,12 +158,7 @@ export default function AddEdit() {
       }
     };
 
-    if (isFocused) {
-      const task = InteractionManager.runAfterInteractions(() => {
-        loadTemplates();
-      });
-      return () => task.cancel();
-    }
+    loadTemplates();
   }, [isFocused]);
 
   return (

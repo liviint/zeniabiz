@@ -3,7 +3,6 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
     Alert,
-    InteractionManager,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -81,11 +80,9 @@ export default function AddTransactionTemplateScreen() {
       setForm(result);
     };
     if (id && isFocused) {
-      const task = InteractionManager.runAfterInteractions(() => {
         loadTemplate();
-      });
-      return () => task.cancel();
-    }
+      };
+    
   }, [id, isFocused]);
 
   return (
