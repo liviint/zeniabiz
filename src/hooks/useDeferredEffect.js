@@ -1,14 +1,15 @@
+
 import { useEffect } from "react";
-import { InteractionManager } from "react-native";
 
 export function useDeferredEffect(effect, deps = [], options = {}) {
-     const { enabled = true } = options;
+    const { enabled = true } = options;
+
     useEffect(() => {
         if (!enabled) return;
-        
+
         let isMounted = true;
 
-        const task = InteractionManager.runAfterInteractions(async () => {
+        const task = requestIdleCallback(async () => {
             if (!isMounted) return;
 
             try {
@@ -20,7 +21,7 @@ export function useDeferredEffect(effect, deps = [], options = {}) {
 
         return () => {
             isMounted = false;
-            task.cancel();
+            cancelIdleCallback(task);
         };
-    }, deps);
+    }, [...deps, enabled]);
 }
