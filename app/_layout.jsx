@@ -38,21 +38,29 @@ export default function RootLayout() {
         <AppDataProvider>
             <AppLockProvider>
               <Stack>
-                <Stack.Screen
-                  name="(tabs)"
-                  options={{
-                    header: () => <Header />,
-                  }}
-                />
+                  <Stack.Screen
+                    name="(tabs)"
+                    options={{
+                      header: () => <Header />,
+                    }}
+                  />
 
-                <Stack.Screen
-                  name="modal"
-                  options={{
-                    presentation: "modal",
-                    title: "Modal",
-                    header: () => <Header />,
-                  }}
-                />
+                  <Stack.Screen name="customers" />
+                  <Stack.Screen name="suppliers" />
+                  <Stack.Screen name="credits" />
+                  <Stack.Screen name="settings" />
+                  <Stack.Screen name="data-backup" />
+                  <Stack.Screen name="google-drive" />
+                  <Stack.Screen name="subscriptions" />
+                  <Stack.Screen name="support" />
+                  <Stack.Screen
+                    name="modal"
+                    options={{
+                      presentation: "modal",
+                      title: "Modal",
+                      header: () => <Header />,
+                    }}
+                  />
               </Stack>
             </AppLockProvider>
         </AppDataProvider>
