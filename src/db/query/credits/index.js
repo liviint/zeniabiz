@@ -1,4 +1,4 @@
-import { newUuid } from "../../utils";
+import { newUuid, getActiveContextSync } from "../../utils";
 import { normalizeRange } from "../../../utils/timeNavigatorHelpers";
 import { enqueueSync } from "../../../cloudSync/syncEvent";
 
@@ -8,6 +8,7 @@ export async function getCredits(
   timeState,
   statusFilter = "outstanding"
 ) {
+  const { company } = getActiveContextSync();
   const { startDate, endDate } = normalizeRange(timeState);
 
   let extraCondition = "";
@@ -70,7 +71,7 @@ export async function getCredits(
 
     WHERE
       s.deleted_at IS NULL
-
+      AND s.company = ?
       AND s.is_credit_sale = 1
 
       ${balanceCondition}
@@ -82,7 +83,7 @@ export async function getCredits(
 
     ORDER BY s.date DESC
     `,
-    [startDate, endDate]
+    [company,startDate, endDate]
   );
 
   return result;
