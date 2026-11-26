@@ -144,6 +144,7 @@ export async function deleteExpense(db, id) {
 }
 
 export async function getExpenseStats(db, timeState) {
+  const { company } = getActiveContextSync();
   const { startDate, endDate } = normalizeRange(timeState);
 
   const overallResult = await db.getFirstAsync(
@@ -155,10 +156,11 @@ export async function getExpenseStats(db, timeState) {
         COALESCE(MAX(e.amount), 0) AS largest
       FROM expenses e
       WHERE e.deleted_at IS NULL
+        AND company = ?
         AND e.date >= ?
         AND e.date <= ?
     `,
-    [startDate, endDate]
+    [company,startDate, endDate]
   );
 
   // Expenses by category
@@ -171,15 +173,17 @@ export async function getExpenseStats(db, timeState) {
         COUNT(e.id) AS count,
         COALESCE(SUM(e.amount), 0) AS total
       FROM expenses e
+        
       LEFT JOIN expense_categories c
         ON e.category_id = c.id
       WHERE e.deleted_at IS NULL
+        AND e.company = ?
         AND e.date >= ?
         AND e.date <= ?
       GROUP BY e.category_id
       ORDER BY total DESC
     `,
-    [startDate, endDate]
+    [company,startDate, endDate]
   );
 
 
